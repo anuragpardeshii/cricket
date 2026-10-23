@@ -27,7 +27,9 @@ Import `anuragpardeshii/cricket` into Vercel. Choose:
 | Output Directory | `dist` |
 | Node.js | 22.x |
 
-Note the stable production domain, for example `https://your-cricket.vercel.app`. The initial frontend can build, but gameplay will work only after the API proxy is configured in step 4. Use the production domain, not a changing preview/deployment URL.
+The committed `frontend/vercel.json` supports this frontend-only first deployment, including direct links to `/rooms`, `/login`, `/register` and `/dashboard`. No frontend environment variables are needed. API paths intentionally remain unavailable until Render is connected.
+
+Note the stable production domain, for example `https://your-cricket.vercel.app`. The initial frontend can build, but login and gameplay will work only after the API proxy is configured in step 4. Use the production domain, not a changing preview/deployment URL.
 
 ## 2. Create PostgreSQL on Render
 
