@@ -2,6 +2,8 @@
 
 React/TypeScript, FastAPI/Python, PostgreSQL and Docker. Play a practice match against AI, or create a shared online room for a league or knockout tournament. Guests and registered users can play; global analytics is administrator-only.
 
+**Hosting:** follow [Deploy on Vercel and Render](docs/DEPLOYMENT.md). Safe configuration references are in [.env.example](.env.example), [backend/.env.example](backend/.env.example), and [frontend/vercel.json.example](frontend/vercel.json.example). Actual credentials stay out of Git.
+
 ## Start and maintain
 
 ```sh
