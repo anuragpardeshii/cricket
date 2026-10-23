@@ -268,6 +268,9 @@ def dashboard(days:Literal['7','30','90']='30',session=Depends(db)):
 class BlockUser(Strict):
     blocked: bool
 
+class GrantAdmin(Strict):
+    pass
+
 @app.get('/api/admin/users',dependencies=[Depends(admin_required)])
 def admin_users(page:int=Query(1,ge=1,le=100000),page_size:int=Query(10,ge=1,le=50),session=Depends(db)):
     total=session.scalar(select(func.count()).select_from(User).where(User.is_guest.is_(False)))
@@ -283,6 +286,18 @@ def block_user(user_id:UUID,body:BlockUser,auth=Depends(admin_required),session=
     if body.blocked: session.execute(delete(LoginSession).where(LoginSession.user_id==user.id))
     session.add(Audit(action='user.blocked' if body.blocked else 'user.unblocked',actor=auth.user_id,resource=user.id))
     session.commit(); return dict(id=user.id,is_blocked=user.is_blocked)
+
+@app.post('/api/admin/users/{user_id}/admin')
+def grant_admin(user_id:UUID,body:GrantAdmin,auth=Depends(admin_required),session=Depends(db)):
+    limit('admin-grant:'+auth.user_id,20,3600)
+    user=session.scalar(select(User).where(User.id==str(user_id),User.is_guest.is_(False)).with_for_update())
+    if not user: raise HTTPException(404,'User not found')
+    if user.is_blocked: raise HTTPException(409,'Unblock this account before granting administrator access')
+    if not user.is_admin:
+        user.is_admin=True
+        session.add(Audit(action='admin.granted',actor=auth.user_id,resource=user.id,details={'source':'dashboard'}))
+        session.commit()
+    return dict(id=user.id,is_admin=True)
 
 from .room_routes import router as room_router
 app.include_router(room_router)

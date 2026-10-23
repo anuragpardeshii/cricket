@@ -319,12 +319,22 @@ def test_user_pagination_block_revoke_and_unblock():
     assert not ({u['id'] for u in first['users']} & {u['id'] for u in second['users']})
     assert 'password_hash' not in first['users'][0]
     user_id=victim.get('/api/auth/me').json()['user']['id']
+    assert ordinary.post(f'/api/admin/users/{user_id}/admin',json={}).status_code==403
     assert ordinary.post(f'/api/admin/users/{user_id}/status',json={'blocked':True}).status_code==403
     assert admin.post(f'/api/admin/users/{user_id}/status',json={'blocked':True}).status_code==200
+    assert admin.post(f'/api/admin/users/{user_id}/admin',json={}).status_code==409
     assert victim.get('/api/games').status_code==401
     assert victim.post('/api/auth/login',json={'email':'victim@example.com','password':'a distinct long passphrase victim'}).status_code==403
     assert admin.post(f'/api/admin/users/{user_id}/status',json={'blocked':False}).status_code==200
     assert victim.post('/api/auth/login',json={'email':'victim@example.com','password':'a distinct long passphrase victim'}).status_code==200
+    assert admin.post(f'/api/admin/users/{user_id}/admin',json={'is_admin':True}).status_code==422
+    assert admin.post(f'/api/admin/users/{user_id}/admin',json={}).json()=={'id':user_id,'is_admin':True}
+    with Session() as s:
+        promoted=s.get(User,user_id)
+        event=s.scalar(select(Audit).where(Audit.action=='admin.granted',Audit.resource==user_id))
+        assert promoted.is_admin is True
+        assert event.actor==admin.get('/api/auth/me').json()['user']['id']
+        assert event.details=={'source':'dashboard'}
     own=admin.get('/api/auth/me').json()['user']['id']
     assert admin.post(f'/api/admin/users/{own}/status',json={'blocked':True}).status_code==409
 
