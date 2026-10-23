@@ -37,7 +37,7 @@ The repository now includes a root `render.yaml` Blueprint with the verified fro
 
 The Blueprint starts on Render's free plans. You can choose paid plans in the review screen or upgrade afterward. `backend/start-render.sh` runs migrations before startup because free web services do not support a separate pre-deploy command. Keeping this sequence in a script also avoids command quoting differences in Render's Docker command runner. Render provides the database URL directly; the backend safely selects the installed psycopg 3 driver and requires TLS in hosted deployments.
 
-After the Blueprint finishes, copy the service's actual `https://…onrender.com` URL. Continue at step 4 to connect Vercel. The manual instructions below remain useful if you prefer configuring each resource yourself.
+The deployed API is `https://out-cricket-api.onrender.com`. The committed Vercel configuration proxies `/api/*` to this service. The manual instructions below remain useful if the deployment domains change later.
 
 Create a **Postgres** database in the same region as the backend. PostgreSQL 18 matches the local stack. Copy its **Internal Database URL** privately.
 
