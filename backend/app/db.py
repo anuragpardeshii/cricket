@@ -7,7 +7,15 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 def now(): return datetime.now(timezone.utc)
 def uid(): return str(uuid.uuid4())
-engine = create_engine(os.environ['DATABASE_URL'], pool_pre_ping=True, pool_size=10, max_overflow=10, connect_args={'options': '-c statement_timeout=5000 -c lock_timeout=3000'})
+database_url = os.environ['DATABASE_URL']
+if database_url.startswith('postgresql://'):
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+elif database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
+connect_args = {'options': '-c statement_timeout=5000 -c lock_timeout=3000'}
+if sslmode := os.getenv('DATABASE_SSLMODE'):
+    connect_args['sslmode'] = sslmode
+engine = create_engine(database_url, pool_pre_ping=True, pool_size=10, max_overflow=10, connect_args=connect_args)
 Session = sessionmaker(engine)
 class Base(DeclarativeBase): pass
 class User(Base):

@@ -47,7 +47,10 @@ async def lifespan(app):
     with suppress(asyncio.CancelledError): await task
 
 app=FastAPI(lifespan=lifespan,title='OUT Cricket API',version='1.0.0',docs_url=None if SECURE else '/api/docs',openapi_url=None if SECURE else '/api/openapi.json',redoc_url=None)
-app.add_middleware(TrustedHostMiddleware,allowed_hosts=os.getenv('ALLOWED_HOSTS','localhost,127.0.0.1,testserver,api').split(','))
+allowed_hosts={host.strip() for host in os.getenv('ALLOWED_HOSTS','localhost,127.0.0.1,testserver,api').split(',') if host.strip()}
+if render_host := os.getenv('RENDER_EXTERNAL_HOSTNAME'):
+    allowed_hosts.add(render_host)
+app.add_middleware(TrustedHostMiddleware,allowed_hosts=sorted(allowed_hosts))
 ph=PasswordHasher(time_cost=3,memory_cost=65536,parallelism=2)
 DUMMY=ph.hash(secrets.token_urlsafe(32))
 log=logging.getLogger('out.security')

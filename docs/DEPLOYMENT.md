@@ -33,6 +33,12 @@ Note the stable production domain, for example `https://your-cricket.vercel.app`
 
 ## 2. Create PostgreSQL on Render
 
+The repository now includes a root `render.yaml` Blueprint with the verified frontend origin. It creates the PostgreSQL database and backend service together in Singapore. Open Render's **Blueprints** page, choose **New Blueprint Instance**, connect `anuragpardeshii/cricket`, and select the `main` branch. Render detects `render.yaml`; review the `out-cricket-api` and `out-cricket-db` resources, then apply the Blueprint.
+
+The Blueprint starts on Render's free plans. You can choose paid plans in the review screen or upgrade afterward. The API command runs migrations before startup because free web services do not support a separate pre-deploy command. Render provides the database URL directly; the backend safely selects the installed psycopg 3 driver and requires TLS in hosted deployments.
+
+After the Blueprint finishes, copy the service's actual `https://…onrender.com` URL. Continue at step 4 to connect Vercel. The manual instructions below remain useful if you prefer configuring each resource yourself.
+
 Create a **Postgres** database in the same region as the backend. PostgreSQL 18 matches the local stack. Copy its **Internal Database URL** privately.
 
 This project uses psycopg 3. Change `postgresql://` (or `postgres://`) at the beginning of the copied URL to `postgresql+psycopg://`. Keep the rest of the actual credentials and address. Append `?sslmode=require`, or `&sslmode=require` if a query string is already present. Internal Render connections support TLS with this mode.
