@@ -1,0 +1,19 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.vite/
+.agents/
+.codex/
+.claude/
+.aws/
+*.log
+frontend/netlify-deploy.zip
+frontend/OUT - Standalone.html

@@ -1,0 +1,77 @@
+name: out-cricket
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: out
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run make init}
+      POSTGRES_DB: out
+      APP_DATABASE_PASSWORD: ${APP_DATABASE_PASSWORD:?Run make init}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./docker/init-app.sh:/docker-entrypoint-initdb.d/init-app.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U out -d out']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://out:${POSTGRES_PASSWORD}@db:5432/out
+    command: [alembic, upgrade, head]
+    depends_on:
+      db: {condition: service_healthy}
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://out_app:${APP_DATABASE_PASSWORD}@db:5432/out
+      APP_ENV: development
+      APP_ORIGIN: http://${WEB_HOST:-localhost}:${WEB_PORT:-5173}
+      ALLOWED_HOSTS: localhost,127.0.0.1,api,${WEB_HOST:-localhost}
+    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000', --reload, --no-proxy-headers]
+    volumes:
+      - ./backend/app:/app/app:ro
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+  frontend:
+    build: {context: ./frontend, target: dev}
+    environment:
+      API_PROXY_TARGET: http://api:8000
+      WEB_HOST: ${WEB_HOST:-localhost}
+    ports: ['${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-5173}:5173']
+    volumes:
+      - ./frontend/src:/app/src:ro
+    depends_on:
+      api: {condition: service_healthy}
+  test-db:
+    image: postgres:18-alpine
+    profiles: [test]
+    environment:
+      POSTGRES_USER: out_test
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD:?Run make init}
+      POSTGRES_DB: out_test
+    tmpfs: [/var/lib/postgresql]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U out_test -d out_test']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  preflight:
+    build: ./backend
+    profiles: [test]
+    environment:
+      DATABASE_URL: postgresql+psycopg://out_test:${TEST_POSTGRES_PASSWORD}@test-db:5432/out_test
+      APP_ENV: test
+    command: [sh, -c, 'alembic upgrade head && pytest -q tests']
+    depends_on:
+      test-db: {condition: service_healthy}
+volumes:
+  postgres_data:
