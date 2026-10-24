@@ -90,3 +90,20 @@ class Room(Base):
     version: Mapped[int] = mapped_column(Integer, default=0)
     state: Mapped[dict] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class RoomSocketTicket(Base):
+    __tablename__ = 'room_socket_tickets'
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    room_id: Mapped[str] = mapped_column(ForeignKey('rooms.id', ondelete='CASCADE'), index=True)
+    session_hash: Mapped[str] = mapped_column(ForeignKey('sessions.token_hash', ondelete='CASCADE'))
+    expires: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+class VoiceGrant(Base):
+    __tablename__ = 'voice_grants'
+    # Rotate the media identity when the login session changes, invalidating old JWTs.
+    member_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    identity: Mapped[str] = mapped_column(String(36), unique=True, default=uid)
+    room_id: Mapped[str] = mapped_column(ForeignKey('rooms.id', ondelete='CASCADE'), index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    # Retain the grant after logout so the media server can revoke that connection.
+    session_hash: Mapped[str] = mapped_column(String(64))

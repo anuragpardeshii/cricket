@@ -1,0 +1,1745 @@
+{
+  "sources": [
+    "https://www.icc-cricket.com/tournaments/t20cricketworldcup/news/all-squads-named-so-far-icc-men-s-t20-world-cup-2024",
+    "https://www.iplt20.com/news/article/ipl-2024-player-retentions-list",
+    "https://www.ipl.com/series/indian-premier-league-2024-128471/squad"
+  ],
+  "notes": "Selected historical 2024 squad cards, including IPL season replacements. Ratings are game balancing values. Not current squads.",
+  "squads": [
+    {
+      "country": "AFGHANISTAN",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "I Zadran",
+          "role": "OP",
+          "rating": 86,
+          "id": "24-0",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "R Gurbaz",
+          "role": "OP",
+          "rating": 90,
+          "id": "24-1",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "N Zadran",
+          "role": "BAT",
+          "rating": 82,
+          "id": "24-2",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "M Ishaq",
+          "role": "WK",
+          "rating": 74,
+          "id": "24-3",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "A Omarzai",
+          "role": "AR",
+          "rating": 87,
+          "id": "24-4",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "M Nabi",
+          "role": "AR",
+          "rating": 87,
+          "id": "24-5",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "G Naib",
+          "role": "AR",
+          "rating": 83,
+          "id": "24-6",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "K Janat",
+          "role": "AR",
+          "rating": 79,
+          "id": "24-7",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "N Kharoti",
+          "role": "SPIN",
+          "rating": 76,
+          "id": "24-8",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "R Khan",
+          "role": "SPIN",
+          "rating": 96,
+          "id": "24-9",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "M ur Rahman",
+          "role": "SPIN",
+          "rating": 86,
+          "id": "24-10",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "N Ahmad",
+          "role": "SPIN",
+          "rating": 85,
+          "id": "24-11",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "N ul-Haq",
+          "role": "PACE",
+          "rating": 86,
+          "id": "24-12",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "F Farooqi",
+          "role": "PACE",
+          "rating": 92,
+          "id": "24-13",
+          "squad": "AFGHANISTAN 2024"
+        },
+        {
+          "name": "F Ahmad",
+          "role": "PACE",
+          "rating": 80,
+          "id": "24-14",
+          "squad": "AFGHANISTAN 2024"
+        }
+      ]
+    },
+    {
+      "country": "BANGLADESH",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "T Hasan",
+          "role": "OP",
+          "rating": 82,
+          "id": "25-0",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "S Sarkar",
+          "role": "OP",
+          "rating": 80,
+          "id": "25-1",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "N H Shanto",
+          "role": "BAT",
+          "rating": 82,
+          "id": "25-2",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "T Hridoy",
+          "role": "BAT",
+          "rating": 86,
+          "id": "25-3",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "Mahmudullah",
+          "role": "BAT",
+          "rating": 84,
+          "id": "25-4",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "L Das",
+          "role": "WK",
+          "rating": 84,
+          "id": "25-5",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "J Ali",
+          "role": "WK",
+          "rating": 77,
+          "id": "25-6",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "S Al Hasan",
+          "role": "AR",
+          "rating": 90,
+          "id": "25-7",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "M Hasan",
+          "role": "AR",
+          "rating": 80,
+          "id": "25-8",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "T Islam",
+          "role": "SPIN",
+          "rating": 78,
+          "id": "25-9",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "R Hossain",
+          "role": "SPIN",
+          "rating": 85,
+          "id": "25-10",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "T Ahmed",
+          "role": "PACE",
+          "rating": 88,
+          "id": "25-11",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "M Rahman",
+          "role": "PACE",
+          "rating": 90,
+          "id": "25-12",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "S Islam",
+          "role": "PACE",
+          "rating": 83,
+          "id": "25-13",
+          "squad": "BANGLADESH 2024"
+        },
+        {
+          "name": "T H Sakib",
+          "role": "PACE",
+          "rating": 85,
+          "id": "25-14",
+          "squad": "BANGLADESH 2024"
+        }
+      ]
+    },
+    {
+      "country": "NEW ZEALAND",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "F Allen",
+          "role": "OP",
+          "rating": 88,
+          "id": "26-0",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "R Ravindra",
+          "role": "OP",
+          "rating": 87,
+          "id": "26-1",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "K Williamson",
+          "role": "BAT",
+          "rating": 88,
+          "id": "26-2",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "D Mitchell",
+          "role": "BAT",
+          "rating": 90,
+          "id": "26-3",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "M Chapman",
+          "role": "BAT",
+          "rating": 84,
+          "id": "26-4",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "G Phillips",
+          "role": "BAT",
+          "rating": 91,
+          "id": "26-5",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "D Conway",
+          "role": "WK",
+          "rating": 90,
+          "id": "26-6",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "M Bracewell",
+          "role": "AR",
+          "rating": 84,
+          "id": "26-7",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "J Neesham",
+          "role": "AR",
+          "rating": 84,
+          "id": "26-8",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "M Santner",
+          "role": "SPIN",
+          "rating": 91,
+          "id": "26-9",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "I Sodhi",
+          "role": "SPIN",
+          "rating": 84,
+          "id": "26-10",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "T Boult",
+          "role": "PACE",
+          "rating": 93,
+          "id": "26-11",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "T Southee",
+          "role": "PACE",
+          "rating": 88,
+          "id": "26-12",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "M Henry",
+          "role": "PACE",
+          "rating": 87,
+          "id": "26-13",
+          "squad": "NEW ZEALAND 2024"
+        },
+        {
+          "name": "L Ferguson",
+          "role": "PACE",
+          "rating": 89,
+          "id": "26-14",
+          "squad": "NEW ZEALAND 2024"
+        }
+      ]
+    },
+    {
+      "country": "PAKISTAN",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "B Azam",
+          "role": "OP",
+          "rating": 91,
+          "id": "27-0",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "S Ayub",
+          "role": "OP",
+          "rating": 83,
+          "id": "27-1",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "F Zaman",
+          "role": "BAT",
+          "rating": 88,
+          "id": "27-2",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "U Khan",
+          "role": "BAT",
+          "rating": 83,
+          "id": "27-3",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "I Ahmed",
+          "role": "AR",
+          "rating": 82,
+          "id": "27-4",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "M Rizwan",
+          "role": "WK",
+          "rating": 91,
+          "id": "27-5",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "A Khan",
+          "role": "WK",
+          "rating": 77,
+          "id": "27-6",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "S Khan",
+          "role": "AR",
+          "rating": 86,
+          "id": "27-7",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "I Wasim",
+          "role": "AR",
+          "rating": 86,
+          "id": "27-8",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "A Ahmed",
+          "role": "SPIN",
+          "rating": 83,
+          "id": "27-9",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "S Afridi",
+          "role": "PACE",
+          "rating": 93,
+          "id": "27-10",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "N Shah",
+          "role": "PACE",
+          "rating": 90,
+          "id": "27-11",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "H Rauf",
+          "role": "PACE",
+          "rating": 89,
+          "id": "27-12",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "M Amir",
+          "role": "PACE",
+          "rating": 87,
+          "id": "27-13",
+          "squad": "PAKISTAN 2024"
+        },
+        {
+          "name": "M A Afridi",
+          "role": "PACE",
+          "rating": 81,
+          "id": "27-14",
+          "squad": "PAKISTAN 2024"
+        }
+      ]
+    },
+    {
+      "country": "SRI LANKA",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "P Nissanka",
+          "role": "OP",
+          "rating": 90,
+          "id": "28-0",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "K Mendis",
+          "role": "OP",
+          "rating": 88,
+          "id": "28-1",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "C Asalanka",
+          "role": "BAT",
+          "rating": 87,
+          "id": "28-2",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "KAM Mendis",
+          "role": "BAT",
+          "rating": 83,
+          "id": "28-3",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "A Mathews",
+          "role": "BAT",
+          "rating": 84,
+          "id": "28-4",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "S Samarawickrama",
+          "role": "WK",
+          "rating": 83,
+          "id": "28-5",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "D Shanaka",
+          "role": "AR",
+          "rating": 82,
+          "id": "28-6",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "D de Silva",
+          "role": "AR",
+          "rating": 84,
+          "id": "28-7",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "W Hasaranga",
+          "role": "AR",
+          "rating": 93,
+          "id": "28-8",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "D Wellalage",
+          "role": "SPIN",
+          "rating": 83,
+          "id": "28-9",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "M Theekshana",
+          "role": "SPIN",
+          "rating": 89,
+          "id": "28-10",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "D Chameera",
+          "role": "PACE",
+          "rating": 85,
+          "id": "28-11",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "N Thushara",
+          "role": "PACE",
+          "rating": 86,
+          "id": "28-12",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "M Pathirana",
+          "role": "PACE",
+          "rating": 90,
+          "id": "28-13",
+          "squad": "SRI LANKA 2024"
+        },
+        {
+          "name": "D Madushanka",
+          "role": "PACE",
+          "rating": 86,
+          "id": "28-14",
+          "squad": "SRI LANKA 2024"
+        }
+      ]
+    },
+    {
+      "country": "CHENNAI SUPER KINGS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "R Gaikwad",
+          "role": "OP",
+          "rating": 92,
+          "id": "29-0",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "D Conway",
+          "role": "OP",
+          "rating": 91,
+          "id": "29-1",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "A Rahane",
+          "role": "BAT",
+          "rating": 85,
+          "id": "29-2",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "S Rizvi",
+          "role": "BAT",
+          "rating": 76,
+          "id": "29-3",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "Shaik Rasheed",
+          "role": "BAT",
+          "rating": 74,
+          "id": "29-4",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "MS Dhoni",
+          "role": "WK",
+          "rating": 90,
+          "id": "29-5",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "D Mitchell",
+          "role": "AR",
+          "rating": 89,
+          "id": "29-6",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "R Jadeja",
+          "role": "AR",
+          "rating": 93,
+          "id": "29-7",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "S Dube",
+          "role": "AR",
+          "rating": 89,
+          "id": "29-8",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "M Ali",
+          "role": "AR",
+          "rating": 87,
+          "id": "29-9",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "D Chahar",
+          "role": "PACE",
+          "rating": 86,
+          "id": "29-10",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "M Pathirana",
+          "role": "PACE",
+          "rating": 92,
+          "id": "29-11",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "M Rahman",
+          "role": "PACE",
+          "rating": 88,
+          "id": "29-12",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "M Theekshana",
+          "role": "SPIN",
+          "rating": 87,
+          "id": "29-13",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "T Deshpande",
+          "role": "PACE",
+          "rating": 84,
+          "id": "29-14",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        },
+        {
+          "name": "M Santner",
+          "role": "SPIN",
+          "rating": 88,
+          "id": "29-15",
+          "squad": "CHENNAI SUPER KINGS 2024"
+        }
+      ]
+    },
+    {
+      "country": "ROYAL CHALLENGERS BENGALURU",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "F du Plessis",
+          "role": "OP",
+          "rating": 91,
+          "id": "30-0",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "V Kohli",
+          "role": "OP",
+          "rating": 97,
+          "id": "30-1",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "R Patidar",
+          "role": "BAT",
+          "rating": 89,
+          "id": "30-2",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "S Prabhudessai",
+          "role": "BAT",
+          "rating": 75,
+          "id": "30-3",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "M Lomror",
+          "role": "BAT",
+          "rating": 79,
+          "id": "30-4",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "D Karthik",
+          "role": "WK",
+          "rating": 88,
+          "id": "30-5",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "A Rawat",
+          "role": "WK",
+          "rating": 78,
+          "id": "30-6",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "G Maxwell",
+          "role": "AR",
+          "rating": 92,
+          "id": "30-7",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "C Green",
+          "role": "AR",
+          "rating": 88,
+          "id": "30-8",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "W Jacks",
+          "role": "AR",
+          "rating": 87,
+          "id": "30-9",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "K Sharma",
+          "role": "SPIN",
+          "rating": 80,
+          "id": "30-10",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "M Dagar",
+          "role": "SPIN",
+          "rating": 77,
+          "id": "30-11",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "M Siraj",
+          "role": "PACE",
+          "rating": 89,
+          "id": "30-12",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "Y Dayal",
+          "role": "PACE",
+          "rating": 85,
+          "id": "30-13",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "L Ferguson",
+          "role": "PACE",
+          "rating": 86,
+          "id": "30-14",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        },
+        {
+          "name": "A Deep",
+          "role": "PACE",
+          "rating": 83,
+          "id": "30-15",
+          "squad": "ROYAL CHALLENGERS BENGALURU 2024"
+        }
+      ]
+    },
+    {
+      "country": "MUMBAI INDIANS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "R Sharma",
+          "role": "OP",
+          "rating": 92,
+          "id": "31-0",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "I Kishan",
+          "role": "OP",
+          "rating": 87,
+          "id": "31-1",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "S Yadav",
+          "role": "BAT",
+          "rating": 97,
+          "id": "31-2",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "T Varma",
+          "role": "BAT",
+          "rating": 90,
+          "id": "31-3",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "T David",
+          "role": "BAT",
+          "rating": 87,
+          "id": "31-4",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "D Brevis",
+          "role": "BAT",
+          "rating": 80,
+          "id": "31-5",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "V Vinod",
+          "role": "WK",
+          "rating": 76,
+          "id": "31-6",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "H Pandya",
+          "role": "AR",
+          "rating": 91,
+          "id": "31-7",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "M Nabi",
+          "role": "AR",
+          "rating": 85,
+          "id": "31-8",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "R Shepherd",
+          "role": "AR",
+          "rating": 83,
+          "id": "31-9",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "P Chawla",
+          "role": "SPIN",
+          "rating": 85,
+          "id": "31-10",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "K Kartikeya",
+          "role": "SPIN",
+          "rating": 78,
+          "id": "31-11",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "J Bumrah",
+          "role": "PACE",
+          "rating": 98,
+          "id": "31-12",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "G Coetzee",
+          "role": "PACE",
+          "rating": 87,
+          "id": "31-13",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "A Madhwal",
+          "role": "PACE",
+          "rating": 82,
+          "id": "31-14",
+          "squad": "MUMBAI INDIANS 2024"
+        },
+        {
+          "name": "N Thushara",
+          "role": "PACE",
+          "rating": 85,
+          "id": "31-15",
+          "squad": "MUMBAI INDIANS 2024"
+        }
+      ]
+    },
+    {
+      "country": "KOLKATA KNIGHT RIDERS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "P Salt",
+          "role": "OP",
+          "rating": 94,
+          "id": "32-0",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "S Narine",
+          "role": "OP",
+          "rating": 96,
+          "id": "32-1",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "S Iyer",
+          "role": "BAT",
+          "rating": 90,
+          "id": "32-2",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "N Rana",
+          "role": "BAT",
+          "rating": 86,
+          "id": "32-3",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "R Singh",
+          "role": "BAT",
+          "rating": 91,
+          "id": "32-4",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "A Raghuvanshi",
+          "role": "BAT",
+          "rating": 81,
+          "id": "32-5",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "R Gurbaz",
+          "role": "WK",
+          "rating": 85,
+          "id": "32-6",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "V Iyer",
+          "role": "AR",
+          "rating": 90,
+          "id": "32-7",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "A Russell",
+          "role": "AR",
+          "rating": 95,
+          "id": "32-8",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "Ramandeep Singh",
+          "role": "AR",
+          "rating": 84,
+          "id": "32-9",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "Anukul Roy",
+          "role": "SPIN",
+          "rating": 77,
+          "id": "32-10",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "V Chakaravarthy",
+          "role": "SPIN",
+          "rating": 93,
+          "id": "32-11",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "S Sharma",
+          "role": "SPIN",
+          "rating": 81,
+          "id": "32-12",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "M Starc",
+          "role": "PACE",
+          "rating": 93,
+          "id": "32-13",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "H Rana",
+          "role": "PACE",
+          "rating": 88,
+          "id": "32-14",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        },
+        {
+          "name": "V Arora",
+          "role": "PACE",
+          "rating": 84,
+          "id": "32-15",
+          "squad": "KOLKATA KNIGHT RIDERS 2024"
+        }
+      ]
+    },
+    {
+      "country": "SUNRISERS HYDERABAD",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "T Head",
+          "role": "OP",
+          "rating": 97,
+          "id": "33-0",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "Abhishek Sharma",
+          "role": "OP",
+          "rating": 94,
+          "id": "33-1",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "M Agarwal",
+          "role": "OP",
+          "rating": 82,
+          "id": "33-2",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "R Tripathi",
+          "role": "BAT",
+          "rating": 86,
+          "id": "33-3",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "A Markram",
+          "role": "BAT",
+          "rating": 88,
+          "id": "33-4",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "A Samad",
+          "role": "BAT",
+          "rating": 81,
+          "id": "33-5",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "H Klaasen",
+          "role": "WK",
+          "rating": 97,
+          "id": "33-6",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "N K Reddy",
+          "role": "AR",
+          "rating": 87,
+          "id": "33-7",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "Shahbaz Ahmed",
+          "role": "AR",
+          "rating": 82,
+          "id": "33-8",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "M Jansen",
+          "role": "AR",
+          "rating": 86,
+          "id": "33-9",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "W Sundar",
+          "role": "AR",
+          "rating": 84,
+          "id": "33-10",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "M Markande",
+          "role": "SPIN",
+          "rating": 83,
+          "id": "33-11",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "P Cummins",
+          "role": "PACE",
+          "rating": 93,
+          "id": "33-12",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "B Kumar",
+          "role": "PACE",
+          "rating": 90,
+          "id": "33-13",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "T Natarajan",
+          "role": "PACE",
+          "rating": 91,
+          "id": "33-14",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        },
+        {
+          "name": "U Malik",
+          "role": "PACE",
+          "rating": 82,
+          "id": "33-15",
+          "squad": "SUNRISERS HYDERABAD 2024"
+        }
+      ]
+    },
+    {
+      "country": "RAJASTHAN ROYALS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "Y Jaiswal",
+          "role": "OP",
+          "rating": 92,
+          "id": "34-0",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "J Buttler",
+          "role": "OP",
+          "rating": 94,
+          "id": "34-1",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "S Hetmyer",
+          "role": "BAT",
+          "rating": 88,
+          "id": "34-2",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "R Powell",
+          "role": "BAT",
+          "rating": 87,
+          "id": "34-3",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "Shubham Dubey",
+          "role": "BAT",
+          "rating": 77,
+          "id": "34-4",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "S Samson",
+          "role": "WK",
+          "rating": 94,
+          "id": "34-5",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "D Jurel",
+          "role": "WK",
+          "rating": 86,
+          "id": "34-6",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "R Parag",
+          "role": "AR",
+          "rating": 93,
+          "id": "34-7",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "R Ashwin",
+          "role": "AR",
+          "rating": 87,
+          "id": "34-8",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "D Ferreira",
+          "role": "AR",
+          "rating": 79,
+          "id": "34-9",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "Y Chahal",
+          "role": "SPIN",
+          "rating": 92,
+          "id": "34-10",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "T Boult",
+          "role": "PACE",
+          "rating": 93,
+          "id": "34-11",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "A Khan",
+          "role": "PACE",
+          "rating": 87,
+          "id": "34-12",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "Sandeep Sharma",
+          "role": "PACE",
+          "rating": 89,
+          "id": "34-13",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "K Sen",
+          "role": "PACE",
+          "rating": 81,
+          "id": "34-14",
+          "squad": "RAJASTHAN ROYALS 2024"
+        },
+        {
+          "name": "N Burger",
+          "role": "PACE",
+          "rating": 85,
+          "id": "34-15",
+          "squad": "RAJASTHAN ROYALS 2024"
+        }
+      ]
+    },
+    {
+      "country": "DELHI CAPITALS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "D Warner",
+          "role": "OP",
+          "rating": 92,
+          "id": "35-0",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "P Shaw",
+          "role": "OP",
+          "rating": 84,
+          "id": "35-1",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "T Stubbs",
+          "role": "BAT",
+          "rating": 92,
+          "id": "35-2",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "S Hope",
+          "role": "BAT",
+          "rating": 84,
+          "id": "35-3",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "Y Dhull",
+          "role": "BAT",
+          "rating": 76,
+          "id": "35-4",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "R Pant",
+          "role": "WK",
+          "rating": 93,
+          "id": "35-5",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "A Porel",
+          "role": "WK",
+          "rating": 85,
+          "id": "35-6",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "M Marsh",
+          "role": "AR",
+          "rating": 89,
+          "id": "35-7",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "A Patel",
+          "role": "AR",
+          "rating": 92,
+          "id": "35-8",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "L Yadav",
+          "role": "AR",
+          "rating": 77,
+          "id": "35-9",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "K Yadav",
+          "role": "SPIN",
+          "rating": 94,
+          "id": "35-10",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "A Nortje",
+          "role": "PACE",
+          "rating": 88,
+          "id": "35-11",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "K Ahmed",
+          "role": "PACE",
+          "rating": 86,
+          "id": "35-12",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "I Sharma",
+          "role": "PACE",
+          "rating": 84,
+          "id": "35-13",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "M Kumar",
+          "role": "PACE",
+          "rating": 86,
+          "id": "35-14",
+          "squad": "DELHI CAPITALS 2024"
+        },
+        {
+          "name": "J Richardson",
+          "role": "PACE",
+          "rating": 83,
+          "id": "35-15",
+          "squad": "DELHI CAPITALS 2024"
+        }
+      ]
+    },
+    {
+      "country": "PUNJAB KINGS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "S Dhawan",
+          "role": "OP",
+          "rating": 90,
+          "id": "36-0",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "J Bairstow",
+          "role": "OP",
+          "rating": 90,
+          "id": "36-1",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "Shashank Singh",
+          "role": "BAT",
+          "rating": 90,
+          "id": "36-2",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "R Rossouw",
+          "role": "BAT",
+          "rating": 86,
+          "id": "36-3",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "A Taide",
+          "role": "BAT",
+          "rating": 78,
+          "id": "36-4",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "Ashutosh Sharma",
+          "role": "BAT",
+          "rating": 87,
+          "id": "36-5",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "J Sharma",
+          "role": "WK",
+          "rating": 84,
+          "id": "36-6",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "P Singh",
+          "role": "WK",
+          "rating": 85,
+          "id": "36-7",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "S Curran",
+          "role": "AR",
+          "rating": 92,
+          "id": "36-8",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "L Livingstone",
+          "role": "AR",
+          "rating": 90,
+          "id": "36-9",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "S Raza",
+          "role": "AR",
+          "rating": 87,
+          "id": "36-10",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "H Brar",
+          "role": "SPIN",
+          "rating": 84,
+          "id": "36-11",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "R Chahar",
+          "role": "SPIN",
+          "rating": 84,
+          "id": "36-12",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "A Singh",
+          "role": "PACE",
+          "rating": 92,
+          "id": "36-13",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "K Rabada",
+          "role": "PACE",
+          "rating": 93,
+          "id": "36-14",
+          "squad": "PUNJAB KINGS 2024"
+        },
+        {
+          "name": "H Patel",
+          "role": "PACE",
+          "rating": 90,
+          "id": "36-15",
+          "squad": "PUNJAB KINGS 2024"
+        }
+      ]
+    },
+    {
+      "country": "LUCKNOW SUPER GIANTS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "KL Rahul",
+          "role": "OP",
+          "rating": 92,
+          "id": "37-0",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "Q de Kock",
+          "role": "OP",
+          "rating": 91,
+          "id": "37-1",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "D Padikkal",
+          "role": "BAT",
+          "rating": 82,
+          "id": "37-2",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "A Badoni",
+          "role": "BAT",
+          "rating": 85,
+          "id": "37-3",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "D Hooda",
+          "role": "BAT",
+          "rating": 81,
+          "id": "37-4",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "A Turner",
+          "role": "BAT",
+          "rating": 79,
+          "id": "37-5",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "N Pooran",
+          "role": "WK",
+          "rating": 96,
+          "id": "37-6",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "M Stoinis",
+          "role": "AR",
+          "rating": 93,
+          "id": "37-7",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "K Pandya",
+          "role": "AR",
+          "rating": 87,
+          "id": "37-8",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "K Mayers",
+          "role": "AR",
+          "rating": 85,
+          "id": "37-9",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "R Bishnoi",
+          "role": "SPIN",
+          "rating": 89,
+          "id": "37-10",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "A Mishra",
+          "role": "SPIN",
+          "rating": 83,
+          "id": "37-11",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "N ul-Haq",
+          "role": "PACE",
+          "rating": 88,
+          "id": "37-12",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "M Khan",
+          "role": "PACE",
+          "rating": 85,
+          "id": "37-13",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "Y Thakur",
+          "role": "PACE",
+          "rating": 82,
+          "id": "37-14",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        },
+        {
+          "name": "M Yadav",
+          "role": "PACE",
+          "rating": 88,
+          "id": "37-15",
+          "squad": "LUCKNOW SUPER GIANTS 2024"
+        }
+      ]
+    },
+    {
+      "country": "GUJARAT TITANS",
+      "tournament": "IPL 2024",
+      "players": [
+        {
+          "name": "S Gill",
+          "role": "OP",
+          "rating": 94,
+          "id": "38-0",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "S Sudharsan",
+          "role": "OP",
+          "rating": 92,
+          "id": "38-1",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "D Miller",
+          "role": "BAT",
+          "rating": 91,
+          "id": "38-2",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "K Williamson",
+          "role": "BAT",
+          "rating": 87,
+          "id": "38-3",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "A Manohar",
+          "role": "BAT",
+          "rating": 79,
+          "id": "38-4",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "Shahrukh Khan",
+          "role": "BAT",
+          "rating": 82,
+          "id": "38-5",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "W Saha",
+          "role": "WK",
+          "rating": 84,
+          "id": "38-6",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "M Wade",
+          "role": "WK",
+          "rating": 84,
+          "id": "38-7",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "V Shankar",
+          "role": "AR",
+          "rating": 81,
+          "id": "38-8",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "R Tewatia",
+          "role": "AR",
+          "rating": 88,
+          "id": "38-9",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "A Omarzai",
+          "role": "AR",
+          "rating": 85,
+          "id": "38-10",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "R Khan",
+          "role": "SPIN",
+          "rating": 96,
+          "id": "38-11",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "N Ahmad",
+          "role": "SPIN",
+          "rating": 88,
+          "id": "38-12",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "R Sai Kishore",
+          "role": "SPIN",
+          "rating": 85,
+          "id": "38-13",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "M Sharma",
+          "role": "PACE",
+          "rating": 89,
+          "id": "38-14",
+          "squad": "GUJARAT TITANS 2024"
+        },
+        {
+          "name": "U Yadav",
+          "role": "PACE",
+          "rating": 85,
+          "id": "38-15",
+          "squad": "GUJARAT TITANS 2024"
+        }
+      ]
+    }
+  ]
+}

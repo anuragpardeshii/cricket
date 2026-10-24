@@ -4,7 +4,7 @@ export type BattingRow = { id: string; name: string; runs: number; balls: number
 export type BowlingRow = { id: string; name: string; balls: number; runs: number; wickets: number; maidens: number };
 export type ScorecardData = { side: string; score: string; batting: BattingRow[]; bowling: BowlingRow[] };
 
-export function Scorecard({ cards, names = { you: 'YOU', opp: 'OPPONENT' } }: { cards: ScorecardData[]; names?: Record<string, string> }) {
+export function Scorecard({ cards, names = { you: 'YOU', opp: 'OPPONENT' }, live = false }: { cards: ScorecardData[]; names?: Record<string, string>; live?: boolean }) {
   const [side, setSide] = useState<string | null>(null);
   const contentId = useId();
   const card = cards.find(c => c.side === side) ?? cards[0];
@@ -20,7 +20,7 @@ export function Scorecard({ cards, names = { you: 'YOU', opp: 'OPPONENT' } }: { 
   const runRate = balls && Number.isFinite(totalRuns) ? (totalRuns / balls * 6).toFixed(2) : '—';
   return <section aria-label="Match scorecard" className="overflow-hidden rounded-2xl border border-neutral/15 bg-panel">
     <div className="flex items-center justify-between gap-3 px-4 pb-3 pt-4 sm:px-5">
-      <h2 className="text-sm font-bold">Scorecard</h2><span className="font-mono text-[10px] uppercase tracking-widest text-muted">Full time</span>
+      <h2 className="text-sm font-bold">Scorecard</h2><span className="font-mono text-[10px] uppercase tracking-widest text-muted">{live?'Live · updates each over':'Full time'}</span>
     </div>
     <div className="mx-3 mb-4 grid grid-cols-2 gap-2 sm:mx-4" aria-label="Select innings">
       {cards.map(c => <button key={c.side} type="button" aria-pressed={c.side === card.side} aria-controls={contentId} onClick={() => setSide(c.side)} className={`min-w-0 rounded-xl border p-3 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber sm:px-4 ${c.side === card.side ? 'border-amber/50 bg-amber/5' : 'border-neutral/10 hover:bg-neutral/5'}`}>

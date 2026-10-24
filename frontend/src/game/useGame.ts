@@ -1,9 +1,13 @@
+import { useTurnFeedback, useWinFeedback } from '../components/GameFeedback';
+import type { Competition } from './types';
 import { useEffect, useRef, useState } from 'react';
 import { SLOTS } from './data';
 import { api, type Account, type BrowserSession } from '../api';
 import type { FeedEntry, MatchPlan, MomentumBar, Player, Screen, Side, Slot, Squad, XI } from './types';
 
 interface GameState {
+  competition?: Competition;
+  edition?: number | null;
   screen: Screen;
   opponentName: string;
   opponentJoined: boolean;
@@ -77,6 +81,8 @@ export function useGame() {
   const reset = () => { if (pending.current) return; clearTimers(); sessionStorage.removeItem('out-game'); saved.current = null; setOpponentCount(0); update(freshState()); };
   type SavedGame = { id: string; version: number; state: Partial<GameState>; opponentCount: number };
   const saved = useRef<SavedGame | null>(null);
+  useTurnFeedback(state.screen==='draft'&&state.turn==='you',saved.current?`${saved.current.id}:${state.pickNumber}`:undefined);
+  useWinFeedback(state.matchDone&&state.match?.result.winner==='you'?saved.current?.id:undefined);
   const pending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
@@ -120,9 +126,9 @@ export function useGame() {
     }, 750);
     return () => { active = false; clearInterval(timer); };
   }, [state.screen, state.turn]);
-  const startPractice = () => request(async () => {
+  const startPractice = (competition: Competition = current.current.competition??'odi', edition: number | null = current.current.edition??null) => request(async () => {
     if (!account) await api<BrowserSession>('/auth/guest', {});
-    const game = await api<SavedGame>('/games', {});
+    const game = await api<SavedGame>('/games', {competition,edition});
     clearTimers();
     update(freshState());
     load(game);
@@ -141,8 +147,7 @@ export function useGame() {
   const noFit = Boolean(state.rolled && !state.rolled.players.some(player => pickable(state, player)));
   const rollSquad = (_reroll = false) => request(async () => {
     update({ rolling: true, selectedId: null });
-    const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 100 : 1400;
-    const [game] = await Promise.all([mutate('roll', {}, false), new Promise(resolve => setTimeout(resolve, delay))]);
+    const game = await mutate('roll', {}, false);
     load(game);
   });
   const selectPlayer = (player: Player) => { if (!busy && current.current.turn === 'you' && pickable(current.current, player)) update({ selectedId: player.id }); };

@@ -3,16 +3,17 @@ export type TeamMember = { id: string; name: string; xi: XI; order?: string[]; i
 export function TeamBar({ members, currentId, selectedId, yourId, onPreview, onVote, required = 0, busy = false }: {
   members: TeamMember[]; currentId?: string; selectedId?: string; yourId: string; onPreview: (id: string) => void; onVote?: (id: string) => void; required?: number; busy?: boolean;
 }) {
-  return <section aria-label="Teams in this game" className="my-4">
-    <div className="flex gap-2 overflow-x-auto py-1">{members.map(member => <div key={member.id} className={`relative flex min-w-32 shrink-0 items-center gap-3 rounded-xl border bg-panel px-3 py-2 ${selectedId === member.id ? 'border-amber bg-amber/5' : 'border-neutral/15'}`}>
-      <button type="button" aria-pressed={selectedId === member.id} aria-label={`Preview ${member.name} team`} onClick={() => onPreview(member.id)} className="min-w-0 flex-1 pr-3 text-left">
-        <span className="block max-w-48 truncate text-sm font-bold">{member.name} {member.id === yourId && member.name !== 'You' ? '(you)' : ''}</span>
-        <span className="mt-1 block text-xs text-muted">{member.forfeited ? 'Forfeited' : member.is_ai ? 'AI team' : 'Player'} · {Object.keys(member.xi).length}/11</span>
-        {member.id === currentId && <span role="img" aria-label={`${member.name}’s turn`} title={`${member.name}’s turn`} className="absolute right-2 top-2 size-2 rounded-full bg-success ring-2 ring-panel"/>}
+  return <section aria-label="Teams in this game" className="team-switcher my-3 flex w-full gap-1.5">{members.map((member,index) => {
+    const current=member.id===currentId;
+    const selected=member.id===selectedId;
+    return <div key={member.id} data-current={current} data-selected={selected} className={`team-chip relative flex min-w-0 items-center rounded-lg border bg-panel ${current?'border-success':selected?'border-amber/60':'border-neutral/15'}`}>
+      <button type="button" aria-pressed={selected} aria-current={current?'step':undefined} aria-label={`Preview ${member.name} team`} title={`${member.name}${member.id===yourId?' (you)':''} · ${Object.keys(member.xi).length}/11${current?' · Picking now':''}`} onClick={() => onPreview(member.id)} className="team-chip-button flex h-10 min-w-0 flex-1 items-center gap-2 px-2 text-left text-xs focus-visible:outline-2 focus-visible:outline-amber">
+        {current&&<span aria-label={`${member.name}’s turn`} className="size-1.5 shrink-0 rounded-full bg-success"/>}
+        <span className="team-short font-bold" aria-hidden="true">{member.is_ai?'A':member.name.charAt(0)}{member.name.match(/\d+/)?.[0]??index+1}</span>
+        <span className="team-full min-w-0 flex-1 truncate font-bold">{member.name}{member.id===yourId?' (you)':''}</span>
+        <span className="team-count shrink-0 font-mono text-[10px] text-muted">{member.forfeited?'Out':`${Object.keys(member.xi).length}/11`}</span>
       </button>
-      {onVote && !member.is_ai && !member.departed && member.id !== yourId && <div className="text-center"><button type="button" aria-label={`Vote to kick ${member.name}`} title={member.voted ? 'Your vote is recorded' : 'Vote to remove this player'} disabled={busy || member.voted} onClick={() => onVote(member.id)} className="rounded-lg border border-danger/30 px-2 py-1 text-lg text-danger hover:bg-danger/10 disabled:opacity-40">×</button><span className="mt-1 block whitespace-nowrap text-[10px] text-muted">{member.kickVotes ?? 0}/{required} votes</span></div>}
-      {member.id === yourId && onVote && <span className="text-[10px] text-muted">{member.kickVotes ?? 0}/{required} votes</span>}
-    </div>)}</div>
-    {onVote && <p className="mt-2 text-[11px] text-muted">Kick threshold: 50% of active human players, rounded up, or 3 votes—whichever is fewer. Each person gets one vote per target.</p>}
-  </section>;
+      {onVote&&!member.is_ai&&!member.departed&&member.id!==yourId&&<button type="button" aria-label={`Vote to kick ${member.name}`} title={`${member.kickVotes??0}/${required} votes to remove · ${member.voted?'Your vote is recorded':'One vote per person'}`} disabled={busy||member.voted} onClick={()=>onVote(member.id)} className="team-vote mr-1 size-7 shrink-0 rounded text-sm text-danger hover:bg-danger/10 disabled:opacity-40">×</button>}
+    </div>;
+  })}</section>;
 }

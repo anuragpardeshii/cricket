@@ -1,8 +1,9 @@
 from sqlalchemy import delete, select
-from .db import Session, LoginSession, RateBucket, User, Game, Room, now
+from .db import Session, LoginSession, RateBucket, RoomSocketTicket, User, Game, Room, now
 with Session.begin() as session:
     session.execute(delete(LoginSession).where(LoginSession.expires < now()))
     session.execute(delete(RateBucket).where(RateBucket.expires < now()))
+    session.execute(delete(RoomSocketTicket).where(RoomSocketTicket.expires < now()))
     # Guest data outlives its cookie only until the next scheduled cleanup.
     guests = session.scalars(select(User.id).where(
         User.is_guest.is_(True),

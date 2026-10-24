@@ -1,5 +1,7 @@
 fastapi
 uvicorn
+websockets
+livekit-api
 SQLAlchemy
 psycopg[binary]
 alembic

@@ -16,5 +16,7 @@ __pycache__/
 .claude/
 .aws/
 *.log
+frontend/test-results/
+frontend/playwright-report/
 frontend/netlify-deploy.zip
 frontend/OUT - Standalone.html

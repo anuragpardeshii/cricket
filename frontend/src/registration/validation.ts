@@ -9,6 +9,7 @@ export interface RegistrationValues {
 
 export type RegistrationField = keyof RegistrationValues;
 export type RegistrationErrors = Partial<Record<RegistrationField, string>>;
+export const MIN_PASSWORD_LENGTH = 7;
 
 const obviousPasswords = new Set([
   'passwordpassword',
@@ -39,9 +40,9 @@ export function validateField(field: RegistrationField, values: RegistrationValu
     case 'password': {
       const length = passwordLength(value);
       if (!value) return 'Enter a password.';
-      if (length < 15) return 'Use at least 15 characters.';
+      if (length < MIN_PASSWORD_LENGTH) return `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
       if (length > 128) return 'Use 128 characters or fewer.';
-      if (obviousPasswords.has(value.toLowerCase()) || /^(.)\1{14,}$/u.test(value)) return 'Choose a less predictable password.';
+      if (obviousPasswords.has(value.toLowerCase()) || new Set(value).size === 1) return 'Choose a less predictable password.';
       return undefined;
     }
     case 'confirmPassword':

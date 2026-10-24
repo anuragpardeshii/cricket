@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { COMPETITIONS, EDITIONS, editionOptions, type Competition } from '../game/types';
+import { SquadLibrary } from '../components/SquadLibrary';
 import { ThemeToggle } from '../theme/ThemeProvider';
 import { CricketGround } from '../components/CricketGround';
 import { useGame } from '../game/useGame';
@@ -13,6 +16,8 @@ const steps = [
 
 export function LandingScreen({ game }: { game: Game }) {
   const { actions } = game;
+  const [competition,setCompetition]=useState<Competition>('odi');
+  const [edition,setEdition]=useState('2023');
   return <main className="mx-auto flex min-h-dvh w-full max-w-7xl flex-col px-5 pb-7 pt-6 sm:px-8 lg:px-12 lg:pt-9">
     <header className="flex flex-wrap gap-y-3 items-center justify-between gap-4 border-b border-neutral/10 pb-5">
       <span className="hidden font-mono text-[11px] tracking-[.22em] text-muted sm:inline">CRICKET SQUAD DRAFT</span>
@@ -31,9 +36,12 @@ export function LandingScreen({ game }: { game: Game }) {
         <p className="landing-intro mt-7 max-w-xl text-pretty text-[clamp(1.15rem,2.2vw,1.7rem)] leading-[1.4] text-cream/70">
           Draft an XI from cricket&apos;s greatest squads. Then settle it — twenty overs, over by over.
         </p>
-        <div className="mt-10 flex max-w-md flex-col gap-3 sm:flex-row lg:mt-12">
+        <label className="mt-7 block max-w-md text-xs text-muted">Practice squad competition<select value={competition} onChange={e=>{setCompetition(e.target.value as Competition);setEdition(EDITIONS[e.target.value as Competition][0].value);}} className="ml-3 rounded-lg border border-neutral/20 bg-panel p-2 text-cream">{COMPETITIONS.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
+        <label className="mb-4 mt-3 block max-w-md text-xs text-muted">Practice squad edition<select value={edition} onChange={e=>setEdition(e.target.value)} className="ml-3 rounded-lg border border-neutral/20 bg-panel p-2 text-cream">{editionOptions(competition).map(e=><option key={e.value} value={e.value}>{e.label}</option>)}</select></label>
+        <SquadLibrary competition={competition} edition={edition} ready={game.ready}/>
+        <div className="mt-5 flex max-w-md flex-col gap-3 sm:flex-row lg:mt-12">
           <a href="/rooms" className="flex flex-1 items-center justify-center rounded-xl bg-accent-fill px-5 py-4 font-bold text-on-accent">Room</a>
-          <ActionButton onClick={actions.startPractice} disabled={!game.ready || game.busy} className="flex-1">Practice vs AI <span aria-hidden="true" className="ml-2">↗</span></ActionButton>
+          <ActionButton onClick={()=>{void actions.startPractice(competition,edition==='all'?null:Number(edition))}} disabled={!game.ready || game.busy} className="flex-1">Practice vs AI <span aria-hidden="true" className="ml-2">↗</span></ActionButton>
         </div>
         <p className="mt-4 max-w-md text-xs leading-5 text-muted">Play against AI without signing in. Guest games stay available in this browser for 12 hours.</p>
       </section>

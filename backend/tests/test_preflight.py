@@ -65,6 +65,15 @@ def test_validation_and_injection():
     assert c.post('/api/auth/login',content='x'*17000,headers={'content-type':'application/json'}).status_code==413
     assert c.post('/api/auth/login',content='email=x').status_code==415
 
+@pytest.mark.parametrize('password,status', [('Abc12!',422),('Abc123!',201),('Abc123!x',201),('aaaaaaa',422),('😀abcd!',422),('😀abc12!',201)])
+def test_registration_password_minimum_seven_characters(password,status):
+    c=TestClient(app,headers=HEADERS)
+    data=dict(username='lengthcheck',email='lengthcheck@example.com',phone='9876543210',password=password)
+    response=c.post('/api/auth/register',json=data)
+    assert response.status_code==status,response.text
+    if status==201:
+        assert c.post('/api/auth/login',json={'email':data['email'],'password':password}).status_code==200
+
 def test_draft_inventory_replay_and_complete_match():
     c=client(); g=create(c)
     assert action(c,g,'match').status_code==409
@@ -207,6 +216,13 @@ def test_admin_guard_and_phone_constraints():
     assert c.get('/api/admin/analytics').status_code==403
 
 
+def ready_room(host, room, *others):
+    for person in (host, *others):
+        response=person.post(f"/api/rooms/{room['id']}/ready",json={'ready':True})
+        assert response.status_code==200,response.text
+    return host.get(f"/api/rooms/{room['id']}").json()
+
+
 def test_room_membership_turns_and_timeout():
     from app.db import Room
     from app import rooms
@@ -216,6 +232,7 @@ def test_room_membership_turns_and_timeout():
     assert b.get(f"/api/rooms/{r['id']}").status_code==404
     r=b.post('/api/rooms/join',json=dict(name='Bob',code=r['code'])).json()
     assert outsider.post('/api/rooms/join',json=dict(name='Eve',code=r['code'])).status_code==409
+    r=ready_room(a,r,b)
     payload=dict(action='start',version=r['version'])
     assert b.post(f"/api/rooms/{r['id']}/actions",json=payload).status_code==403
     r=a.post(f"/api/rooms/{r['id']}/actions",json=payload).json()
@@ -242,6 +259,7 @@ def test_tournaments_scorecards_awards_and_future_redaction():
         body=SimpleNamespace(format=kind,capacity=4,pick_seconds=10,lobby_minutes=5,name='One')
         state=rooms.new_state('one',body)
         for name in ['two','three','four']: state['members'].append(rooms.member(name,name))
+        for m in state['members']: m['ready']=True
         ts=time.time(); rooms.start(state,ts)
         # All participants disconnect: the authoritative clock completes every turn.
         rooms.advance(state,players,ts+440)
@@ -260,7 +278,9 @@ def test_tournaments_scorecards_awards_and_future_redaction():
         for match in state['matches']:
             plan=match['plan']
             assert plan['result']['highestScorer'] and plan['result']['bestBowler']
-            assert all(1<=len(e['deliveries'])<=6 and e['text'] for e in plan['timeline'])
+            assert all(1<=len(e['deliveries'])<=6 for e in plan['timeline'])
+            assert 2<=sum(bool(e['text']) for e in plan['timeline'])<=12
+            assert plan['timeline'][-1]['kind']=='result'
             for card in plan['scorecards']:
                 assert sum(p['runs'] for p in card['batting'])==sum(p['runs'] for p in card['bowling'])
                 assert sum(p['balls'] for p in card['batting'])==sum(p['balls'] for p in card['bowling'])
@@ -306,7 +326,7 @@ def test_public_discovery_guest_names_and_self_rename():
     extra=a.post('/api/rooms',json={**settings,'visibility':'public'}).json()
     with Session.begin() as s:
         row=s.get(Room,extra['id']); state=copy.deepcopy(row.state); state['lobbyDeadline']=time.time()-1; row.state=state
-    assert b.get('/api/rooms/public').json()['total']==0
+    assert b.get('/api/rooms/public').json()['total']==1  # Legacy deadlines no longer close entry.
 
 
 def test_user_pagination_block_revoke_and_unblock():
@@ -364,6 +384,7 @@ def test_partial_room_starts_with_ai_and_completes(humans):
     if humans==2:
         room=guest.post('/api/rooms/join',json={'code':room['code']}).json()
         assert guest.post(f"/api/rooms/{room['id']}/actions",json=dict(action='start',version=room['version'])).status_code==403
+    room=ready_room(host,room,*([guest] if humans==2 else []))
     response=host.post(f"/api/rooms/{room['id']}/actions",json=dict(action='start',version=room['version']))
     assert response.status_code==200,response.text
     room=response.json(); members=room['state']['members']
@@ -392,7 +413,7 @@ def test_partial_room_starts_with_ai_and_completes(humans):
         assert all(len(match['scorecards'])==2 for match in visible['state']['matches'])
 
 
-def test_join_deadline_fills_ai_and_redacts_live_scorecards():
+def test_no_join_deadline_and_live_scorecards_show_only_visible_overs():
     import copy
     import time
     from app import rooms
@@ -404,20 +425,27 @@ def test_join_deadline_fills_ai_and_redacts_live_scorecards():
         row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
         state['lobbyDeadline']=time.time()-1; row.state=state
     closed=outsider.post('/api/rooms/join',json={'code':room['code']})
-    assert closed.status_code==409 and 'Joining has closed' in closed.json()['detail']
+    assert closed.status_code==200
+    assert 'lobbyDeadline' not in closed.json()['state']
     rooms.tick()
+    assert host.get(f"/api/rooms/{room['id']}").json()['state']['phase']=='lobby'
+    room=ready_room(host,room,outsider)
+    assert host.post(f"/api/rooms/{room['id']}/actions",json=dict(action='start',version=room['version'])).status_code==200
     with Session.begin() as session:
         row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
         assert state['phase']=='draft' and len(state['members'])==4
-        assert sum(m['is_ai'] for m in state['members'])==3
+        assert sum(m['is_ai'] for m in state['members'])==2
         players=[p for squad in load_catalog(session)['squads'] for p in squad['players']]
         while state['phase']=='draft': rooms.advance(state,players,state['deadline'])
         row.state=state
         visible=rooms.project(row,row.owner_id,state['matches'][0]['startedAt']+rooms.OVER_SECONDS*2)
         for match in visible['state']['matches']:
             assert match['status']=='live' and len(match['timeline'])==2
-            assert 'scorecards' not in match and 'winner' not in match and 'result' not in match
-            assert all(e['text'] and 'deliveries' not in e and 'scorecards' not in e for e in match['timeline'])
+            assert 'winner' not in match and 'result' not in match
+            original=next(m for m in state['matches'] if m['id']==match['id'])
+            assert match['scorecards']==original['plan']['timeline'][1]['scorecards']
+            assert match['timeline'][0]['text']
+            assert all('deliveries' not in e and 'scorecards' not in e for e in match['timeline'])
 
 
 @pytest.mark.parametrize('phase,message',[('lobby','Room is full'),('draft','Game in progress'),('live','Game in progress'),('complete','tournament has finished'),('expired','room has expired')])
@@ -473,6 +501,7 @@ def test_kick_votes_unique_authorized_ai_takeover_and_host_transfer():
     a,b,c,d,e=[client(n) for n in ['alice','bob','charlie','dave','eve']]
     room=room_for(a)
     for person in [b,c,d]: room=person.post('/api/rooms/join',json={'code':room['code']}).json()
+    room=ready_room(a,room,b,c,d)
     room=a.post(f"/api/rooms/{room['id']}/actions",json=dict(action='start',version=room['version'])).json()
     target=room['you']; url=f"/api/rooms/{room['id']}/kick-vote"
     assert e.post(url,json={'target_id':target}).status_code==404
@@ -524,6 +553,7 @@ def test_exit_during_draft_preserves_picks_and_formation_permissions():
     a=client(); b=client('bob'); room=room_for(a,2)
     b.post('/api/rooms/join',json={'code':room['code']})
     room=a.get(f"/api/rooms/{room['id']}").json()
+    room=ready_room(a,room,b)
     room=a.post(f"/api/rooms/{room['id']}/actions",json=dict(action='start',version=room['version'])).json()
     order=[s['id'] for s in SLOTS][::-1]
     changed=b.post(f"/api/rooms/{room['id']}/actions",json=dict(action='formation',version=room['version'],order=order)).json()
@@ -541,6 +571,7 @@ def test_exit_during_draft_preserves_picks_and_formation_permissions():
 
 
 @pytest.mark.parametrize('kind',['knockout','league'])
+
 def test_exit_live_forfeits_without_revealing_future_and_tournament_finishes(kind):
     import copy,time
     from app.db import Room
@@ -551,6 +582,7 @@ def test_exit_live_forfeits_without_revealing_future_and_tournament_finishes(kin
     with Session.begin() as session:
         row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
         players=[p for squad in load_catalog(session)['squads'] for p in squad['players']]
+        for m in state['members']: m['ready']=True
         ts=time.time()-10000; rooms.start(state,ts)
         while state['phase']=='draft': rooms.advance(state,players,state['deadline'])
         for match in state['matches']:
@@ -633,6 +665,7 @@ def test_room_roll_scope_turn_permissions_rerolls_and_timeout():
     a=client(); b=client('bob'); outsider=client('eve'); r=room_for(a,2)
     r=b.post('/api/rooms/join',json={'code':r['code']}).json()
     url=f"/api/rooms/{r['id']}/actions"
+    r=ready_room(a,r,b)
     r=a.post(url,json=dict(action='start',version=r['version'])).json()
     deadline=r['state']['deadline']
     assert a.post(url,json=dict(action='pick',version=r['version'],player_id='0-0',slot_id='op1')).status_code==409
@@ -643,8 +676,10 @@ def test_room_roll_scope_turn_permissions_rerolls_and_timeout():
     assert a.post(url,json=dict(action='roll',version=old['version'])).status_code==409
     rolled=r['state']['rolled']; ids={p['id'] for p in rolled['players']}
     assert 0<len(ids)<20 and len({p['squad'] for p in rolled['players']})==1
-    assert r['state']['deadline']==deadline and r['state']['members'][0]['rerollsUsed']==0
-    assert b.get(f"/api/rooms/{r['id']}").json()['state']['rolled']==rolled
+    assert r['state']['deadline']>deadline and r['state']['members'][0]['rerollsUsed']==0
+    assert r['state']['deadline']==r['serverTime']+r['state']['seconds']
+    deadline=r['state']['deadline']
+    assert b.get(f"/api/rooms/{r['id']}").json()['state']['rolled'] is None
     assert a.get(f"/api/rooms/{r['id']}").json()['state']['rolled']==rolled
     with Session() as session:
         players=[p for squad in load_catalog(session)['squads'] for p in squad['players']]
@@ -684,6 +719,7 @@ def test_room_roll_scope_turn_permissions_rerolls_and_timeout():
 
 def test_room_concurrent_roll_once_and_invalid_position_rejected():
     c=client(); r=room_for(c,2); url=f"/api/rooms/{r['id']}/actions"
+    r=ready_room(c,r)
     r=c.post(url,json=dict(action='start',version=r['version'])).json()
     def roll(_):
         with TestClient(app,headers=dict(c.headers),cookies=dict(c.cookies)) as other:
@@ -706,6 +742,7 @@ def test_full_room_squad_visible_but_taken_players_cannot_be_picked(monkeypatch)
     a=client(); b=client('bob'); r=room_for(a,2)
     r=b.post('/api/rooms/join',json={'code':r['code']}).json()
     url=f"/api/rooms/{r['id']}/actions"
+    r=ready_room(a,r,b)
     r=a.post(url,json=dict(action='start',version=r['version'])).json()
     monkeypatch.setattr(rooms.rng,'choice',lambda choices:next(x for x in choices if x=='INDIA 2011'))
     r=a.post(url,json=dict(action='roll',version=r['version'])).json()
@@ -737,6 +774,7 @@ def test_full_room_squad_visible_but_taken_players_cannot_be_picked(monkeypatch)
 
 
 @pytest.mark.parametrize('phase',['draft','live','complete'])
+
 def test_room_name_locks_after_selection_starts(phase):
     import copy
     from app.db import Room

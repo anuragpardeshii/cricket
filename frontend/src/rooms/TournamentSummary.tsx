@@ -1,11 +1,10 @@
+import { Trophy } from '../components/Trophy';
+export { Trophy } from '../components/Trophy';
 import { useEffect, useId, useRef, useState } from 'react';
 import { ActionButton } from '../components/ui';
 import type { Room } from './types';
 import { tournamentStats } from './tournamentStats';
 
-export function Trophy({ className = 'size-10' }: { className?: string }) {
-  return <svg aria-hidden="true" className={className} viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 7h20v12a10 10 0 0 1-20 0V7ZM14 11H7v5a9 9 0 0 0 10 9M34 11h7v5a9 9 0 0 1-10 9M24 29v9M16 41h16M19 38h10"/><path d="m24 12 1.8 3.6 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6L24 12Z" fill="currentColor" strokeWidth=".5"/></svg>;
-}
 export function TournamentSummary({ room, who, onScorecards }: { room: Room; who: (id:string|null|undefined)=>string; onScorecards:()=>void }) {
   const { state } = room;
   const stats = tournamentStats(state.matches);
@@ -40,14 +39,14 @@ export function TournamentSummary({ room, who, onScorecards }: { room: Room; who
       {state.matches.some(m=>m.forfeit)&&<p className="border-t border-neutral/10 px-5 py-2 text-[10px] text-muted">Forfeited matches count toward results; their performances are excluded from tournament totals and awards.</p>}
     </section>
     <dialog ref={dialog} aria-labelledby={heading} aria-describedby={description} onCancel={e=>{e.preventDefault();setOpen(false)}} className="victory-dialog m-auto w-[calc(100%_-_2rem)] max-h-[calc(100dvh_-_2rem)] max-w-lg overflow-y-auto rounded-3xl border border-amber/40 bg-panel p-0 text-cream shadow-2xl backdrop:bg-black/65">
-      <div className="relative px-6 pb-7 pt-10 text-center sm:px-10">
-        {open&&<div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">{Array.from({length:18},(_,i)=><span key={i} className="victory-confetti absolute top-0 h-3 w-1.5 rounded-sm bg-amber" style={{left:`${5+(i*37)%90}%`,animationDelay:`${i*.07}s`,opacity:.35+(i%3)*.2}}/>)}</div>}
-        <div className="victory-trophy relative mx-auto mb-5 flex size-20 items-center justify-center rounded-full border border-amber/30 bg-amber/10 text-amber"><Trophy className="size-14"/></div>
+      <div className="victory-halo relative px-6 pb-7 pt-6 text-center sm:px-10">
+        {open&&<div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">{Array.from({length:36},(_,i)=><span key={i} className="victory-confetti absolute top-0 h-3 w-1.5 rounded-sm" style={{left:`${5+(i*37)%90}%`,animationDelay:`${i*.07}s`,opacity:.5+(i%3)*.2,background:['#ffd768','#fff1b8','#e79b28','#75a469'][i%4]}}/>)}</div>}
+        <div className="victory-trophy relative mx-auto mb-4 flex h-56 items-center justify-center"><Trophy className="h-56 w-40"/></div>
         <p className="text-[10px] font-bold uppercase tracking-[.3em] text-amber">Tournament champion</p>
         <h2 id={heading} className="mt-3 text-3xl font-black sm:text-4xl">Congratulations!</h2>
         <p id={description} className="mt-3 text-sm leading-6 text-muted">{who(room.you)}, you won the {state.format} tournament.{champion?` ${champion.won} wins in ${champion.played} matches.`:''}</p>
         {final?.result&&<p className="mt-2 text-sm font-semibold">Final won {final.result.margin}</p>}
-        <div className="relative my-6 rounded-xl border border-neutral/10 bg-background/50 p-4"><p className="text-[10px] uppercase tracking-wider text-amber">Player of the tournament</p><p className="mt-2 text-lg font-bold">{award?.name??'No award recorded'}</p>{award&&<p className="mt-1 text-xs text-muted">{who(award.team)} · {award.runs} runs · {award.wickets} wickets</p>}</div>
+        <div className="relative my-5 rounded-xl border border-neutral/10 bg-background/50 p-3"><Trophy variant="player" className="float-left h-20 w-14"/><p className="text-[10px] uppercase tracking-wider text-amber">Player of the tournament</p><p className="mt-2 text-lg font-bold">{award?.name??'No award recorded'}</p>{award&&<p className="mt-1 text-xs text-muted">{who(award.team)} · {award.runs} runs · {award.wickets} wickets</p>}</div>
         <ActionButton autoFocus className="relative w-full" onClick={()=>{setOpen(false);onScorecards()}}>View tournament scorecards</ActionButton><button onClick={()=>setOpen(false)} className="relative mt-4 text-xs text-muted">Back to tournament</button>
       </div>
     </dialog>

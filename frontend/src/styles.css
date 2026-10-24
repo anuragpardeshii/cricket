@@ -202,3 +202,28 @@ button:disabled { cursor: not-allowed; }
   .victory-confetti { display: none; }
   .bracket-card:hover { transform: none; }
 }
+
+/* A fixed-width team rail: reveal names on the active, focused or hovered seat. */
+.team-chip { flex: 1 1 0; container: team / inline-size; transition: flex-grow .22s ease; }
+.team-chip[data-current="true"], .team-chip[data-selected="true"] { flex-grow: 4.5; }
+.team-chip:hover, .team-chip:focus-within { flex-grow: 4.5; }
+.team-short { display: none; }
+@container team (max-width: 105px) {
+  .team-count, .team-vote { display: none; }
+  .team-full { font-size: 10px; }
+  .team-chip-button { gap: 4px; padding-inline: 6px; }
+}
+@container team (max-width: 85px) {
+  .team-full, .team-count, .team-vote { display: none; }
+  .team-short { display: inline; }
+  .team-chip-button { justify-content: center; padding-inline: 3px; gap: 3px; }
+}
+@media (prefers-reduced-motion: reduce) { .team-chip { transition: none; } }
+.gold-trophy { overflow: visible; filter: drop-shadow(0 8px 12px #a7751826); }
+.trophy-float { transform-origin: 90px 230px; animation: trophy-float 5s ease-in-out infinite; }
+.trophy-glint { transform-origin: center; animation: trophy-glint 3.6s ease-in-out infinite; }
+@keyframes trophy-float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-5px) rotate(1deg); } }
+@keyframes trophy-glint { 0%,60%,100% { opacity: .15; } 75% { opacity: 1; } }
+.victory-halo { background: radial-gradient(ellipse at 50% 25%,#ffcc5538,transparent 60%); }
+.victory-halo::before { content: ''; position: absolute; width: 240px; height: 240px; top: 20px; left: calc(50% - 120px); border: 1px solid #edc75833; border-radius: 50%; box-shadow: 0 0 0 25px #edc75809, 0 0 0 55px #edc75805; animation: winner-mark 1s ease both; pointer-events:none; }
+@media (prefers-reduced-motion: reduce) { .trophy-float,.trophy-glint,.victory-halo::before { animation:none; } }

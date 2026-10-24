@@ -1,5 +1,5 @@
 import asyncio
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 import copy
 import hashlib
 import hmac
@@ -15,7 +15,7 @@ from argon2.exceptions import VerifyMismatchError, InvalidHashError
 from fastapi import FastAPI, Depends, HTTPException, Request, Response, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 from sqlalchemy import select, delete, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -23,6 +23,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from .db import Session, User, LoginSession, Game, Room, Audit, RateBucket, now, uid
 from .game import initial, act, advance_game
 from .catalog import load_catalog
+from .draft_pool import used_people, person_key, validate_edition
 
 ENV=os.getenv('APP_ENV','development')
 ORIGIN=os.getenv('APP_ORIGIN','http://localhost:5173').rstrip('/')
@@ -32,6 +33,10 @@ if ENV not in ('development','test','production') or (SECURE and not ORIGIN.star
 COOKIE='__Host-out_session' if SECURE else 'out_session'
 @asynccontextmanager
 async def lifespan(app):
+    from .realtime import RoomSignals, listen
+    from .voice import monitor
+    signals = RoomSignals()
+    app.state.room_signals = signals
     async def clock():
         from .rooms import tick
         from .game import tick as practice_tick
@@ -41,10 +46,12 @@ async def lifespan(app):
             try: await asyncio.to_thread(practice_tick)
             except Exception: logging.getLogger('out.security').error('practice_clock_failed')
             await asyncio.sleep(1)
-    task=asyncio.create_task(clock())
-    yield
-    task.cancel()
-    with suppress(asyncio.CancelledError): await task
+    tasks=[asyncio.create_task(clock()), asyncio.create_task(listen(signals)), asyncio.create_task(monitor(signals))]
+    try:
+        yield
+    finally:
+        for task in tasks: task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 app=FastAPI(lifespan=lifespan,title='OUT Cricket API',version='1.0.0',docs_url=None if SECURE else '/api/docs',openapi_url=None if SECURE else '/api/openapi.json',redoc_url=None)
 allowed_hosts={host.strip() for host in os.getenv('ALLOWED_HOSTS','localhost,127.0.0.1,testserver,api').split(',') if host.strip()}
@@ -105,7 +112,7 @@ class Register(Strict):
     email: EmailStr=Field(max_length=254)
     phone: str=Field(pattern=r'^[0-9]{10}$')
     country_code: str=Field(default='+91',pattern=r'^\+[1-9][0-9]{0,3}$')
-    password: str=Field(min_length=15,max_length=128)
+    password: str=Field(min_length=7,max_length=128)
     @field_validator('password')
     @classmethod
     def password_valid(cls,v):
@@ -201,7 +208,7 @@ def logout(response:Response,auth=Depends(authenticated),session=Depends(db)):
 def view(game):
     state=copy.deepcopy(game.state)
     if state.get('rolled'):
-        state['rolled']['players']=[p for p in state['rolled']['players'] if p['id'] not in state['taken']]
+        state['rolled']['players']=[p for p in state['rolled']['players'] if p['id'] not in state['taken'] and person_key(p) not in used_people([state['yourXI'],state['opponentXI']])]
     return dict(id=game.id,version=game.version,state=state,opponentCount=len(game.state['opponentXI']))
 def owned(session,game_id,user_id,lock=False):
     stmt=select(Game).where(Game.id==str(game_id),Game.owner_id==user_id)
@@ -210,11 +217,22 @@ def owned(session,game_id,user_id,lock=False):
         audit(session,'game.access_denied',user_id); session.commit(); raise HTTPException(404,'Game not found')
     return game
 @app.get('/api/catalog')
-def catalog(auth=Depends(authenticated),session=Depends(db)): return load_catalog(session)
+def catalog(competition:Literal['odi','t20','ipl']|None=None,edition:int|None=None,auth=Depends(authenticated),session=Depends(db)):
+    try: validate_edition(competition,edition)
+    except ValueError as exc: raise HTTPException(422,str(exc)) from exc
+    return load_catalog(session,competition,edition)
+class CreateGame(Strict):
+    competition:Literal['odi','t20','ipl']='odi'
+    edition:int|None=None
+    @model_validator(mode='after')
+    def check_edition(self):
+        validate_edition(self.competition,self.edition)
+        return self
+
 @app.post('/api/games',status_code=201)
-def create(auth=Depends(authenticated),session=Depends(db)):
+def create(body:CreateGame=CreateGame(),auth=Depends(authenticated),session=Depends(db)):
     limit('create:'+auth.user_id,20,3600)
-    game=Game(owner_id=auth.user_id,state=initial())
+    game=Game(owner_id=auth.user_id,state=initial(body.competition,body.edition))
     session.add(game); session.flush(); audit(session,'game.created',auth.user_id,game.id); session.commit(); return view(game)
 @app.get('/api/games')
 def games(auth=Depends(authenticated),session=Depends(db)):
@@ -231,7 +249,7 @@ def action(game_id:UUID,body:Action,auth=Depends(authenticated),session=Depends(
         session.commit()
         raise HTTPException(409,'Game changed; refresh and try again')
     if game.version!=body.version: raise HTTPException(409,'Game changed; refresh and try again')
-    state=copy.deepcopy(game.state); act(state,body.action,body.player_id,body.slot_id,squads=load_catalog(session)['squads'],order=body.order)
+    state=copy.deepcopy(game.state); act(state,body.action,body.player_id,body.slot_id,squads=load_catalog(session,state.get('competition'),state.get('edition'))['squads'],order=body.order)
     game.state=state; game.version+=1; audit(session,'game.'+body.action,auth.user_id,game.id); session.commit(); return view(game)
 def admin_required(auth=Depends(authenticated),session=Depends(db)):
     user=session.get(User,auth.user_id)
@@ -301,3 +319,7 @@ def grant_admin(user_id:UUID,body:GrantAdmin,auth=Depends(admin_required),sessio
 
 from .room_routes import router as room_router
 app.include_router(room_router)
+from .realtime import router as realtime_router
+from .voice import router as voice_router
+app.include_router(realtime_router)
+app.include_router(voice_router)

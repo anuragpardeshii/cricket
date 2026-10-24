@@ -1,0 +1,160 @@
+{
+  "odi": [
+    {
+      "year": 2023,
+      "teams": 10
+    },
+    {
+      "year": 2019,
+      "teams": 10
+    },
+    {
+      "year": 2015,
+      "teams": 14
+    },
+    {
+      "year": 2011,
+      "teams": 14
+    },
+    {
+      "year": 2007,
+      "teams": 16
+    },
+    {
+      "year": 2003,
+      "teams": 14
+    },
+    {
+      "year": 1999,
+      "teams": 12
+    },
+    {
+      "year": 1996,
+      "teams": 12
+    },
+    {
+      "year": 1992,
+      "teams": 9
+    }
+  ],
+  "t20": [
+    {
+      "year": 2026,
+      "teams": 20
+    },
+    {
+      "year": 2024,
+      "teams": 20
+    },
+    {
+      "year": 2022,
+      "teams": 16
+    },
+    {
+      "year": 2021,
+      "teams": 16
+    },
+    {
+      "year": 2016,
+      "teams": 16
+    },
+    {
+      "year": 2014,
+      "teams": 16
+    },
+    {
+      "year": 2012,
+      "teams": 12
+    },
+    {
+      "year": 2010,
+      "teams": 12
+    },
+    {
+      "year": 2009,
+      "teams": 12
+    },
+    {
+      "year": 2007,
+      "teams": 12
+    }
+  ],
+  "ipl": [
+    {
+      "year": 2026,
+      "teams": 10
+    },
+    {
+      "year": 2025,
+      "teams": 10
+    },
+    {
+      "year": 2024,
+      "teams": 10
+    },
+    {
+      "year": 2023,
+      "teams": 10
+    },
+    {
+      "year": 2022,
+      "teams": 10
+    },
+    {
+      "year": 2021,
+      "teams": 8
+    },
+    {
+      "year": 2020,
+      "teams": 8
+    },
+    {
+      "year": 2019,
+      "teams": 8
+    },
+    {
+      "year": 2018,
+      "teams": 8
+    },
+    {
+      "year": 2017,
+      "teams": 8
+    },
+    {
+      "year": 2016,
+      "teams": 8
+    },
+    {
+      "year": 2015,
+      "teams": 8
+    },
+    {
+      "year": 2014,
+      "teams": 8
+    },
+    {
+      "year": 2013,
+      "teams": 9
+    },
+    {
+      "year": 2012,
+      "teams": 9
+    },
+    {
+      "year": 2011,
+      "teams": 10
+    },
+    {
+      "year": 2010,
+      "teams": 8
+    },
+    {
+      "year": 2009,
+      "teams": 8
+    },
+    {
+      "year": 2008,
+      "teams": 8
+    }
+  ]
+}

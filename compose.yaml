@@ -29,11 +29,16 @@ services:
       APP_ENV: development
       APP_ORIGIN: http://${WEB_HOST:-localhost}:${WEB_PORT:-5173}
       ALLOWED_HOSTS: localhost,127.0.0.1,api,${WEB_HOST:-localhost}
-    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000', --reload, --no-proxy-headers]
+      LIVEKIT_URL: http://livekit:7880
+      LIVEKIT_PUBLIC_URL: ws://${WEB_HOST:-localhost}:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000', --reload, --no-proxy-headers, --ws-max-size, '4096', --ws-max-queue, '8']
     volumes:
       - ./backend/app:/app/app:ro
     depends_on:
       migrate: {condition: service_completed_successfully}
+      livekit: {condition: service_started}
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 5s
@@ -41,6 +46,14 @@ services:
       retries: 10
     security_opt: [no-new-privileges:true]
     cap_drop: [ALL]
+  # Development only. Production uses private LiveKit credentials and TLS.
+  livekit:
+    image: livekit/livekit-server@sha256:89ca9ce0791e18d6e03bf6e2c49ceb27e1c754eae8bd50c989386c1a5963791a
+    command: [--dev, --bind, 0.0.0.0, --node-ip, '${LIVEKIT_NODE_IP:-127.0.0.1}']
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:7880:7880'
+      - '${BIND_ADDRESS:-127.0.0.1}:7881:7881'
+      - '${BIND_ADDRESS:-127.0.0.1}:7882:7882/udp'
   frontend:
     build: {context: ./frontend, target: dev}
     environment:

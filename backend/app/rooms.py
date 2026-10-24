@@ -8,30 +8,32 @@ from sqlalchemy import select
 from .db import Room, Session, Audit, uid
 from .catalog import load_catalog, SLOTS
 from .game import simulate, rng, validate_order
+from .commentary import describe_finish
+from .draft_pool import eligible_picks, person_key, used_people
 
 OVER_SECONDS=3
 AI_PICK_SECONDS=2
 
-def member(user_id,name): return dict(id=uid(),uid=user_id,name=name,xi={},is_ai=user_id is None,rerollsUsed=0)
+def member(user_id,name): return dict(id=uid(),uid=user_id,name=name,xi={},is_ai=user_id is None,ready=user_id is None,rerollsUsed=0)
 def new_state(user_id,body):
     return dict(phase='lobby',format=body.format,capacity=body.capacity,seconds=body.pick_seconds,
-                lobbyDeadline=time.time()+body.lobby_minutes*60,members=[member(user_id,body.name)],turn=0,deadline=None,matches=[],taken=[],champion=None,rolled=None)
+                competition=getattr(body,'competition',None),edition=getattr(body,'edition',None),members=[member(user_id,body.name)],turn=0,draftRevision=0,deadline=None,matches=[],taken=[],champion=None,rolled=None)
 def eligible(state,players):
-    current=state['members'][state['turn']]; output=[]
-    for p in players:
-        if p['id'] in state['taken']: continue
-        for slot in SLOTS:
-            if slot['id'] in current['xi'] or p['role'] not in slot['accepts']: continue
-            # Reserve sufficient specialists for all remaining teams.
-            remaining=[s for m in state['members'] for s in SLOTS if s['id'] not in m['xi'] and not (m is current and s['id']==slot['id'])]
-            available=[q for q in players if q['id'] not in state['taken'] and q['id']!=p['id']]
-            groups=[({'OP'},lambda s:s['id'].startswith('op')),({'OP','BAT'},lambda s:s['id'].startswith('op') or s['id'].startswith('n')),({'AR'},lambda s:s['id']=='ar'),({'WK'},lambda s:s['id']=='wk'),({'PACE','SPIN'},lambda s:s['id'].startswith('b'))]
-            if all(sum(q['role'] in roles for q in available)>=sum(test(s) for s in remaining) for roles,test in groups):
-                output.append(dict(player=p,slot=slot['id']))
-    return output
+    players=pool_players(state,players)
+    teams=[m['xi'] for m in state['members']]
+    return eligible_picks(teams,teams[state['turn']],players,SLOTS,state['taken'])
+
+def pool_players(state,players):
+    selected=state.get('competition')
+    edition=state.get('edition')
+    return [p for p in players if (not selected or p.get('competition')==selected)
+            and (edition is None or p.get('edition')==edition)]
 
 def start(state,ts):
     if state['phase']!='lobby': raise HTTPException(409,'Room already started')
+    humans=[m for m in state['members'] if m['uid'] is not None]
+    if not humans or not all(m.get('ready',False) for m in humans):
+        raise HTTPException(409,'Every human player must be ready before the host can start')
     # Bots are room members without a login identity; they cannot authenticate or act.
     number=1
     while len(state['members'])<state['capacity']:
@@ -39,9 +41,11 @@ def start(state,ts):
         if any(m['name'].lower()==name.lower() for m in state['members']): continue
         state['members'].append(member(None,name))
     state['phase']='draft'; state['rolled']=None; state['deadline']=ts+(AI_PICK_SECONDS if state['members'][state['turn']].get('is_ai') else state['seconds'])
+    state['draftRevision']=state.get('draftRevision',0)+1
 
 def roll(state,players,options=None,*,ts=None):
     if state['phase']!='draft': raise HTTPException(409,'Draft is not accepting rolls')
+    players=pool_players(state,players)
     options=eligible(state,players) if options is None else options
     if not options: raise HTTPException(409,'No compatible player remains')
     current=state['members'][state['turn']]
@@ -56,7 +60,8 @@ def roll(state,players,options=None,*,ts=None):
     allowed={}
     for option in choices: allowed.setdefault(option['player']['id'],[]).append(option['slot'])
     state['rolled']=dict(country=country,tournament=year,players=[p for p in players if p['squad']==squad],allowedSlots=allowed)
-    if previous and ts is not None:
+    state['draftRevision']=state.get('draftRevision',0)+1
+    if ts is not None:
         state['deadline']=ts+state['seconds']
 
 def pick(state,players,ts,player_id=None,slot_id=None,automatic=False):
@@ -73,6 +78,7 @@ def pick(state,players,ts,player_id=None,slot_id=None,automatic=False):
     m=state['members'][state['turn']]; m['xi'][choice['slot']]=choice['player']; state['taken'].append(choice['player']['id'])
     state['lastPick']=dict(name=m['name'],player=choice['player']['name'],automatic=automatic,is_ai=m.get('is_ai',False))
     state['rolled']=None
+    state['draftRevision']=state.get('draftRevision',0)+1
     if all(len(m['xi'])==11 for m in state['members']):
         state['phase']='live'; fixtures(state,ts); return
     state['turn']=(state['turn']+1)%len(state['members'])
@@ -90,7 +96,7 @@ def forfeit_match(state,match,ts):
     count=max(0,int((ts-match.get('startedAt',ts))//OVER_SECONDS))
     timeline=plan['timeline'][:count] if plan else []
     # Retain only overs already visible; never reveal the unused simulated result.
-    match['timeline']=[{k:e[k] for k in ['over','innings','text','youScore','oppScore']} for e in timeline]
+    match['timeline']=[{k:e[k] for k in ['over','innings','text','headline','kind','youScore','oppScore'] if k in e} for e in timeline]
     match['scores']={k:timeline[-1][k] if timeline else '—' for k in ['youScore','oppScore']}
     match['scorecards']=timeline[-1]['scorecards'] if timeline else []
     match['winner']=winner; match['status']='complete'; match['forfeit']=True
@@ -108,6 +114,7 @@ def remove_member(room,state,target,ts,reason):
         target['is_ai']=True
         if state['phase']=='draft' and state['members'][state['turn']]['id']==target['id']:
             state['deadline']=min(state['deadline'],ts+AI_PICK_SECONDS)
+            state['draftRevision']=state.get('draftRevision',0)+1
     elif state['phase']=='live':
         target['forfeited']=True
         for match in state['matches']:
@@ -131,6 +138,7 @@ def vote_kick(room,state,voter_id,target_id,ts):
 
 def fixtures(state,ts):
     members=[m['id'] for m in state['members']]
+    rng.shuffle(members)
     matches=[]
     if state['format']=='league':
         for a,b in itertools.combinations(members,2): matches.append(dict(id=uid(),round=1,a=a,b=b,status='pending',sources=[]))
@@ -142,6 +150,7 @@ def fixtures(state,ts):
             round_num+=1; current=[]
             for i in range(0,len(previous),2): current.append(dict(id=uid(),round=round_num,a=None,b=None,status='pending',sources=[previous[i]['id'],previous[i+1]['id']]))
             matches+=current; previous=current
+    if state['format']=='league': rng.shuffle(matches)
     state['matches']=matches
     launch_ready(state,ts)
 
@@ -155,7 +164,8 @@ def launch_ready(state,ts):
             match['a'],match['b']=[p['winner'] for p in parents]
         if any(team not in teams or teams[team].get('forfeited') for team in [match['a'],match['b']]):
             forfeit_match(state,match,ts); continue
-        match['plan']=simulate(teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),teams[match['b']].get('order'))
+        names={'you':teams[match['a']]['name'],'opp':teams[match['b']]['name']}
+        match['plan']=simulate(teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),teams[match['b']].get('order'),team_names=names)
         result=match['plan']['result']
         if result['winner']=='tie':
             # Repeated six-ball tie-breaks, visible in the result.
@@ -165,6 +175,8 @@ def launch_ready(state,ts):
                 tie_scores.append(dict(a=a,b=b))
                 if a!=b: break
             result['winner']='you' if a>b else 'opp'; result['margin']=f'after a six-ball tie-break ({a}–{b})'; result['tieBreaks']=tie_scores
+            last=match['plan']['timeline'][-1]
+            last['headline'],last['text']=describe_finish(result,match['plan']['scorecards'],names)
         match['winner']=match['a'] if result['winner']=='you' else match['b']
         match['status']='live'; match['startedAt']=ts; match['endsAt']=ts+OVER_SECONDS*len(match['plan']['timeline'])
 
@@ -196,9 +208,7 @@ def tournament_award(state):
 
 def advance(state,players,ts):
     changed=False
-    if state['phase']=='lobby' and ts>=state['lobbyDeadline']:
-        start(state,state['lobbyDeadline'])
-        changed=True
+    # Only the host starts a ready lobby; joining has no countdown.
     while state['phase']=='draft' and ts>=state['deadline']:
         pick(state,players,state['deadline'],automatic=True); changed=True
     if state['phase']=='live':
@@ -218,32 +228,60 @@ def advance(state,players,ts):
     return changed
 
 def project(room,user_id,ts):
-    state=copy.deepcopy(room.state); viewer=next((m for m in state['members'] if m['uid']==user_id),None)
+    # Hidden simulations contain every scorecard snapshot. Do not clone them for
+    # every viewer on every socket heartbeat just to discard them afterwards.
+    state=copy.deepcopy({k:v for k,v in room.state.items() if k!='matches'})
+    state['matches']=[]
+    viewer=next((m for m in state['members'] if m['uid']==user_id),None)
     if not viewer: raise HTTPException(404,'Room not found')
+    if state['phase']=='draft' and state['members'][state['turn']]['id']!=viewer['id']:
+        state['rolled']=None
+    if state.get('rolled'):
+        used=used_people(m['xi'] for m in state['members'])
+        state['rolled']['unavailableIds']=[p['id'] for p in state['rolled']['players'] if person_key(p) in used]
+    state.pop('lobbyDeadline',None)
     votes=state.pop('votes',{})
     state.pop('removedUsers',None)
     state['kickRequired']=kick_threshold(state)
     for m in state['members']:
         m['kickVotes']=len(votes.get(m['id'],[])); m['voted']=viewer['id'] in votes.get(m['id'],[])
         m.pop('uid')
-    for match in state['matches']:
-        plan=match.pop('plan',None)
+    for source in room.state['matches']:
+        match=copy.deepcopy({k:v for k,v in source.items() if k!='plan'})
+        state['matches'].append(match)
+        plan=source.get('plan')
         if not plan: continue
         count=len(plan['timeline']) if match['status']=='complete' else max(0,min(len(plan['timeline']),int((ts-match['startedAt'])//OVER_SECONDS)))
         match.pop('endsAt',None)
-        match['timeline']=[{k:e[k] for k in ['over','innings','text','youScore','oppScore']} for e in plan['timeline'][:count]]
+        match['timeline']=[{k:e[k] for k in ['over','innings','text','headline','kind','youScore','oppScore'] if k in e} for e in plan['timeline'][:count]]
         match['scores']={k:plan['timeline'][count-1][k] if count else '—' for k in ['youScore','oppScore']}
         if match['status']=='complete':
-            match['result']=plan['result']; match['scorecards']=plan['scorecards']
-        else: match.pop('winner',None)
+            match['result']=copy.deepcopy(plan['result']); match['scorecards']=copy.deepcopy(plan['scorecards'])
+        else:
+            match.pop('winner',None)
+            match['scorecards']=copy.deepcopy(plan['timeline'][count-1]['scorecards']) if count else []
     return dict(id=room.id,code=room.code,visibility=room.visibility or 'private',version=room.version,serverTime=ts,you=viewer['id'],host=room.owner_id==user_id,state=state,standings=standings(room.state))
 
 def tick():
-    with Session.begin() as session:
-        rooms=session.scalars(select(Room).where(Room.state['phase'].astext.in_(['lobby','draft','live'])).with_for_update(skip_locked=True).limit(50)).all()
-        if not rooms: return
-        players=[p for s in load_catalog(session)['squads'] for p in s['players']]
-        for room in rooms:
+    with Session() as session:
+        ids=list(session.scalars(select(Room.id).where(Room.state['phase'].astext.in_(['draft','live']))))
+        if not ids: return
+    pools={}
+    # One room per transaction: a tournament simulation must not hold the locks
+    # of unrelated rooms while their players are trying to pick.
+    for room_id in ids:
+        with Session.begin() as session:
+            room=session.scalar(select(Room).where(Room.id==room_id).with_for_update(skip_locked=True))
+            if not room: continue
+            ts=time.time(); current=room.state
+            if current['phase']=='draft' and ts<current['deadline']: continue
+            if current['phase']=='live' and not any(m['status']=='live' and ts>=m['endsAt'] for m in current['matches']): continue
             state=copy.deepcopy(room.state)
-            if advance(state,players,time.time()):
+            players=[]
+            if state['phase']=='draft':
+                key=(state.get('competition'),state.get('edition'))
+                if key not in pools:
+                    pools[key]=[p for s in load_catalog(session,*key)['squads'] for p in s['players']]
+                players=pools[key]
+            if advance(state,players,ts):
                 room.state=state; room.version+=1; session.add(Audit(action='room.clock',resource=room.id))

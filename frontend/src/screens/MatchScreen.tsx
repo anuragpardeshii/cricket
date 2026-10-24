@@ -1,3 +1,5 @@
+import { Scorecard } from '../components/Scorecard';
+import { FeedbackToggle } from '../components/GameFeedback';
 import { useState } from 'react';
 import { TeamBar } from '../components/TeamBar';
 import { TeamFormation } from '../components/TeamFormation';
@@ -5,25 +7,23 @@ import { PracticeExit } from '../components/PracticeExit';
 import { ThemeToggle } from '../theme/ThemeProvider';
 import { ActionButton, Brand, Eyebrow, Panel } from '../components/ui';
 import { useGame } from '../game/useGame';
-import type { FeedEntry } from '../game/types';
+import { CommentaryFeed } from '../rooms/CommentaryFeed';
 
 type Game = ReturnType<typeof useGame>;
-
-function FeedRow({ entry }: { entry: FeedEntry }) {
-
-  return <li className="flex gap-3 border-b border-neutral/5 py-3 last:border-0"><span className="w-11 shrink-0 pt-0.5 font-mono text-[10px] text-muted">{entry.over}</span><span className="font-mono text-xs leading-5 text-cream/80">{entry.text}</span></li>;
-}
 
 export function MatchScreen({ game }: { game: Game }) {
   const [preview,setPreview]=useState<string|null>(null);
   const { state, actions } = game;
+  const [cards,setCards]=useState(false);
+  const visibleCards=state.match?.timeline[state.timelineIndex-1]?.scorecards??[];
   const phase = state.matchDone ? 'FULL TIME' : `INNINGS ${state.innings}`;
   return <main className="relative mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-5 pb-8 pt-6 sm:px-8 lg:px-12 lg:pt-9">
     {state.wicketPulse && <div className="wicket-flash pointer-events-none absolute inset-0 z-20" aria-hidden="true" />}
-    <header className="flex flex-wrap gap-y-3 items-center justify-between border-b border-neutral/10 pb-5"><Brand /><div className="flex max-w-full flex-wrap items-center justify-end gap-3"><Eyebrow>{phase}</Eyebrow>{!state.matchDone&&<PracticeExit busy={game.busy} onExit={actions.exitMatch}/>}<ThemeToggle /></div></header>
+    <header className="flex flex-wrap gap-y-3 items-center justify-between border-b border-neutral/10 pb-5"><Brand /><div className="flex max-w-full flex-wrap items-center justify-end gap-3"><Eyebrow>{phase}</Eyebrow>{!state.matchDone&&<PracticeExit busy={game.busy} onExit={actions.exitMatch}/>}<FeedbackToggle/><ThemeToggle /></div></header>
     <TeamBar members={[{id:'you',name:'You',xi:state.yourXI},{id:'ai',name:'AI',xi:state.opponentXI,is_ai:true}]} selectedId={preview??undefined} yourId="you" onPreview={id=>setPreview(id===preview?null:id)}/>
     {preview&&<Panel className="mb-5 p-5"><button className="mb-4 text-sm text-amber" onClick={()=>setPreview(null)}>Close team preview</button><TeamFormation name={preview==='you'?'You':'AI'} xi={preview==='you'?state.yourXI:state.opponentXI} order={preview==='you'?state.order:undefined}/></Panel>}
-    <div className="grid flex-1 gap-8 pt-7 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1fr)] lg:gap-12">
+    <div className="mt-3 flex gap-2" aria-label="Match views">{[false,true].map(show=><button key={String(show)} aria-pressed={cards===show} onClick={()=>setCards(show)} className={`rounded-lg border px-3 py-2 text-xs ${cards===show?'border-amber text-amber':'border-neutral/15 text-muted'}`}>{show?'Scorecard':'Highlights'}</button>)}</div>
+    {cards?<div className="mt-4">{visibleCards.length?<Scorecard cards={visibleCards} live={!state.matchDone}/>:<p className="text-sm text-muted">Waiting for the first over…</p>}</div>:<div className="grid flex-1 gap-6 pt-4 lg:grid-cols-[minmax(0,.9fr)_minmax(0,1fr)]">
       <section>
         <Eyebrow>Match centre · T20</Eyebrow>
         <h1 className="mt-2 text-3xl font-black tracking-tight">LIVE SIMULATION</h1>
@@ -40,12 +40,8 @@ export function MatchScreen({ game }: { game: Game }) {
           </div>
         </div>
       </section>
-      <section className="flex min-h-64 flex-col lg:min-h-[560px]"><div className="flex items-center justify-between"><Eyebrow>Over summary &amp; commentary</Eyebrow><span className="font-mono text-[10px] text-muted">LATEST FIRST</span></div>
-        <Panel className="mt-3 max-h-[460px] min-h-64 flex-1 overflow-y-auto px-4 sm:px-5 lg:max-h-[600px]">
-          {state.feed.length === 0 ? <p className="py-8 font-mono text-xs text-muted">Waiting for the first over…</p> : <ol aria-live="polite" aria-relevant="additions text">{state.feed.map((entry, index) => <FeedRow key={`${state.timelineIndex}-${index}`} entry={entry} />)}</ol>}
-        </Panel>
-      </section>
-    </div>
+      <CommentaryFeed entries={state.match?.timeline.slice(0,state.timelineIndex)??[]} live={!state.matchDone} showScores={false}/>
+    </div>}
     <div className="mt-8 flex justify-end">{state.matchDone ? <ActionButton onClick={actions.showResult} className="w-full sm:w-auto sm:min-w-64">View result</ActionButton> : <ActionButton onClick={actions.skipMatch} variant="outline" className="w-full sm:w-auto sm:min-w-64">Skip to result</ActionButton>}</div>
   </main>;
 }

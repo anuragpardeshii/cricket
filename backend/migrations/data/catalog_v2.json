@@ -1,0 +1,1682 @@
+{
+  "sources": [
+    {
+      "tournament": "WORLD CUP 2023",
+      "roster_date": "2023-09-28",
+      "url": "https://www.icc-cricket.com/media-releases/squads-confirmed-for-icc-mens-cricket-world-cup-2023"
+    },
+    {
+      "tournament": "T20 WORLD CUP 2024",
+      "roster_date": "2024-05-24",
+      "url": "https://www.icc-cricket.com/tournaments/t20cricketworldcup/news/all-squads-named-so-far-icc-men-s-t20-world-cup-2024"
+    }
+  ],
+  "notes": "Announced 15-player squads; later injury replacements and travelling reserves are excluded. Abbreviated names, primary draft roles and ratings are game data, not official ICC ratings.",
+  "squads": [
+    {
+      "country": "INDIA",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "R Sharma",
+          "role": "OP",
+          "rating": 95,
+          "id": "9-0",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "S Gill",
+          "role": "OP",
+          "rating": 90,
+          "id": "9-1",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "V Kohli",
+          "role": "BAT",
+          "rating": 98,
+          "id": "9-2",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "S Iyer",
+          "role": "BAT",
+          "rating": 89,
+          "id": "9-3",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "S Yadav",
+          "role": "BAT",
+          "rating": 84,
+          "id": "9-4",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "KL Rahul",
+          "role": "WK",
+          "rating": 91,
+          "id": "9-5",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "I Kishan",
+          "role": "WK",
+          "rating": 84,
+          "id": "9-6",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "H Pandya",
+          "role": "AR",
+          "rating": 89,
+          "id": "9-7",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "R Jadeja",
+          "role": "AR",
+          "rating": 91,
+          "id": "9-8",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "R Ashwin",
+          "role": "SPIN",
+          "rating": 86,
+          "id": "9-9",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "K Yadav",
+          "role": "SPIN",
+          "rating": 91,
+          "id": "9-10",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "J Bumrah",
+          "role": "PACE",
+          "rating": 97,
+          "id": "9-11",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "M Shami",
+          "role": "PACE",
+          "rating": 96,
+          "id": "9-12",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "M Siraj",
+          "role": "PACE",
+          "rating": 88,
+          "id": "9-13",
+          "squad": "INDIA 2023"
+        },
+        {
+          "name": "S Thakur",
+          "role": "PACE",
+          "rating": 79,
+          "id": "9-14",
+          "squad": "INDIA 2023"
+        }
+      ]
+    },
+    {
+      "country": "AUSTRALIA",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "D Warner",
+          "role": "OP",
+          "rating": 93,
+          "id": "10-0",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "T Head",
+          "role": "OP",
+          "rating": 95,
+          "id": "10-1",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "S Smith",
+          "role": "BAT",
+          "rating": 89,
+          "id": "10-2",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "M Labuschagne",
+          "role": "BAT",
+          "rating": 87,
+          "id": "10-3",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "M Marsh",
+          "role": "AR",
+          "rating": 91,
+          "id": "10-4",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "G Maxwell",
+          "role": "AR",
+          "rating": 96,
+          "id": "10-5",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "M Stoinis",
+          "role": "AR",
+          "rating": 83,
+          "id": "10-6",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "C Green",
+          "role": "AR",
+          "rating": 81,
+          "id": "10-7",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "A Carey",
+          "role": "WK",
+          "rating": 84,
+          "id": "10-8",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "J Inglis",
+          "role": "WK",
+          "rating": 85,
+          "id": "10-9",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "P Cummins",
+          "role": "PACE",
+          "rating": 92,
+          "id": "10-10",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "M Starc",
+          "role": "PACE",
+          "rating": 92,
+          "id": "10-11",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "J Hazlewood",
+          "role": "PACE",
+          "rating": 93,
+          "id": "10-12",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "S Abbott",
+          "role": "PACE",
+          "rating": 79,
+          "id": "10-13",
+          "squad": "AUSTRALIA 2023"
+        },
+        {
+          "name": "A Zampa",
+          "role": "SPIN",
+          "rating": 94,
+          "id": "10-14",
+          "squad": "AUSTRALIA 2023"
+        }
+      ]
+    },
+    {
+      "country": "ENGLAND",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "J Bairstow",
+          "role": "OP",
+          "rating": 87,
+          "id": "11-0",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "D Malan",
+          "role": "OP",
+          "rating": 89,
+          "id": "11-1",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "J Root",
+          "role": "BAT",
+          "rating": 88,
+          "id": "11-2",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "H Brook",
+          "role": "BAT",
+          "rating": 86,
+          "id": "11-3",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "B Stokes",
+          "role": "BAT",
+          "rating": 92,
+          "id": "11-4",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "J Buttler",
+          "role": "WK",
+          "rating": 91,
+          "id": "11-5",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "M Ali",
+          "role": "AR",
+          "rating": 83,
+          "id": "11-6",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "S Curran",
+          "role": "AR",
+          "rating": 83,
+          "id": "11-7",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "L Livingstone",
+          "role": "AR",
+          "rating": 84,
+          "id": "11-8",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "C Woakes",
+          "role": "AR",
+          "rating": 85,
+          "id": "11-9",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "A Rashid",
+          "role": "SPIN",
+          "rating": 90,
+          "id": "11-10",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "G Atkinson",
+          "role": "PACE",
+          "rating": 81,
+          "id": "11-11",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "R Topley",
+          "role": "PACE",
+          "rating": 86,
+          "id": "11-12",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "D Willey",
+          "role": "PACE",
+          "rating": 84,
+          "id": "11-13",
+          "squad": "ENGLAND 2023"
+        },
+        {
+          "name": "M Wood",
+          "role": "PACE",
+          "rating": 87,
+          "id": "11-14",
+          "squad": "ENGLAND 2023"
+        }
+      ]
+    },
+    {
+      "country": "NEW ZEALAND",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "D Conway",
+          "role": "OP",
+          "rating": 90,
+          "id": "12-0",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "W Young",
+          "role": "OP",
+          "rating": 83,
+          "id": "12-1",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "K Williamson",
+          "role": "BAT",
+          "rating": 93,
+          "id": "12-2",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "D Mitchell",
+          "role": "BAT",
+          "rating": 94,
+          "id": "12-3",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "G Phillips",
+          "role": "BAT",
+          "rating": 87,
+          "id": "12-4",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "M Chapman",
+          "role": "BAT",
+          "rating": 80,
+          "id": "12-5",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "T Latham",
+          "role": "WK",
+          "rating": 86,
+          "id": "12-6",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "R Ravindra",
+          "role": "AR",
+          "rating": 93,
+          "id": "12-7",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "J Neesham",
+          "role": "AR",
+          "rating": 84,
+          "id": "12-8",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "M Santner",
+          "role": "SPIN",
+          "rating": 90,
+          "id": "12-9",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "I Sodhi",
+          "role": "SPIN",
+          "rating": 81,
+          "id": "12-10",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "T Boult",
+          "role": "PACE",
+          "rating": 92,
+          "id": "12-11",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "M Henry",
+          "role": "PACE",
+          "rating": 90,
+          "id": "12-12",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "L Ferguson",
+          "role": "PACE",
+          "rating": 87,
+          "id": "12-13",
+          "squad": "NEW ZEALAND 2023"
+        },
+        {
+          "name": "T Southee",
+          "role": "PACE",
+          "rating": 86,
+          "id": "12-14",
+          "squad": "NEW ZEALAND 2023"
+        }
+      ]
+    },
+    {
+      "country": "SOUTH AFRICA",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "T Bavuma",
+          "role": "OP",
+          "rating": 82,
+          "id": "13-0",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "R Hendricks",
+          "role": "OP",
+          "rating": 84,
+          "id": "13-1",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "A Markram",
+          "role": "BAT",
+          "rating": 92,
+          "id": "13-2",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "R van der Dussen",
+          "role": "BAT",
+          "rating": 90,
+          "id": "13-3",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "D Miller",
+          "role": "BAT",
+          "rating": 91,
+          "id": "13-4",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "Q de Kock",
+          "role": "WK",
+          "rating": 96,
+          "id": "13-5",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "H Klaasen",
+          "role": "WK",
+          "rating": 94,
+          "id": "13-6",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "M Jansen",
+          "role": "AR",
+          "rating": 90,
+          "id": "13-7",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "A Phehlukwayo",
+          "role": "AR",
+          "rating": 78,
+          "id": "13-8",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "K Maharaj",
+          "role": "SPIN",
+          "rating": 90,
+          "id": "13-9",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "T Shamsi",
+          "role": "SPIN",
+          "rating": 85,
+          "id": "13-10",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "K Rabada",
+          "role": "PACE",
+          "rating": 93,
+          "id": "13-11",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "G Coetzee",
+          "role": "PACE",
+          "rating": 90,
+          "id": "13-12",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "L Ngidi",
+          "role": "PACE",
+          "rating": 86,
+          "id": "13-13",
+          "squad": "SOUTH AFRICA 2023"
+        },
+        {
+          "name": "L Williams",
+          "role": "PACE",
+          "rating": 77,
+          "id": "13-14",
+          "squad": "SOUTH AFRICA 2023"
+        }
+      ]
+    },
+    {
+      "country": "PAKISTAN",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "F Zaman",
+          "role": "OP",
+          "rating": 90,
+          "id": "14-0",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "I ul-Haq",
+          "role": "OP",
+          "rating": 85,
+          "id": "14-1",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "A Shafique",
+          "role": "OP",
+          "rating": 88,
+          "id": "14-2",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "B Azam",
+          "role": "BAT",
+          "rating": 93,
+          "id": "14-3",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "S Shakeel",
+          "role": "BAT",
+          "rating": 84,
+          "id": "14-4",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "M Rizwan",
+          "role": "WK",
+          "rating": 92,
+          "id": "14-5",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "I Ahmed",
+          "role": "AR",
+          "rating": 83,
+          "id": "14-6",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "S Ali Agha",
+          "role": "AR",
+          "rating": 81,
+          "id": "14-7",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "S Khan",
+          "role": "AR",
+          "rating": 84,
+          "id": "14-8",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "M Nawaz",
+          "role": "AR",
+          "rating": 81,
+          "id": "14-9",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "U Mir",
+          "role": "SPIN",
+          "rating": 79,
+          "id": "14-10",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "S Afridi",
+          "role": "PACE",
+          "rating": 93,
+          "id": "14-11",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "H Rauf",
+          "role": "PACE",
+          "rating": 87,
+          "id": "14-12",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "H Ali",
+          "role": "PACE",
+          "rating": 83,
+          "id": "14-13",
+          "squad": "PAKISTAN 2023"
+        },
+        {
+          "name": "M Wasim",
+          "role": "PACE",
+          "rating": 83,
+          "id": "14-14",
+          "squad": "PAKISTAN 2023"
+        }
+      ]
+    },
+    {
+      "country": "SRI LANKA",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "P Nissanka",
+          "role": "OP",
+          "rating": 88,
+          "id": "15-0",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "D Karunaratne",
+          "role": "OP",
+          "rating": 81,
+          "id": "15-1",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "K Perera",
+          "role": "OP",
+          "rating": 82,
+          "id": "15-2",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "C Asalanka",
+          "role": "BAT",
+          "rating": 86,
+          "id": "15-3",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "S Samarawickrama",
+          "role": "BAT",
+          "rating": 88,
+          "id": "15-4",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "K Mendis",
+          "role": "WK",
+          "rating": 89,
+          "id": "15-5",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "D Shanaka",
+          "role": "AR",
+          "rating": 80,
+          "id": "15-6",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "D de Silva",
+          "role": "AR",
+          "rating": 84,
+          "id": "15-7",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "D Wellalage",
+          "role": "AR",
+          "rating": 82,
+          "id": "15-8",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "D Hemantha",
+          "role": "SPIN",
+          "rating": 75,
+          "id": "15-9",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "M Theekshana",
+          "role": "SPIN",
+          "rating": 86,
+          "id": "15-10",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "D Madushanka",
+          "role": "PACE",
+          "rating": 91,
+          "id": "15-11",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "K Rajitha",
+          "role": "PACE",
+          "rating": 80,
+          "id": "15-12",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "M Pathirana",
+          "role": "PACE",
+          "rating": 83,
+          "id": "15-13",
+          "squad": "SRI LANKA 2023"
+        },
+        {
+          "name": "L Kumara",
+          "role": "PACE",
+          "rating": 81,
+          "id": "15-14",
+          "squad": "SRI LANKA 2023"
+        }
+      ]
+    },
+    {
+      "country": "AFGHANISTAN",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "I Zadran",
+          "role": "OP",
+          "rating": 88,
+          "id": "16-0",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "R Hassan",
+          "role": "OP",
+          "rating": 75,
+          "id": "16-1",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "R Shah",
+          "role": "BAT",
+          "rating": 85,
+          "id": "16-2",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "H Shahidi",
+          "role": "BAT",
+          "rating": 84,
+          "id": "16-3",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "N Zadran",
+          "role": "BAT",
+          "rating": 79,
+          "id": "16-4",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "R Gurbaz",
+          "role": "WK",
+          "rating": 87,
+          "id": "16-5",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "I Alikhil",
+          "role": "WK",
+          "rating": 79,
+          "id": "16-6",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "A Omarzai",
+          "role": "AR",
+          "rating": 88,
+          "id": "16-7",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "M Nabi",
+          "role": "AR",
+          "rating": 86,
+          "id": "16-8",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "R Khan",
+          "role": "SPIN",
+          "rating": 94,
+          "id": "16-9",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "M ur Rahman",
+          "role": "SPIN",
+          "rating": 86,
+          "id": "16-10",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "N Ahmad",
+          "role": "SPIN",
+          "rating": 84,
+          "id": "16-11",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "F Farooqi",
+          "role": "PACE",
+          "rating": 85,
+          "id": "16-12",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "N ul-Haq",
+          "role": "PACE",
+          "rating": 84,
+          "id": "16-13",
+          "squad": "AFGHANISTAN 2023"
+        },
+        {
+          "name": "A Rahman",
+          "role": "PACE",
+          "rating": 75,
+          "id": "16-14",
+          "squad": "AFGHANISTAN 2023"
+        }
+      ]
+    },
+    {
+      "country": "BANGLADESH",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "L Das",
+          "role": "OP",
+          "rating": 85,
+          "id": "17-0",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "T Hasan",
+          "role": "OP",
+          "rating": 77,
+          "id": "17-1",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "N H Shanto",
+          "role": "BAT",
+          "rating": 84,
+          "id": "17-2",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "T Hridoy",
+          "role": "BAT",
+          "rating": 82,
+          "id": "17-3",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "Mahmudullah",
+          "role": "BAT",
+          "rating": 86,
+          "id": "17-4",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "M Rahim",
+          "role": "WK",
+          "rating": 87,
+          "id": "17-5",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "S Al Hasan",
+          "role": "AR",
+          "rating": 91,
+          "id": "17-6",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "M H Miraz",
+          "role": "AR",
+          "rating": 87,
+          "id": "17-7",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "M Hasan",
+          "role": "AR",
+          "rating": 79,
+          "id": "17-8",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "N Ahmed",
+          "role": "SPIN",
+          "rating": 77,
+          "id": "17-9",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "T Ahmed",
+          "role": "PACE",
+          "rating": 85,
+          "id": "17-10",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "M Rahman",
+          "role": "PACE",
+          "rating": 85,
+          "id": "17-11",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "H Mahmud",
+          "role": "PACE",
+          "rating": 79,
+          "id": "17-12",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "S Islam",
+          "role": "PACE",
+          "rating": 83,
+          "id": "17-13",
+          "squad": "BANGLADESH 2023"
+        },
+        {
+          "name": "T H Sakib",
+          "role": "PACE",
+          "rating": 77,
+          "id": "17-14",
+          "squad": "BANGLADESH 2023"
+        }
+      ]
+    },
+    {
+      "country": "NETHERLANDS",
+      "tournament": "WORLD CUP 2023",
+      "players": [
+        {
+          "name": "M O'Dowd",
+          "role": "OP",
+          "rating": 80,
+          "id": "18-0",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "V Singh",
+          "role": "OP",
+          "rating": 77,
+          "id": "18-1",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "W Barresi",
+          "role": "BAT",
+          "rating": 76,
+          "id": "18-2",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "T Nidamanuru",
+          "role": "BAT",
+          "rating": 78,
+          "id": "18-3",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "S Engelbrecht",
+          "role": "BAT",
+          "rating": 82,
+          "id": "18-4",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "S Edwards",
+          "role": "WK",
+          "rating": 85,
+          "id": "18-5",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "C Ackermann",
+          "role": "AR",
+          "rating": 81,
+          "id": "18-6",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "B de Leede",
+          "role": "AR",
+          "rating": 85,
+          "id": "18-7",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "L van Beek",
+          "role": "AR",
+          "rating": 82,
+          "id": "18-8",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "S Zulfiqar",
+          "role": "AR",
+          "rating": 74,
+          "id": "18-9",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "R van der Merwe",
+          "role": "SPIN",
+          "rating": 82,
+          "id": "18-10",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "A Dutt",
+          "role": "SPIN",
+          "rating": 81,
+          "id": "18-11",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "S Ahmad",
+          "role": "SPIN",
+          "rating": 74,
+          "id": "18-12",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "P van Meekeren",
+          "role": "PACE",
+          "rating": 82,
+          "id": "18-13",
+          "squad": "NETHERLANDS 2023"
+        },
+        {
+          "name": "R Klein",
+          "role": "PACE",
+          "rating": 73,
+          "id": "18-14",
+          "squad": "NETHERLANDS 2023"
+        }
+      ]
+    },
+    {
+      "country": "INDIA",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "R Sharma",
+          "role": "OP",
+          "rating": 95,
+          "id": "19-0",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "Y Jaiswal",
+          "role": "OP",
+          "rating": 89,
+          "id": "19-1",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "V Kohli",
+          "role": "BAT",
+          "rating": 92,
+          "id": "19-2",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "S Yadav",
+          "role": "BAT",
+          "rating": 94,
+          "id": "19-3",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "R Pant",
+          "role": "WK",
+          "rating": 89,
+          "id": "19-4",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "S Samson",
+          "role": "WK",
+          "rating": 86,
+          "id": "19-5",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "H Pandya",
+          "role": "AR",
+          "rating": 94,
+          "id": "19-6",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "S Dube",
+          "role": "AR",
+          "rating": 83,
+          "id": "19-7",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "R Jadeja",
+          "role": "AR",
+          "rating": 88,
+          "id": "19-8",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "A Patel",
+          "role": "AR",
+          "rating": 92,
+          "id": "19-9",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "K Yadav",
+          "role": "SPIN",
+          "rating": 92,
+          "id": "19-10",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "Y Chahal",
+          "role": "SPIN",
+          "rating": 87,
+          "id": "19-11",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "J Bumrah",
+          "role": "PACE",
+          "rating": 99,
+          "id": "19-12",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "A Singh",
+          "role": "PACE",
+          "rating": 94,
+          "id": "19-13",
+          "squad": "INDIA 2024"
+        },
+        {
+          "name": "M Siraj",
+          "role": "PACE",
+          "rating": 86,
+          "id": "19-14",
+          "squad": "INDIA 2024"
+        }
+      ]
+    },
+    {
+      "country": "AUSTRALIA",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "D Warner",
+          "role": "OP",
+          "rating": 91,
+          "id": "20-0",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "T Head",
+          "role": "OP",
+          "rating": 95,
+          "id": "20-1",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "T David",
+          "role": "BAT",
+          "rating": 86,
+          "id": "20-2",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "M Marsh",
+          "role": "AR",
+          "rating": 88,
+          "id": "20-3",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "G Maxwell",
+          "role": "AR",
+          "rating": 91,
+          "id": "20-4",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "M Stoinis",
+          "role": "AR",
+          "rating": 91,
+          "id": "20-5",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "C Green",
+          "role": "AR",
+          "rating": 83,
+          "id": "20-6",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "J Inglis",
+          "role": "WK",
+          "rating": 85,
+          "id": "20-7",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "M Wade",
+          "role": "WK",
+          "rating": 84,
+          "id": "20-8",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "A Agar",
+          "role": "SPIN",
+          "rating": 80,
+          "id": "20-9",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "A Zampa",
+          "role": "SPIN",
+          "rating": 94,
+          "id": "20-10",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "P Cummins",
+          "role": "PACE",
+          "rating": 93,
+          "id": "20-11",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "M Starc",
+          "role": "PACE",
+          "rating": 91,
+          "id": "20-12",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "J Hazlewood",
+          "role": "PACE",
+          "rating": 92,
+          "id": "20-13",
+          "squad": "AUSTRALIA 2024"
+        },
+        {
+          "name": "N Ellis",
+          "role": "PACE",
+          "rating": 85,
+          "id": "20-14",
+          "squad": "AUSTRALIA 2024"
+        }
+      ]
+    },
+    {
+      "country": "ENGLAND",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "P Salt",
+          "role": "OP",
+          "rating": 93,
+          "id": "21-0",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "W Jacks",
+          "role": "OP",
+          "rating": 86,
+          "id": "21-1",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "J Bairstow",
+          "role": "BAT",
+          "rating": 86,
+          "id": "21-2",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "H Brook",
+          "role": "BAT",
+          "rating": 90,
+          "id": "21-3",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "B Duckett",
+          "role": "BAT",
+          "rating": 84,
+          "id": "21-4",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "J Buttler",
+          "role": "WK",
+          "rating": 94,
+          "id": "21-5",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "M Ali",
+          "role": "AR",
+          "rating": 84,
+          "id": "21-6",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "S Curran",
+          "role": "AR",
+          "rating": 87,
+          "id": "21-7",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "L Livingstone",
+          "role": "AR",
+          "rating": 87,
+          "id": "21-8",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "A Rashid",
+          "role": "SPIN",
+          "rating": 94,
+          "id": "21-9",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "T Hartley",
+          "role": "SPIN",
+          "rating": 78,
+          "id": "21-10",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "J Archer",
+          "role": "PACE",
+          "rating": 92,
+          "id": "21-11",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "C Jordan",
+          "role": "PACE",
+          "rating": 86,
+          "id": "21-12",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "R Topley",
+          "role": "PACE",
+          "rating": 85,
+          "id": "21-13",
+          "squad": "ENGLAND 2024"
+        },
+        {
+          "name": "M Wood",
+          "role": "PACE",
+          "rating": 88,
+          "id": "21-14",
+          "squad": "ENGLAND 2024"
+        }
+      ]
+    },
+    {
+      "country": "SOUTH AFRICA",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "R Hendricks",
+          "role": "OP",
+          "rating": 83,
+          "id": "22-0",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "R Rickelton",
+          "role": "OP",
+          "rating": 84,
+          "id": "22-1",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "A Markram",
+          "role": "BAT",
+          "rating": 88,
+          "id": "22-2",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "D Miller",
+          "role": "BAT",
+          "rating": 92,
+          "id": "22-3",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "T Stubbs",
+          "role": "BAT",
+          "rating": 90,
+          "id": "22-4",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "Q de Kock",
+          "role": "WK",
+          "rating": 93,
+          "id": "22-5",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "H Klaasen",
+          "role": "WK",
+          "rating": 96,
+          "id": "22-6",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "M Jansen",
+          "role": "AR",
+          "rating": 88,
+          "id": "22-7",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "K Maharaj",
+          "role": "SPIN",
+          "rating": 90,
+          "id": "22-8",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "T Shamsi",
+          "role": "SPIN",
+          "rating": 90,
+          "id": "22-9",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "B Fortuin",
+          "role": "SPIN",
+          "rating": 80,
+          "id": "22-10",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "K Rabada",
+          "role": "PACE",
+          "rating": 94,
+          "id": "22-11",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "A Nortje",
+          "role": "PACE",
+          "rating": 95,
+          "id": "22-12",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "G Coetzee",
+          "role": "PACE",
+          "rating": 85,
+          "id": "22-13",
+          "squad": "SOUTH AFRICA 2024"
+        },
+        {
+          "name": "O Baartman",
+          "role": "PACE",
+          "rating": 86,
+          "id": "22-14",
+          "squad": "SOUTH AFRICA 2024"
+        }
+      ]
+    },
+    {
+      "country": "WEST INDIES",
+      "tournament": "T20 WORLD CUP 2024",
+      "players": [
+        {
+          "name": "B King",
+          "role": "OP",
+          "rating": 87,
+          "id": "23-0",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "J Charles",
+          "role": "OP",
+          "rating": 85,
+          "id": "23-1",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "R Powell",
+          "role": "BAT",
+          "rating": 88,
+          "id": "23-2",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "S Hetmyer",
+          "role": "BAT",
+          "rating": 85,
+          "id": "23-3",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "S Rutherford",
+          "role": "BAT",
+          "rating": 89,
+          "id": "23-4",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "N Pooran",
+          "role": "WK",
+          "rating": 95,
+          "id": "23-5",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "S Hope",
+          "role": "WK",
+          "rating": 87,
+          "id": "23-6",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "A Russell",
+          "role": "AR",
+          "rating": 93,
+          "id": "23-7",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "J Holder",
+          "role": "AR",
+          "rating": 85,
+          "id": "23-8",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "R Shepherd",
+          "role": "AR",
+          "rating": 85,
+          "id": "23-9",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "R Chase",
+          "role": "AR",
+          "rating": 87,
+          "id": "23-10",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "A Hosein",
+          "role": "SPIN",
+          "rating": 92,
+          "id": "23-11",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "G Motie",
+          "role": "SPIN",
+          "rating": 89,
+          "id": "23-12",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "A Joseph",
+          "role": "PACE",
+          "rating": 89,
+          "id": "23-13",
+          "squad": "WEST INDIES 2024"
+        },
+        {
+          "name": "S Joseph",
+          "role": "PACE",
+          "rating": 83,
+          "id": "23-14",
+          "squad": "WEST INDIES 2024"
+        }
+      ]
+    }
+  ]
+}

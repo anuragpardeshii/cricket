@@ -2,19 +2,21 @@ import secrets
 import time
 from fastapi import HTTPException
 from .catalog import SLOTS
-from .commentary import describe_over
+from .draft_pool import squads_for, person_key, used_people
+from .commentary import MatchHighlights, describe_finish
 rng = secrets.SystemRandom()
 AI_PICK_SECONDS = 3
-def initial():
-    return dict(screen='draft', yourXI={}, opponentXI={}, taken={}, rolled=None, rerollsUsed=0, turn='you', pickNumber=1, match=None)
+def initial(competition=None, edition=None):
+    return dict(competition=competition,edition=edition,screen='draft', yourXI={}, opponentXI={}, taken={}, rolled=None, rerollsUsed=0, turn='you', pickNumber=1, match=None)
 def fits(state,p):
-    return p['id'] not in state['taken'] and any(s['id'] not in state['yourXI'] and p['role'] in s['accepts'] for s in SLOTS)
+    return p['id'] not in state['taken'] and person_key(p) not in used_people([state['yourXI'],state['opponentXI']]) and any(s['id'] not in state['yourXI'] and p['role'] in s['accepts'] for s in SLOTS)
 def validate_order(order):
     if not isinstance(order,list) or len(order)!=11 or set(order)!={s['id'] for s in SLOTS}:
         raise HTTPException(422,'Formation must contain each of the eleven team positions exactly once')
     return list(order)
 
 def act(state, action, player_id=None, slot_id=None, *, squads, order=None):
+    squads=squads_for(squads,state.get('competition'),state.get('edition'))
     if state.get('abandoned'): raise HTTPException(409,'This practice game has ended')
     if action=='exit':
         state['abandoned']=True; state['screen']='landing'
@@ -57,8 +59,10 @@ def act(state, action, player_id=None, slot_id=None, *, squads, order=None):
 def advance(state, squads, ts):
     if state.get('abandoned') or state['screen']!='draft' or state['turn']!='opp' or ts<state.get('aiDeadline',float('inf')):
         return False
+    squads=squads_for(squads,state.get('competition'),state.get('edition'))
+    used=used_people([state['yourXI'],state['opponentXI']])
     slot=rng.choice([s for s in SLOTS if s['id'] not in state['opponentXI']])
-    candidates=sorted([p for squad in squads for p in squad['players'] if p['id'] not in state['taken'] and p['role'] in slot['accepts']],key=lambda p:-p['rating'])
+    candidates=sorted([p for squad in squads for p in squad['players'] if p['id'] not in state['taken'] and person_key(p) not in used and p['role'] in slot['accepts']],key=lambda p:-p['rating'])
     if not candidates: raise HTTPException(409, 'No eligible opponent players in catalog')
     opponent=rng.choice(candidates[:5])
     state['opponentXI'][slot['id']]=opponent
@@ -74,7 +78,7 @@ def advance_game(session, game):
     from .db import Audit
     state=copy.deepcopy(game.state)
     if state.get('turn')!='opp' or state.get('abandoned'): return False
-    if advance(state,load_catalog(session)['squads'],time.time()):
+    if advance(state,load_catalog(session,state.get('competition'),state.get('edition'))['squads'],time.time()):
         game.state=state; game.version+=1
         session.add(Audit(action='game.ai_pick',resource=game.id))
         return True
@@ -87,12 +91,13 @@ def tick():
         games=session.scalars(select(Game).where(Game.state['screen'].astext=='draft',Game.state['turn'].astext=='opp').with_for_update(skip_locked=True).limit(50)).all()
         for game in games: advance_game(session,game)
 
-def simulate(you,opp,you_order=None,opp_order=None):
+def simulate(you,opp,you_order=None,opp_order=None,team_names=None):
     import copy
     first=rng.choice(['you','opp']); second='opp' if first=='you' else 'you'
     teams={'you':you,'opp':opp}; scores={'you':'—','opp':'—'}; timeline=[]; scorecards=[]
     first_runs=0
     for num,side in enumerate([first,second],1):
+        highlights=MatchHighlights(); partnership=0
         other_side='opp' if side=='you' else 'you'
         order=(you_order if side=='you' else opp_order) or [s['id'] for s in SLOTS]
         batters=[teams[side][slot] for slot in order]
@@ -115,12 +120,14 @@ def simulate(you,opp,you_order=None,opp_order=None):
                     fielder=rng.choice(fielders); caught=rng.random()<.7
                     card['dismissal']=f"c {fielder['name']} b {bowler['name']}" if caught else f"b {bowler['name']}"
                     text=f"{bowler['name']} deceived {batter['name']}, caught by {fielder['name']} for {card['runs']}" if caught else f"{bowler['name']} bowled {batter['name']} for {card['runs']}"
-                    dismissals.append(text); deliveries.append('W'); lines.append(dict(kind='wicket',text=f'{over}.{ball+1} — {text}.'))
+                    dismissals.append(dict(text=text,name=batter['name'],runs=card['runs'])); partnership=0
+                    deliveries.append('W'); lines.append(dict(kind='wicket',text=f'{over}.{ball+1} — {text}.'))
                     if nxt<11:
                         striker=nxt; nxt+=1; batting[striker]['dismissal']='not out'
                 else:
                     scored=rng.choices([0,1,2,4,6],[30,36,9,max(2,13+(batter['rating']-85)*.5),max(1,5+(batter['rating']-85)*.35)])[0]
                     runs+=scored; card['runs']+=scored; bc['runs']+=scored; contribution['runs']+=scored; deliveries.append(str(scored))
+                    partnership+=scored
                     if scored in (4,6):
                         key='fours' if scored==4 else 'sixes'; card[key]+=1; contribution[key]+=1
                     lines.append(dict(kind='six' if scored==6 else 'four' if scored==4 else 'info',text=f"{over}.{ball+1} — {batter['name']}: {scored} run{'s' if scored!=1 else ''}."))
@@ -128,9 +135,10 @@ def simulate(you,opp,you_order=None,opp_order=None):
             if runs==start and len(deliveries)==6: bc['maidens']+=1
             striker,non=non,striker
             scores[side]=f'{runs}/{wickets} ({balls//6}.{balls%6})'
-            narrative=describe_over(contributions=contributions,dismissals=dismissals,bowler=bowler['name'],runs=runs-start,wickets=over_wickets,deliveries=len(deliveries),innings=num,total=runs,total_wickets=wickets,balls=balls,target=first_runs+1 if num==2 else None)
+            headline,narrative=highlights.over(number=over+1,batting=batting,bowler=bowler['name'],contributions=contributions,dismissals=dismissals,runs=runs-start,total=runs,wickets=wickets,balls=balls,target=first_runs+1 if num==2 else None,partnership=partnership,partners=[batters[striker]['name'],batters[non]['name']])
             current=dict(side=side,score=scores[side],batting=copy.deepcopy(batting),bowling=copy.deepcopy(bowling))
-            timeline.append(dict(over=f'OV {over+1}',kind='over',text=narrative,lines=lines,deliveries=deliveries,wicket=fell,bar=dict(runs=runs-start,wicket=fell,innings=num),batting=side,innings=num,youScore=scores['you'],oppScore=scores['opp'],scorecards=copy.deepcopy(scorecards)+[current]))
+            # Finished innings cards are immutable; reuse them until serialization.
+            timeline.append(dict(over=f'OV {over+1}',kind='over',headline=headline,text=narrative,lines=lines,deliveries=deliveries,wicket=fell,bar=dict(runs=runs-start,wicket=fell,innings=num),batting=side,innings=num,youScore=scores['you'],oppScore=scores['opp'],scorecards=list(scorecards)+[current]))
             if wickets==10 or (num==2 and runs>first_runs): break
         scorecards.append(current)
         if num==1: first_runs=runs
@@ -146,4 +154,6 @@ def simulate(you,opp,you_order=None,opp_order=None):
     mvp=max(performances.values(),key=lambda p:p['points'])
     award=lambda p,line: dict(id=p['id'],name=p['name'],side=p['side'],line=line)
     result=dict(winner=winner,margin=margin,mvp=award(mvp,f"{mvp['runs']} runs · {mvp['wickets']} wickets"),highestScorer=award(top,f"{top['runs']} ({top['balls']})"),bestBowler=award(best_bowler,f"{best_bowler['wickets']}/{best_bowler['runs']}"),yourScore=scores['you'],opponentScore=scores['opp'])
+    timeline[-1]['headline'],timeline[-1]['text']=describe_finish(result,scorecards,team_names or {'you':'Your team','opp':'AI'})
+    timeline[-1]['kind']='result'
     return dict(timeline=timeline,result=result,firstBatting=first,scorecards=scorecards,performances=list(performances.values()))

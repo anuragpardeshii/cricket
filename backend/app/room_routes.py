@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from .main import Strict,authenticated,db,limit,audit
 from .db import Room,User
 from .catalog import load_catalog
+from .draft_pool import validate_edition
 from . import rooms
 router=APIRouter(prefix='/api/rooms',dependencies=[Depends(authenticated)])
 class CreateRoom(Strict):
@@ -18,9 +19,12 @@ class CreateRoom(Strict):
     format:Literal['league','knockout']
     capacity:int=Field(ge=2,le=8)
     pick_seconds:int=Field(ge=10,le=120)
-    lobby_minutes:int=Field(ge=1,le=30)
+    competition:Literal['t20','odi','ipl']='odi'
+    edition:int|None=None
+    lobby_minutes:int|None=Field(default=None,ge=1,le=30)  # Accepted for older clients; ignored.
     @model_validator(mode='after')
     def check(self):
+        validate_edition(self.competition,self.edition)
         if self.name is not None and not self.name.strip(): raise ValueError('Name required')
         if self.format=='knockout' and self.capacity not in [2,4,8]: raise ValueError('Knockout requires 2, 4 or 8 teams')
         return self
@@ -30,6 +34,7 @@ class JoinRoom(Strict):
 class RoomAction(Strict):
     action:Literal['start','roll','pick','formation']
     version:int=Field(ge=0)
+    draft_revision:int|None=Field(default=None,ge=0)
     player_id:str|None=Field(default=None,max_length=16)
     slot_id:str|None=Field(default=None,max_length=8)
     order:list[str]|None=Field(default=None,min_length=11,max_length=11)
@@ -64,7 +69,6 @@ def join(body:JoinRoom,request:Request,auth=Depends(authenticated),session=Depen
     if state['phase'] in ['draft','live']: raise HTTPException(409,'Game in progress. New players cannot join after the draft starts.')
     if state['phase']=='complete': raise HTTPException(409,'This tournament has finished. Join another room or create your own.')
     if state['phase']!='lobby': raise HTTPException(409,'This room has expired. Join another room or create your own.')
-    if time.time()>=state['lobbyDeadline']: raise HTTPException(409,'Joining has closed. The game is starting with AI filling the empty seats.')
     if len(state['members'])>=state['capacity']: raise HTTPException(409,'Room is full. All player seats have been taken.')
     user=session.get(User,auth.user_id)
     preferred=user.username if not user.is_guest else f"Player {len(state['members'])+1}"
@@ -75,14 +79,27 @@ def join(body:JoinRoom,request:Request,auth=Depends(authenticated),session=Depen
     audit(session,'room.joined',auth.user_id,room.id); session.commit(); return rooms.project(room,auth.user_id,time.time())
 @router.get('/public')
 def public_rooms(page:int=Query(1,ge=1,le=10000),page_size:int=Query(10,ge=1,le=25),session=Depends(db)):
-    conditions=[Room.visibility=='public',Room.state['phase'].astext=='lobby',cast(Room.state['lobbyDeadline'].astext,Float)>time.time(),func.jsonb_array_length(Room.state['members'])<cast(Room.state['capacity'].astext,Float)]
+    conditions=[Room.visibility=='public',Room.state['phase'].astext=='lobby',func.jsonb_array_length(Room.state['members'])<cast(Room.state['capacity'].astext,Float)]
     total=session.scalar(select(func.count()).select_from(Room).where(*conditions))
     rows=session.scalars(select(Room).where(*conditions).order_by(Room.created_at.desc(),Room.id).offset((page-1)*page_size).limit(page_size)).all()
     # No identities, membership IDs, private room codes or game state in discovery.
-    return dict(page=page,page_size=page_size,total=total,rooms=[dict(code=r.code,format=r.state['format'],capacity=r.state['capacity'],players=len(r.state['members']),pick_seconds=r.state['seconds'],join_deadline=r.state['lobbyDeadline']) for r in rows])
+    return dict(page=page,page_size=page_size,total=total,rooms=[dict(code=r.code,format=r.state['format'],capacity=r.state['capacity'],players=len(r.state['members']),pick_seconds=r.state['seconds'],competition=r.state.get('competition'),edition=r.state.get('edition')) for r in rows])
 
 class Rename(Strict):
     name:str=Field(min_length=1,max_length=24,pattern=r'^[A-Za-z0-9 ._-]+$')
+
+class Ready(Strict):
+    ready:bool
+
+@router.post('/{room_id}/ready')
+def ready(room_id:UUID,body:Ready,auth=Depends(authenticated),session=Depends(db)):
+    room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state)
+    if state['phase']!='lobby': raise HTTPException(409,'Readiness is locked once the draft starts')
+    person=next(m for m in state['members'] if m['uid']==auth.user_id)
+    if person.get('ready',False)!=body.ready:
+        person['ready']=body.ready; room.state=state; room.version+=1
+        audit(session,'room.ready',auth.user_id,room.id); session.commit()
+    return rooms.project(room,auth.user_id,time.time())
 
 @router.post('/{room_id}/name')
 def rename(room_id:UUID,body:Rename,auth=Depends(authenticated),session=Depends(db)):
@@ -101,11 +118,15 @@ def get(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
 @router.post('/{room_id}/actions')
 def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
-    players=[p for s in load_catalog(session)['squads'] for p in s['players']]
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']]
     if rooms.advance(state,players,ts):
         room.state=state; room.version+=1; session.commit()
         raise HTTPException(409,'The room advanced. Refresh and try again.')
-    if room.version!=body.version: raise HTTPException(409,'Room changed. Try again.')
+    # Picks depend on the turn and rolled squad, not another team's formation,
+    # name or vote. Keep a separate revision, while supporting older clients.
+    if body.action in ['roll','pick'] and body.draft_revision is not None:
+        if state.get('draftRevision',0)!=body.draft_revision: raise HTTPException(409,'The draft advanced. Try again.')
+    elif room.version!=body.version: raise HTTPException(409,'Room changed. Try again.')
     if body.action=='start':
         if room.owner_id!=auth.user_id: raise HTTPException(403,'Only the host can start')
         rooms.start(state,ts)
@@ -127,7 +148,7 @@ class KickVote(Strict):
 def kick_vote(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Depends(db)):
     limit('kick-vote:'+auth.user_id,30,300)
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
-    players=[p for s in load_catalog(session)['squads'] for p in s['players']]
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']]
     rooms.advance(state,players,ts)
     passed=rooms.vote_kick(room,state,auth.user_id,body.target_id,ts)
     rooms.advance(state,players,ts)
@@ -138,7 +159,7 @@ def kick_vote(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Dep
 @router.post('/{room_id}/exit')
 def exit_room(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
-    players=[p for s in load_catalog(session)['squads'] for p in s['players']]
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']]
     rooms.advance(state,players,ts)
     target=next(m for m in state['members'] if m['uid']==auth.user_id)
     rooms.remove_member(room,state,target,ts,'exited'); rooms.advance(state,players,ts)

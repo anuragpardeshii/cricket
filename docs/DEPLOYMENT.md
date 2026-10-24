@@ -191,3 +191,29 @@ Free Render Postgres expires after 30 days. Use a persistent paid database and a
 - [Render deployment and pre-deploy commands](https://render.com/docs/deploys)
 - [Render PostgreSQL connections and TLS](https://render.com/docs/postgresql-creating-connecting)
 - [Render free service/database limitations](https://render.com/docs/free)
+
+## Room WebSockets and LiveKit voice
+
+Deploy migration **0008** with the backend and build the frontend with its updated dependencies. Room state now arrives through a WebSocket; gameplay actions still use the existing same-origin `/api` proxy. In Render, `RENDER_EXTERNAL_HOSTNAME` produces the direct `wss://<backend>/api/rooms/<uuid>/live` URL automatically. If using a different backend host, set `ROOM_WEBSOCKET_ORIGIN=wss://your-api.example.com`. Do not include an `/api` path in that variable. Add the exact WebSocket origin to `connect-src` in `frontend/vercel.json` (and its example). Keep `APP_ORIGIN` equal to the frontend origin: it is checked on every socket handshake.
+
+The browser gets a 30-second, single-use connection ticket through the existing authenticated HTTP API, then sends it in the socket's first frame. Direct backend sockets therefore work without exposing the HttpOnly login cookie or depending on third-party cookies. Use an always-on API instance for dependable live rooms. A socket outage shows a reconnecting state and retries with backoff. No frontend environment variable is required.
+
+To enable voice, create a LiveKit Cloud project and add these settings to **Render → API service → Environment**:
+
+| Variable | Value |
+| --- | --- |
+| `LIVEKIT_URL` | Your project's `wss://…livekit.cloud` URL |
+| `LIVEKIT_API_KEY` | Your LiveKit API key |
+| `LIVEKIT_API_SECRET` | Your LiveKit API secret |
+
+Set these privately in hosting settings; never commit actual values, place them in `VITE_*`, or send them to the browser. Restart the API after configuring them. `LIVEKIT_PUBLIC_URL` is optional and only needed when the browser and backend use different LiveKit addresses. The checked-in policies allow LiveKit Cloud HTTPS/WSS endpoints and blob audio; for self-hosted LiveKit, add its exact HTTPS and WSS origins to `connect-src` in the active frontend hosting configuration. Configure its TLS, TCP/UDP media ports, and TURN according to the [LiveKit deployment guide](https://docs.livekit.io/transport/self-hosting/deployment/).
+
+Audio uses WebRTC directly between browsers and LiveKit; only game updates and media signaling use WebSockets. The existing FastAPI server does not relay audio. Voice access requires current game membership, including guest membership. Users join with microphones off. Individual mute and incoming-sound controls are local to the listener and do not change another participant's publishing permission.
+
+Keep the API's media access monitor running. It checks participants on room/access changes and every five seconds under normal operation, removing connections whose session or membership is no longer valid, even after an API restart. LiveKit Cloud receives an explicit token revocation cutoff; short-lived tokens plus continued reconciliation also limit stale-token reconnects on self-hosted LiveKit. Monitor `voice_access_check_failed` and `room_notifications_unavailable`. Media access enforcement can be delayed while the backend or LiveKit control API is unavailable. Each API worker uses one dedicated PostgreSQL connection for LISTEN in addition to its normal pool; use a direct/session-pooling database connection, not a transaction-pooling endpoint for LISTEN.
+
+After deployment, test with three independent browser sessions: join the same room, join voice, unmute one microphone, mute that speaker in only one listener, and confirm the other listener still hears them. Also test mic denial, leaving voice without exiting the room, refresh/rejoin, removal by kick vote, and live room updates after reconnect. The development Compose LiveKit server is for local testing and must not be exposed publicly.
+
+## Competition pools and compact rooms
+
+Apply migration **0010** (`alembic upgrade head`) before serving the updated backend. It adds 15 squads without rewriting existing cards or saved results. New rooms and practice games accept `competition: "odi" | "t20" | "ipl"`; the default is ODI. The retired `lobby_minutes` field remains accepted for older clients but has no effect. Existing rooms without a competition keep their mixed pool. Room sockets now include only the visible over’s scorecards and reveal rolls only to the active picker. Deploy backend and frontend together. The animated trophies and winning sound require no external assets or credentials; haptics depend on browser/device support.

@@ -1,5 +1,95 @@
 """Over narratives built from recorded outcomes, without changing match randomness."""
 
+class MatchHighlights:
+    """Select a few story beats using only events already played in this innings."""
+
+    def __init__(self):
+        self.count=0
+        self.last_over=-3
+        self.previous=None
+        self.milestones=set()
+        self.pressure_reported=False
+        self.partnership_reported=False
+
+    def over(self, *, number, batting, bowler, contributions, dismissals, runs,
+             total, wickets, balls, target, partnership, partners):
+        finished=wickets==10 or balls>=120 or (target is not None and total>=target)
+        previous=self.previous
+        self.previous=(bowler,runs)
+        headline=text=''
+        if finished:
+            if target is None:
+                leader=max(batting,key=lambda p:p['runs'])
+                headline='The target is set'
+                text=f"{leader['name']} leads the scoring with {leader['runs']} from {leader['balls']}. The innings closes at {total}/{wickets} — the chase needs {total+1}."
+            else:
+                # The simulator replaces this with the actual result and heroes.
+                headline='The final act'; text='The final ball of the contest has been played.'
+        elif number==1:
+            a,b=batting[:2]
+            headline='The opening act'
+            text=f"{a['name']} and {b['name']} open the innings. "
+            if dismissals:
+                text+=f"An early twist! {dismissals[0]['text']}."
+            elif total>=12:
+                leader=max([a,b],key=lambda p:p['runs'])
+                text+=f"Straight onto the attack: {total} from the first over, with {leader['name']} contributing {leader['runs']}."
+            else:
+                text+=f"{bowler} opens the bowling; the first exchange ends at {total}/{wickets}."
+        elif self.count<5 and number-self.last_over>=3:
+            big_wicket=next((d for d in dismissals if d['runs']>=25),None)
+            fifty=next((p for p in batting if p['runs']>=50 and p['id'] not in self.milestones),None)
+            if len(dismissals)>=2:
+                headline='The innings jolts'
+                names=' and '.join(d['name'] for d in dismissals[:2])
+                text=f"How quickly this game turns! {bowler} removes {names}; {len(dismissals)} wickets in one over leave the batting side at {total}/{wickets}."
+            elif big_wicket:
+                headline='The big wicket'
+                text=f"Just when {big_wicket['name']} was building something! {big_wicket['text']}. At {total}/{wickets}, the batting side must find a new driving force."
+            elif partnership>=50 and not self.partnership_reported:
+                headline='A partnership takes charge'
+                self.partnership_reported=True
+                text=f"{partners[0]} and {partners[1]} have put on {partnership} together. The stand is giving the innings its shape — {total}/{wickets}, and the bowlers need a way back."
+            elif fifty:
+                headline='A fifty to savour'
+                text=f"{fifty['name']} reaches {fifty['runs']} from {fifty['balls']} balls. The innings has its anchor; now comes the chance to turn that platform into something bigger."
+            elif runs>=16:
+                leader=max(contributions,key=lambda name:contributions[name]['runs'])
+                headline='The attack breaks loose'
+                text=f"{leader} takes on {bowler}, scoring {contributions[leader]['runs']} of the over’s {runs} runs. A sudden burst of intent — the score races to {total}/{wickets}!"
+            elif number==6:
+                leader=max(batting,key=lambda p:p['runs'])
+                headline='Powerplay verdict'
+                mood='A flying start!' if total>=50 and wickets<=2 else 'Early damage to repair.' if wickets>=3 else 'The opening exchanges are over.'
+                text=f"{mood} {total}/{wickets} after six, with {leader['name']} making {leader['runs']} from {leader['balls']}. The middle overs will test that platform."
+            elif previous and previous[1]+runs<=8:
+                headline='The bowlers tighten the grip'
+                text=f"{previous[0]} and {bowler} concede just {previous[1]+runs} across two overs. The runs have dried up — who can break the pressure at {total}/{wickets}?"
+            elif target is not None and balls>=96 and not self.pressure_reported:
+                self.pressure_reported=True
+                headline='The chase reaches its crossroads'
+                text=f"Still {target-total} needed from {120-balls} balls, with {10-wickets} wickets in hand. Every boundary can change this chase; every dot gives the fielding side another breath."
+        if text:
+            self.count+=1; self.last_over=number
+            self.milestones.update(p['id'] for p in batting if p['runs']>=50)
+        return headline,text
+
+
+def describe_finish(result, scorecards, team_names):
+    """Final-only narrative: credit players on the winning side, in their roles."""
+    winner=result['winner']
+    if winner=='tie': return 'Nothing separates them!', 'Scores level after both innings. Neither side has found the winning edge.'
+    batting=next(c['batting'] for c in scorecards if c['side']==winner)
+    bowling=next(c['bowling'] for c in scorecards if c['side']!=winner)
+    batter=max(batting,key=lambda p:p['runs'])
+    bowler=max(bowling,key=lambda p:(p['wickets'],-p['runs']))
+    text=f"{team_names[winner]} wins {result['margin']}! {batter['name']} supplies {batter['runs']} runs"
+    if bowler['wickets']:
+        text+=f", while {bowler['name']} takes {bowler['wickets']}/{bowler['runs']} with the ball."
+    else:
+        text+=f"; the winning side’s bowlers finish without a wicket."
+    return 'The final act',text
+
 def describe_over(*, contributions, dismissals, bowler, runs, wickets, deliveries, innings, total, total_wickets, balls, target=None):
     sixes=sum(c['sixes'] for c in contributions.values())
     if wickets>=2 and runs>=12:
