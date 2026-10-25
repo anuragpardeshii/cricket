@@ -83,3 +83,44 @@ def test_roll_is_private_and_competition_is_validated():
     assert all(p['competition']=='ipl' for p in room['state']['rolled']['players'])
     assert b.get(path).json()['state']['rolled'] is None
     assert 'lobbyDeadline' not in room['state']
+
+
+def test_recent_rolls_prefer_different_historical_squads(monkeypatch):
+    squads=[]
+    for index in range(4):
+        player=dict(id=f'x{index}',name=f'Player {index}',role='BAT',rating=80,
+                    squad=f'TEAM {index} 2024',competition='t20',edition=2024)
+        squads.append(dict(country=f'TEAM {index}',tournament='T20 WORLD CUP 2024',players=[player]))
+    monkeypatch.setattr(rooms.rng,'choice',lambda values:values[0])
+    practice=game.initial()
+    practice_rolls=[]
+    for _ in range(4):
+        game.act(practice,'roll',squads=squads)
+        practice_rolls.append(practice['rolled']['players'][0]['squad'])
+    assert len(set(practice_rolls))==4
+
+    state=rooms.new_state('host',SimpleNamespace(name='Host',capacity=2,format='knockout',pick_seconds=30,competition='t20'))
+    state['members'][0]['ready']=True; rooms.start(state,100)
+    players=[squad['players'][0] for squad in squads]
+    options=[dict(player=player,slot='n3') for player in players]
+    room_rolls=[]
+    for number in range(4):
+        rooms.roll(state,players,options,ts=101+number)
+        room_rolls.append(state['rolled']['players'][0]['squad'])
+    assert len(set(room_rolls))==4
+
+
+def test_match_length_follows_competition(monkeypatch):
+    class StableRandom:
+        def choice(self,values): return values[0]
+        def choices(self,_values,_weights): return [1]
+        def random(self): return .5
+    monkeypatch.setattr(game,'rng',StableRandom())
+    roles=['OP','OP','BAT','BAT','BAT','AR','WK','PACE','PACE','PACE','SPIN']
+    slots=['op1','op2','n3','n4','n5','ar','wk','b1','b2','b3','b4']
+    team=lambda prefix:{slot:dict(id=f'{prefix}-{index}',name=f'{prefix}{index}',role=role,rating=80,squad='TEST 2024') for index,(slot,role) in enumerate(zip(slots,roles))}
+    odi=game.simulate(team('a'),team('b'),overs=game.match_overs('odi'))
+    t20=game.simulate(team('c'),team('d'),overs=game.match_overs('t20'))
+    assert odi['overs']==50 and len(odi['timeline'])==100
+    assert t20['overs']==20 and len(t20['timeline'])==40
+    assert all(card['score'].endswith('(50.0)') for card in odi['scorecards'])

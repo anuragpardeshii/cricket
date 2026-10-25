@@ -168,7 +168,8 @@ def test_voice_token_is_short_lived_room_scoped_and_microphone_only(livekit_conf
     with Session() as session:
         assert session.get(VoiceGrant, room['you']).session_hash == digest(a.cookies.get(COOKIE))
     assert a.post(f"/api/rooms/{room['id']}/exit", json={}).status_code == 200
-    assert a.post(path, json={}).status_code == 403
+    # This was the room's final human, so explicit exit deleted the room.
+    assert a.post(path, json={}).status_code == 404
 
 
 def test_missing_voice_config_does_not_block_room_connection(monkeypatch):

@@ -15,7 +15,7 @@ from argon2.exceptions import VerifyMismatchError, InvalidHashError
 from fastapi import FastAPI, Depends, HTTPException, Request, Response, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from sqlalchemy import select, delete, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
@@ -224,15 +224,13 @@ def catalog(competition:Literal['odi','t20','ipl']|None=None,edition:int|None=No
 class CreateGame(Strict):
     competition:Literal['odi','t20','ipl']='odi'
     edition:int|None=None
-    @model_validator(mode='after')
-    def check_edition(self):
-        validate_edition(self.competition,self.edition)
-        return self
 
 @app.post('/api/games',status_code=201)
 def create(body:CreateGame=CreateGame(),auth=Depends(authenticated),session=Depends(db)):
     limit('create:'+auth.user_id,20,3600)
-    game=Game(owner_id=auth.user_id,state=initial(body.competition,body.edition))
+    # Practice is one simple format: a T20 draft across every historical T20
+    # World Cup edition. Keep accepting the old request fields during rollout.
+    game=Game(owner_id=auth.user_id,state=initial('t20',None))
     session.add(game); session.flush(); audit(session,'game.created',auth.user_id,game.id); session.commit(); return view(game)
 @app.get('/api/games')
 def games(auth=Depends(authenticated),session=Depends(db)):
@@ -249,7 +247,10 @@ def action(game_id:UUID,body:Action,auth=Depends(authenticated),session=Depends(
         session.commit()
         raise HTTPException(409,'Game changed; refresh and try again')
     if game.version!=body.version: raise HTTPException(409,'Game changed; refresh and try again')
-    state=copy.deepcopy(game.state); act(state,body.action,body.player_id,body.slot_id,squads=load_catalog(session,state.get('competition'),state.get('edition'))['squads'],order=body.order)
+    state=copy.deepcopy(game.state)
+    needs_pool=body.action in ['roll','pick'] and state.get('screen')=='draft' and state.get('turn')=='you'
+    squads=load_catalog(session,state.get('competition'),state.get('edition'))['squads'] if needs_pool else []
+    act(state,body.action,body.player_id,body.slot_id,squads=squads,order=body.order)
     game.state=state; game.version+=1; audit(session,'game.'+body.action,auth.user_id,game.id); session.commit(); return view(game)
 def admin_required(auth=Depends(authenticated),session=Depends(db)):
     user=session.get(User,auth.user_id)

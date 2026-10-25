@@ -3,8 +3,9 @@
 class MatchHighlights:
     """Select a few story beats using only events already played in this innings."""
 
-    def __init__(self):
+    def __init__(self, overs=20):
         self.count=0
+        self.overs=overs
         self.last_over=-3
         self.previous=None
         self.milestones=set()
@@ -13,7 +14,8 @@ class MatchHighlights:
 
     def over(self, *, number, batting, bowler, contributions, dismissals, runs,
              total, wickets, balls, target, partnership, partners):
-        finished=wickets==10 or balls>=120 or (target is not None and total>=target)
+        ball_limit=self.overs*6
+        finished=wickets==10 or balls>=ball_limit or (target is not None and total>=target)
         previous=self.previous
         self.previous=(bowler,runs)
         headline=text=''
@@ -57,18 +59,20 @@ class MatchHighlights:
                 leader=max(contributions,key=lambda name:contributions[name]['runs'])
                 headline='The attack breaks loose'
                 text=f"{leader} takes on {bowler}, scoring {contributions[leader]['runs']} of the over’s {runs} runs. A sudden burst of intent — the score races to {total}/{wickets}!"
-            elif number==6:
+            elif number==(10 if self.overs==50 else 6):
                 leader=max(batting,key=lambda p:p['runs'])
                 headline='Powerplay verdict'
-                mood='A flying start!' if total>=50 and wickets<=2 else 'Early damage to repair.' if wickets>=3 else 'The opening exchanges are over.'
-                text=f"{mood} {total}/{wickets} after six, with {leader['name']} making {leader['runs']} from {leader['balls']}. The middle overs will test that platform."
+                threshold=80 if self.overs==50 else 50
+                period='ten' if self.overs==50 else 'six'
+                mood='A flying start!' if total>=threshold and wickets<=2 else 'Early damage to repair.' if wickets>=3 else 'The opening exchanges are over.'
+                text=f"{mood} {total}/{wickets} after {period}, with {leader['name']} making {leader['runs']} from {leader['balls']}. The middle overs will test that platform."
             elif previous and previous[1]+runs<=8:
                 headline='The bowlers tighten the grip'
                 text=f"{previous[0]} and {bowler} concede just {previous[1]+runs} across two overs. The runs have dried up — who can break the pressure at {total}/{wickets}?"
-            elif target is not None and balls>=96 and not self.pressure_reported:
+            elif target is not None and balls>=ball_limit-24 and not self.pressure_reported:
                 self.pressure_reported=True
                 headline='The chase reaches its crossroads'
-                text=f"Still {target-total} needed from {120-balls} balls, with {10-wickets} wickets in hand. Every boundary can change this chase; every dot gives the fielding side another breath."
+                text=f"Still {target-total} needed from {ball_limit-balls} balls, with {10-wickets} wickets in hand. Every boundary can change this chase; every dot gives the fielding side another breath."
         if text:
             self.count+=1; self.last_over=number
             self.milestones.update(p['id'] for p in batting if p['runs']>=50)
@@ -90,7 +94,7 @@ def describe_finish(result, scorecards, team_names):
         text+=f"; the winning side’s bowlers finish without a wicket."
     return 'The final act',text
 
-def describe_over(*, contributions, dismissals, bowler, runs, wickets, deliveries, innings, total, total_wickets, balls, target=None):
+def describe_over(*, contributions, dismissals, bowler, runs, wickets, deliveries, innings, total, total_wickets, balls, target=None, overs=20):
     sixes=sum(c['sixes'] for c in contributions.values())
     if wickets>=2 and runs>=12:
         opening='Absolute drama! Big hits and wickets collide in a breathless over.'
@@ -120,12 +124,12 @@ def describe_over(*, contributions, dismissals, bowler, runs, wickets, deliverie
         parts.append(('But the bowler hits back! ' if sixes or any(c['fours'] for c in contributions.values()) else 'Gone! ')+'. '.join(dismissals)+'.')
     parts.append(f"{runs} run{'s' if runs!=1 else ''}, {wickets} wicket{'s' if wickets!=1 else ''} from {bowler}’s {'over' if deliveries==6 else str(deliveries)+'-ball spell'}.")
     if innings==2 and target is not None:
-        needed=target-total; remaining=max(0,120-balls)
+        needed=target-total; remaining=max(0,overs*6-balls)
         if needed<=0: parts.append(f"That seals the chase! Home with {10-total_wickets} wickets and {remaining} balls to spare.")
         elif total_wickets==10 or remaining==0:
             parts.append('Scores level! Nothing separates these teams.' if needed==1 else f"The defence holds! The chase falls {needed-1} runs short.")
         else:
             parts.append(f"Now {needed} needed from {remaining} balls."+(' Every delivery feels enormous!' if remaining<=30 or needed>remaining*2 else ' The chase is still alive.'))
-    elif total_wickets==10 or balls>=120:
+    elif total_wickets==10 or balls>=overs*6:
         parts.append(f"The innings closes at {total}/{total_wickets}. The chase will need {total+1}.")
     return ' '.join(parts)

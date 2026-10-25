@@ -23,6 +23,12 @@ services:
         fromDatabase:
           name: out-cricket-db
           property: connectionString
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
     buildFilter:
       paths:
         - backend/**

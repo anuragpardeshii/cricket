@@ -41,6 +41,19 @@ def test_readiness_is_personal_required_and_can_be_withdrawn():
     assert b.post(path+'/ready',json={'ready':False}).status_code==409
 
 
+def test_lobby_host_transfers_and_last_exit_deletes_room():
+    a,b=client(),client('bob')
+    room=room_for(a,2); room=b.post('/api/rooms/join',json={'code':room['code']}).json()
+    first=a.post(f"/api/rooms/{room['id']}/exit",json={})
+    assert first.status_code==200 and first.json()=={'ok':True,'closed':False}
+    transferred=b.get(f"/api/rooms/{room['id']}")
+    assert transferred.status_code==200 and transferred.json()['host'] is True
+    last=b.post(f"/api/rooms/{room['id']}/exit",json={})
+    assert last.status_code==200 and last.json()=={'ok':True,'closed':True}
+    assert b.get(f"/api/rooms/{room['id']}").status_code==404
+    with Session() as session: assert session.get(Room,room['id']) is None
+
+
 def test_expired_join_window_cannot_start_even_a_ready_room():
     a=client(); room=ready_room(a,room_for(a,2))
     with Session.begin() as session:

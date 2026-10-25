@@ -1,0 +1,22 @@
+name: Keep Render demo awake
+
+on:
+  schedule:
+    # Offset from the top of the hour, when scheduled Actions are busiest.
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-render-demo-awake
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Wake API and verify database readiness
+        run: curl --fail --show-error --silent --max-time 90 --retry 2 --retry-delay 10 https://out-cricket-api.onrender.com/api/health

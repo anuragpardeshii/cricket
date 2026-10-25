@@ -24,7 +24,9 @@ class CreateRoom(Strict):
     lobby_minutes:int|None=Field(default=None,ge=1,le=30)  # Accepted for older clients; ignored.
     @model_validator(mode='after')
     def check(self):
-        validate_edition(self.competition,self.edition)
+        # Rooms always draw from every historical edition in the competition.
+        # Accept the old edition field during a staggered frontend rollout.
+        validate_edition(self.competition,None)
         if self.name is not None and not self.name.strip(): raise ValueError('Name required')
         if self.format=='knockout' and self.capacity not in [2,4,8]: raise ValueError('Knockout requires 2, 4 or 8 teams')
         return self
@@ -118,7 +120,9 @@ def get(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
 @router.post('/{room_id}/actions')
 def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
-    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']]
+    your_pick=body.action in ['roll','pick'] and state['phase']=='draft' and state['members'][state['turn']]['uid']==auth.user_id
+    needs_pool=state['phase']=='draft' and (ts>=state['deadline'] or your_pick)
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if needs_pool else []
     if rooms.advance(state,players,ts):
         room.state=state; room.version+=1; session.commit()
         raise HTTPException(409,'The room advanced. Refresh and try again.')
@@ -148,7 +152,7 @@ class KickVote(Strict):
 def kick_vote(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Depends(db)):
     limit('kick-vote:'+auth.user_id,30,300)
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
-    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']]
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if state['phase']=='draft' and ts>=state['deadline'] else []
     rooms.advance(state,players,ts)
     passed=rooms.vote_kick(room,state,auth.user_id,body.target_id,ts)
     rooms.advance(state,players,ts)
@@ -159,9 +163,12 @@ def kick_vote(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Dep
 @router.post('/{room_id}/exit')
 def exit_room(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
-    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']]
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if state['phase']=='draft' and ts>=state['deadline'] else []
     rooms.advance(state,players,ts)
     target=next(m for m in state['members'] if m['uid']==auth.user_id)
     rooms.remove_member(room,state,target,ts,'exited'); rooms.advance(state,players,ts)
+    if not any(member['uid'] is not None for member in state['members']):
+        audit(session,'room.closed',auth.user_id,room.id); session.delete(room); session.commit()
+        return {'ok':True,'closed':True}
     room.state=state; room.version+=1; audit(session,'room.exited',auth.user_id,room.id); session.commit()
-    return {'ok':True}
+    return {'ok':True,'closed':False}

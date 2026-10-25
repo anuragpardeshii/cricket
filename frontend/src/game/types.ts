@@ -7,7 +7,7 @@ export const EDITIONS: Record<Competition, {value: string; label: string}[]> = {
   ipl: [{value:'2026',label:'2026 · 10 teams'}, {value:'2025',label:'2025 · 10 teams'}, {value:'2024',label:'2024 · 10 teams'}, {value:'2023',label:'2023 · 10 teams'}, {value:'2022',label:'2022 · 10 teams'}, {value:'2021',label:'2021 · 8 teams'}, {value:'2020',label:'2020 · 8 teams'}, {value:'2019',label:'2019 · 8 teams'}, {value:'2018',label:'2018 · 8 teams'}, {value:'2017',label:'2017 · 8 teams'}, {value:'2016',label:'2016 · 8 teams'}, {value:'2015',label:'2015 · 8 teams'}, {value:'2014',label:'2014 · 8 teams'}, {value:'2013',label:'2013 · 9 teams'}, {value:'2012',label:'2012 · 9 teams'}, {value:'2011',label:'2011 · 10 teams'}, {value:'2010',label:'2010 · 8 teams'}, {value:'2009',label:'2009 · 8 teams'}, {value:'2008',label:'2008 · 8 teams'}],
 };
 export const editionOptions = (competition: Competition) => [...EDITIONS[competition], {value:'all',label:'All historical editions'}];
-export const poolName = (competition?: string, edition?: number | null) => `${competitionName(competition)}${edition ? ` ${edition}` : ' · All years'}`;
+export const poolName = (competition?: string, _edition?: number | null) => competitionName(competition);
 import type { ScorecardData } from '../components/Scorecard';
 export type Role = 'OP' | 'BAT' | 'AR' | 'WK' | 'PACE' | 'SPIN';
 export type Side = 'you' | 'opp';
@@ -103,4 +103,5 @@ export interface MatchPlan {
   timeline: TimelineEntry[];
   result: MatchResult;
   firstBatting: Side;
+  overs?: number;
 }

@@ -39,7 +39,7 @@ interface GameState {
 }
 
 const freshState = (): GameState => ({
-  screen: 'landing', opponentName: 'AI', opponentJoined: false,
+  competition: 't20', edition: null, screen: 'landing', opponentName: 'AI', opponentJoined: false,
   turn: 'you', pickNumber: 1, rerollsUsed: 0,
   rolling: false, rollName: '', rolled: null, selectedId: null,
   yourXI: {}, opponentXI: {}, taken: {}, recentSquads: [], opponentThinking: false,
@@ -126,9 +126,9 @@ export function useGame() {
     }, 750);
     return () => { active = false; clearInterval(timer); };
   }, [state.screen, state.turn]);
-  const startPractice = (competition: Competition = current.current.competition??'odi', edition: number | null = current.current.edition??null) => request(async () => {
+  const startPractice = () => request(async () => {
     if (!account) await api<BrowserSession>('/auth/guest', {});
-    const game = await api<SavedGame>('/games', {competition,edition});
+    const game = await api<SavedGame>('/games', {});
     clearTimers();
     update(freshState());
     load(game);

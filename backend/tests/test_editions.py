@@ -40,7 +40,7 @@ def test_every_edition_completes_eight_unique_xis(competition,edition,count,monk
     assert all(p['edition']==edition and p['competition']==competition for p in practice['opponentXI'].values())
 
 
-def test_edition_api_validation_filtering_and_saved_settings():
+def test_edition_api_filtering_and_game_modes():
     c=client()
     assert c.get('/api/catalog?competition=t20&edition=2024').status_code==200
     squads=c.get('/api/catalog?competition=t20&edition=2024').json()['squads']
@@ -55,14 +55,16 @@ def test_edition_api_validation_filtering_and_saved_settings():
     assert c.get('/api/catalog?edition=2023').status_code==422
     settings=dict(competition='ipl',edition=2023)
     practice=c.post('/api/games',json=settings).json()
-    assert c.get('/api/games/'+practice['id']).json()['state']['edition']==2023
+    practice_state=c.get('/api/games/'+practice['id']).json()['state']
+    assert practice_state['competition']=='t20' and practice_state['edition'] is None
     room_settings=dict(format='knockout',capacity=8,pick_seconds=30,visibility='public',**settings)
     room=c.post('/api/rooms',json=room_settings).json()
-    assert c.get('/api/rooms/'+room['id']).json()['state']['edition']==2023
-    assert next(r for r in c.get('/api/rooms/public').json()['rooms'] if r['code']==room['code'])['edition']==2023
+    room_state=c.get('/api/rooms/'+room['id']).json()['state']
+    assert room_state['competition']=='ipl' and room_state['edition'] is None
+    assert next(r for r in c.get('/api/rooms/public').json()['rooms'] if r['code']==room['code'])['edition'] is None
     for invalid in [dict(competition='ipl',edition=2007),dict(competition='odi',edition=2024),dict(competition='t20',edition=2050)]:
-        assert c.post('/api/games',json=invalid).status_code==422
-        assert c.post('/api/rooms',json={**room_settings,**invalid}).status_code==422
+        assert c.post('/api/games',json=invalid).json()['state']['competition']=='t20'
+        assert c.post('/api/rooms',json={**room_settings,**invalid}).json()['state']['edition'] is None
 
 
 def test_historical_squad_boundaries_and_namesakes():

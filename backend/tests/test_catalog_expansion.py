@@ -7,7 +7,7 @@ from pathlib import Path
 from sqlalchemy import delete, select, update
 
 from app import game, rooms
-from app.catalog import load_catalog
+from app.catalog import clear_catalog_cache, load_catalog
 from app.db import Game, PlayerRecord, SquadRecord, Session, engine
 from test_preflight import clean, client, create, action
 
@@ -40,6 +40,19 @@ def test_expanded_catalog_keeps_original_cards_and_matches_database():
     with Session() as session:
         assert without_metadata(load_catalog(session))==current
     assert without_metadata(client().get('/api/catalog').json())==current
+
+
+def test_production_catalog_cache_reuses_a_competition_pool(monkeypatch):
+    monkeypatch.setenv('APP_ENV','production'); clear_catalog_cache()
+    try:
+        with Session() as session:
+            first=load_catalog(session,'t20')
+        class NoDatabase:
+            def execute(self,*_args,**_kwargs): raise AssertionError('cached catalog queried PostgreSQL')
+        assert load_catalog(NoDatabase(),'t20') is first
+        assert len(first['squads'])==152
+    finally:
+        clear_catalog_cache()
 
 
 @pytest.mark.parametrize('filename',['0009_more_tournament_squads.py','0011_historical_editions.py','0012_complete_tournament_archive.py'])

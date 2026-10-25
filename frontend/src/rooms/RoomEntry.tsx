@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { ActionButton, Eyebrow, Panel } from '../components/ui';
 import { Select } from '../components/Select';
-import { COMPETITIONS, EDITIONS, editionOptions, type Competition } from '../game/types';
-import { SquadLibrary } from '../components/SquadLibrary';
+import { COMPETITIONS, type Competition } from '../game/types';
 import { PublicRooms } from './PublicRooms';
 
 type Props = { ready: boolean; busy: boolean; send: (path: string, body: unknown) => Promise<void> };
@@ -15,7 +14,6 @@ export function RoomEntry({ ready, busy, send }: Props) {
   const [capacity, setCapacity] = useState('4');
   const [seconds, setSeconds] = useState('30');
   const [competition, setCompetition] = useState<Competition>('odi');
-  const [edition,setEdition] = useState('2023');
   const [code, setCode] = useState('');
   return <section className="mx-auto max-w-4xl pb-12 pt-12">
     {view !== 'choose' && <button className="mb-8 text-sm text-muted hover:text-amber disabled:opacity-40" disabled={busy} onClick={() => setView('choose')}>← Back to rooms</button>}
@@ -27,17 +25,14 @@ export function RoomEntry({ ready, busy, send }: Props) {
         <span className="font-mono text-xs text-amber">{item.number}</span><h2 className="mb-3 mt-7 text-2xl font-bold">{item.title}</h2><p className="min-h-14 text-sm leading-6 text-muted">{item.text}</p><span className="mt-8 flex items-center justify-between text-sm font-bold text-amber">{item.action}<span aria-hidden="true">↗</span></span>
       </button>)}
     </div>}
-    {view === 'create' && <Panel className="p-6 sm:p-8"><form className="space-y-7" onSubmit={event => { event.preventDefault(); void send('/rooms', { visibility, format, capacity: Number(capacity), pick_seconds: Number(seconds), competition, edition: edition==='all'?null:Number(edition) }); }}>
+    {view === 'create' && <Panel className="p-6 sm:p-8"><form className="space-y-7" onSubmit={event => { event.preventDefault(); void send('/rooms', { visibility, format, capacity: Number(capacity), pick_seconds: Number(seconds), competition }); }}>
       <div className="grid gap-6 sm:grid-cols-2">
         <Select label="Room visibility" value={visibility} onChange={setVisibility} options={[{ value: 'private', label: 'Private room', description: 'Only players with your invitation code can enter.' }, { value: 'public', label: 'Public room', description: 'Anyone can discover your room and join.' }]}/>
         <Select label="Tournament format" value={format} onChange={value => { setFormat(value); setCapacity('4'); }} options={[{ value: 'knockout', label: 'Knockout', description: 'Win to advance. One team takes the trophy.' }, { value: 'league', label: 'League', description: 'Everyone plays everyone. Lead the table to win.' }]}/>
         <Select label="Players in room" value={capacity} onChange={setCapacity} options={numbered(format === 'knockout' ? [2, 4, 8] : [2, 3, 4, 5, 6, 7, 8], 'players')}/>
         <Select label="Time per pick" value={seconds} onChange={setSeconds} options={numbered([10, 20, 30, 60, 90, 120], 'seconds')}/>
-        <Select label="Squad competition" value={competition} onChange={value=>{setCompetition(value as Competition);setEdition(EDITIONS[value as Competition][0].value);}} options={[...COMPETITIONS]}/>
-        <Select label="Squad edition" value={edition} onChange={setEdition} options={editionOptions(competition)}/>
+        <Select label="Squad competition" value={competition} onChange={value=>setCompetition(value as Competition)} options={[...COMPETITIONS]}/>
       </div>
-      <SquadLibrary competition={competition} edition={edition} ready={ready}/>
-      <div className="rounded-xl border border-amber/15 bg-amber/5 p-4 text-sm leading-6 text-muted"><strong className="text-cream">Ready together.</strong> Everyone presses Ready before the host starts. Friends can join until the host starts. Opening fixtures are drawn at random. Empty seats become AI teams. Drafts use historical squads from your selected competition and edition; matches are fast 20-over simulations. A missed pick receives a random compatible player.</div>
       <ActionButton type="submit" disabled={!ready || busy} className="w-full sm:w-auto">{busy ? 'Creating…' : 'Create room'} <span aria-hidden="true" className="ml-4">↗</span></ActionButton>
     </form></Panel>}
     {view === 'join' && <><Panel className="p-6 sm:p-8"><h2 className="mb-5 text-xl font-bold">Enter with a room code</h2><form className="flex flex-wrap items-end gap-4" onSubmit={event => { event.preventDefault(); void send('/rooms/join', { code }); }}>

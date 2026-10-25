@@ -28,7 +28,7 @@ test('ready gate, private rolls, live scorecards and win feedback',async({browse
       await page.goto('/rooms');
       await expect.poll(async()=>(await page.request.get('/api/auth/me')).status()).toBe(200);
     }
-    let room=await post(a,'/rooms',{format:'knockout',capacity:2,pick_seconds:30,lobby_minutes:5});
+    let room=await post(a,'/rooms',{format:'knockout',competition:'t20',capacity:2,pick_seconds:30,lobby_minutes:5});
     await post(b,'/rooms/join',{code:room.code});
     const path=`/rooms/${room.id}`;
     for(const page of [a,b]){
@@ -37,6 +37,7 @@ test('ready gate, private rolls, live scorecards and win feedback',async({browse
       await expect(page.getByText('Live room connection',{exact:true})).toBeVisible();
     }
     await expect(a.getByRole('button',{name:'Start match',exact:true})).toBeDisabled();
+    await expect(b.getByRole('button',{name:'Start match',exact:true})).toHaveCount(0);
     await a.getByRole('button',{name:'Ready',exact:true}).click();
     await expect(b.getByText('1/2 players ready',{exact:true})).toBeVisible();
     await expect(a.getByRole('button',{name:'Start match',exact:true})).toBeDisabled();

@@ -37,6 +37,8 @@ The repository now includes a root `render.yaml` Blueprint with the verified fro
 
 The Blueprint starts on Render's free plans. You can choose paid plans in the review screen or upgrade afterward. `backend/start-render.sh` runs migrations before startup because free web services do not support a separate pre-deploy command. Keeping this sequence in a script also avoids command quoting differences in Render's Docker command runner. Render provides the database URL directly; the backend safely selects the installed psycopg 3 driver and requires TLS in hosted deployments.
 
+The GitHub Actions workflow `.github/workflows/keep-render-awake.yml` calls the database-backed health endpoint every ten minutes. Scheduled workflows run from the default branch and can be delayed by GitHub, so this is a demo-tier convenience rather than an availability guarantee. Render can still restart a free instance, and a free Render PostgreSQL database still expires under Render's current free-plan rules. Upgrade both resources for durable hosting.
+
 The deployed API is `https://out-cricket-api.onrender.com`. The committed Vercel configuration proxies `/api/*` to this service. The manual instructions below remain useful if the deployment domains change later.
 
 Create a **Postgres** database in the same region as the backend. PostgreSQL 18 matches the local stack. Copy its **Internal Database URL** privately.
@@ -206,7 +208,7 @@ To enable voice, create a LiveKit Cloud project and add these settings to **Rend
 | `LIVEKIT_API_KEY` | Your LiveKit API key |
 | `LIVEKIT_API_SECRET` | Your LiveKit API secret |
 
-Set these privately in hosting settings; never commit actual values, place them in `VITE_*`, or send them to the browser. Restart the API after configuring them. `LIVEKIT_PUBLIC_URL` is optional and only needed when the browser and backend use different LiveKit addresses. The checked-in policies allow LiveKit Cloud HTTPS/WSS endpoints and blob audio; for self-hosted LiveKit, add its exact HTTPS and WSS origins to `connect-src` in the active frontend hosting configuration. Configure its TLS, TCP/UDP media ports, and TURN according to the [LiveKit deployment guide](https://docs.livekit.io/transport/self-hosting/deployment/).
+The Blueprint declares these three values with `sync: false`; enter the credentials from a LiveKit Cloud project in Render's backend Environment page. Missing any one of them disables **Join voice**. Set them privately in hosting settings; never commit actual values, place them in `VITE_*`, or send them to the browser. Restart the API after configuring them. `LIVEKIT_PUBLIC_URL` is optional and only needed when the browser and backend use different LiveKit addresses. The checked-in policies allow LiveKit Cloud HTTPS/WSS endpoints and blob audio; for self-hosted LiveKit, add its exact HTTPS and WSS origins to `connect-src` in the active frontend hosting configuration. Configure its TLS, TCP/UDP media ports, and TURN according to the [LiveKit deployment guide](https://docs.livekit.io/transport/self-hosting/deployment/).
 
 Audio uses WebRTC directly between browsers and LiveKit; only game updates and media signaling use WebSockets. The existing FastAPI server does not relay audio. Voice access requires current game membership, including guest membership. Users join with microphones off. Individual mute and incoming-sound controls are local to the listener and do not change another participant's publishing permission.
 

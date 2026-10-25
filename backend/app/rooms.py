@@ -7,17 +7,17 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from .db import Room, Session, Audit, uid
 from .catalog import load_catalog, SLOTS
-from .game import simulate, rng, validate_order
+from .game import simulate, rng, validate_order, match_overs
 from .commentary import describe_finish
 from .draft_pool import eligible_picks, person_key, used_people
 
 OVER_SECONDS=3
 AI_PICK_SECONDS=2
 
-def member(user_id,name): return dict(id=uid(),uid=user_id,name=name,xi={},is_ai=user_id is None,ready=user_id is None,rerollsUsed=0)
+def member(user_id,name): return dict(id=uid(),uid=user_id,name=name,xi={},is_ai=user_id is None,ready=user_id is None,rerollsUsed=0,recentSquads=[])
 def new_state(user_id,body):
     return dict(phase='lobby',format=body.format,capacity=body.capacity,seconds=body.pick_seconds,
-                competition=getattr(body,'competition',None),edition=getattr(body,'edition',None),members=[member(user_id,body.name)],turn=0,draftRevision=0,deadline=None,matches=[],taken=[],champion=None,rolled=None)
+                competition=getattr(body,'competition',None),edition=None,members=[member(user_id,body.name)],turn=0,draftRevision=0,deadline=None,matches=[],taken=[],champion=None,rolled=None)
 def eligible(state,players):
     players=pool_players(state,players)
     teams=[m['xi'] for m in state['members']]
@@ -54,7 +54,13 @@ def roll(state,players,options=None,*,ts=None):
         if current.get('rerollsUsed',0)>=3: raise HTTPException(409,'No rerolls left')
         current['rerollsUsed']=current.get('rerollsUsed',0)+1
     # Keep the whole squad visible; allowedSlots controls who can actually be picked.
-    squad=rng.choice(sorted({o['player']['squad'] for o in options}))
+    squads=sorted({o['player']['squad'] for o in options})
+    recent=current.setdefault('recentSquads',[])
+    fresh=[squad for squad in squads if squad not in recent[-3:]]
+    repeated=[squad for squad in squads if squad in recent[-3:]]
+    squad=rng.choice(fresh*5+repeated if fresh else squads)
+    recent.append(squad)
+    del recent[:-3]
     choices=[o for o in options if o['player']['squad']==squad]
     country,year=squad.rsplit(' ',1)
     allowed={}
@@ -165,7 +171,7 @@ def launch_ready(state,ts):
         if any(team not in teams or teams[team].get('forfeited') for team in [match['a'],match['b']]):
             forfeit_match(state,match,ts); continue
         names={'you':teams[match['a']]['name'],'opp':teams[match['b']]['name']}
-        match['plan']=simulate(teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),teams[match['b']].get('order'),team_names=names)
+        match['plan']=simulate(teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),teams[match['b']].get('order'),team_names=names,overs=match_overs(state.get('competition')))
         result=match['plan']['result']
         if result['winner']=='tie':
             # Repeated six-ball tie-breaks, visible in the result.
@@ -191,8 +197,9 @@ def standings(state):
             if match.get('forfeit'): continue
             cards=match['plan']['scorecards']; own=next(c for c in cards if c['side']==side); against=next(c for c in cards if c['side']!=side)
             row['runsFor']+=sum(p['runs'] for p in own['batting']); row['runsAgainst']+=sum(p['runs'] for p in against['batting'])
-            row['ballsFor']+=120 if sum(p['wickets'] for p in own['bowling'])==10 else sum(p['balls'] for p in own['batting'])
-            row['ballsAgainst']+=120 if sum(p['wickets'] for p in against['bowling'])==10 else sum(p['balls'] for p in against['batting'])
+            innings_balls=match['plan'].get('overs',20)*6
+            row['ballsFor']+=innings_balls if sum(p['wickets'] for p in own['bowling'])==10 else sum(p['balls'] for p in own['batting'])
+            row['ballsAgainst']+=innings_balls if sum(p['wickets'] for p in against['bowling'])==10 else sum(p['balls'] for p in against['batting'])
     for row in rows.values(): row['nrr']=round(6*row['runsFor']/max(1,row['ballsFor'])-6*row['runsAgainst']/max(1,row['ballsAgainst']),3)
     return sorted(rows.values(),key=lambda r:(-r['points'],-r['nrr'],r['id']))
 
@@ -245,7 +252,7 @@ def project(room,user_id,ts):
     state['kickRequired']=kick_threshold(state)
     for m in state['members']:
         m['kickVotes']=len(votes.get(m['id'],[])); m['voted']=viewer['id'] in votes.get(m['id'],[])
-        m.pop('uid')
+        m.pop('uid'); m.pop('recentSquads',None)
     for source in room.state['matches']:
         match=copy.deepcopy({k:v for k,v in source.items() if k!='plan'})
         state['matches'].append(match)
