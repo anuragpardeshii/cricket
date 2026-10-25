@@ -11,8 +11,13 @@ from .game import simulate, rng, validate_order, match_overs
 from .commentary import describe_finish
 from .draft_pool import eligible_picks, person_key, used_people
 
-OVER_SECONDS=3
+OVER_SECONDS=1
+ODI_OVER_SECONDS=.5
 AI_PICK_SECONDS=2
+
+def playback_seconds(competition):
+    """Seconds between visible over updates for a room match."""
+    return ODI_OVER_SECONDS if competition=='odi' else OVER_SECONDS
 
 def member(user_id,name): return dict(id=uid(),uid=user_id,name=name,xi={},is_ai=user_id is None,ready=user_id is None,rerollsUsed=0,recentSquads=[])
 def new_state(user_id,body):
@@ -99,7 +104,8 @@ def forfeit_match(state,match,ts):
     available=[team for team in [match['a'],match['b']] if team in teams and not teams[team].get('forfeited')]
     winner=available[0] if len(available)==1 else None
     plan=match.pop('plan',None)
-    count=max(0,int((ts-match.get('startedAt',ts))//OVER_SECONDS))
+    interval=playback_seconds(state.get('competition'))
+    count=max(0,int((ts-match.get('startedAt',ts))//interval))
     timeline=plan['timeline'][:count] if plan else []
     # Retain only overs already visible; never reveal the unused simulated result.
     match['timeline']=[{k:e[k] for k in ['over','innings','text','headline','kind','youScore','oppScore'] if k in e} for e in timeline]
@@ -184,7 +190,8 @@ def launch_ready(state,ts):
             last=match['plan']['timeline'][-1]
             last['headline'],last['text']=describe_finish(result,match['plan']['scorecards'],names)
         match['winner']=match['a'] if result['winner']=='you' else match['b']
-        match['status']='live'; match['startedAt']=ts; match['endsAt']=ts+OVER_SECONDS*len(match['plan']['timeline'])
+        interval=playback_seconds(state.get('competition'))
+        match['status']='live'; match['startedAt']=ts; match['endsAt']=ts+interval*len(match['plan']['timeline'])
 
 def standings(state):
     rows={m['id']:dict(id=m['id'],name=m['name'],played=0,won=0,points=0,runsFor=0,ballsFor=0,runsAgainst=0,ballsAgainst=0) for m in state['members']}
@@ -258,7 +265,8 @@ def project(room,user_id,ts):
         state['matches'].append(match)
         plan=source.get('plan')
         if not plan: continue
-        count=len(plan['timeline']) if match['status']=='complete' else max(0,min(len(plan['timeline']),int((ts-match['startedAt'])//OVER_SECONDS)))
+        interval=playback_seconds(room.state.get('competition'))
+        count=len(plan['timeline']) if match['status']=='complete' else max(0,min(len(plan['timeline']),int((ts-match['startedAt'])//interval)))
         match.pop('endsAt',None)
         match['timeline']=[{k:e[k] for k in ['over','innings','text','headline','kind','youScore','oppScore'] if k in e} for e in plan['timeline'][:count]]
         match['scores']={k:plan['timeline'][count-1][k] if count else '—' for k in ['youScore','oppScore']}

@@ -175,7 +175,7 @@ export function useGame() {
       wicketPulse: Boolean(entry.wicket),
     });
     if (entry.wicket) schedule(() => update({ wicketPulse: false }), 450);
-    schedule(applyEntry, 3000);
+    schedule(applyEntry, 1000);
   };
 
   const startMatch = () => request(async () => {

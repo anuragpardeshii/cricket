@@ -124,3 +124,5 @@ def test_match_length_follows_competition(monkeypatch):
     assert odi['overs']==50 and len(odi['timeline'])==100
     assert t20['overs']==20 and len(t20['timeline'])==40
     assert all(card['score'].endswith('(50.0)') for card in odi['scorecards'])
+    assert rooms.playback_seconds('odi')==.5
+    assert rooms.playback_seconds('t20')==rooms.playback_seconds('ipl')==1

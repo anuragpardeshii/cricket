@@ -438,7 +438,8 @@ def test_no_join_deadline_and_live_scorecards_show_only_visible_overs():
         players=[p for squad in load_catalog(session)['squads'] for p in squad['players']]
         while state['phase']=='draft': rooms.advance(state,players,state['deadline'])
         row.state=state
-        visible=rooms.project(row,row.owner_id,state['matches'][0]['startedAt']+rooms.OVER_SECONDS*2)
+        interval=rooms.playback_seconds(state.get('competition'))
+        visible=rooms.project(row,row.owner_id,state['matches'][0]['startedAt']+interval*2)
         for match in visible['state']['matches']:
             assert match['status']=='live' and len(match['timeline'])==2
             assert 'winner' not in match and 'result' not in match
