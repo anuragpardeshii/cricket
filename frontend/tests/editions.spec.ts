@@ -28,11 +28,11 @@ test('rooms use a competition-wide historical pool and explain the rules',async(
   await expect(page.getByText(/ODI World Cup/).first()).toBeVisible();
 });
 
-test('practice is T20 only and has no pool selectors or browser',async({page})=>{
+test('practice defaults to classic T20 and offers the group challenge presets',async({page})=>{
   await page.goto('/');
   await expect(page.getByRole('combobox',{name:/Practice squad/})).toHaveCount(0);
   await expect(page.getByRole('button',{name:/Browse teams and players/})).toHaveCount(0);
-  await expect(page.getByText(/Practice uses T20 rules/)).toBeVisible();
+  await expect(page.getByRole('combobox',{name:'Practice while your friends are away',exact:true})).toBeVisible();
   const created=page.waitForResponse(response=>response.url().endsWith('/api/games')&&response.request().method()==='POST');
   await page.getByRole('button',{name:/Practice vs AI/}).click();
   const saved=await(await created).json();

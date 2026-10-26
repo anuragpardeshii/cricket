@@ -3,12 +3,22 @@ import time
 from fastapi import HTTPException
 from .catalog import SLOTS
 from .draft_pool import squads_for, person_key, used_people
+from .presets import filter_squads
 from .commentary import MatchHighlights, describe_finish
+from . import draft_turns
 rng = secrets.SystemRandom()
 AI_PICK_SECONDS = 3
 def match_overs(competition): return 50 if competition == 'odi' else 20
-def initial(competition='t20', edition=None):
-    return dict(competition=competition,edition=edition,screen='draft', yourXI={}, opponentXI={}, taken={}, rolled=None, recentSquads=[], rerollsUsed=0, turn='you', pickNumber=1, match=None)
+def initial(competition='t20', edition=None, *, rules_version=draft_turns.RULES_VERSION):
+    return dict(competition=competition,edition=edition,screen='draft', yourXI={}, opponentXI={}, taken={}, rolled=None, recentSquads=[], rerollsUsed=0, turn='you', pickNumber=1, match=None, **draft_turns.initial(rules_version))
+
+def finish_pick(state, ts):
+    current=0 if state['turn']=='you' else 1
+    next_turn=draft_turns.after_pick(state,[state['yourXI'],state['opponentXI']],current)
+    state['pickNumber']+=1
+    state['turn']='done' if next_turn is None else 'you' if next_turn==0 else 'opp'
+    if state['turn']=='opp': state['aiDeadline']=ts+AI_PICK_SECONDS
+    else: state.pop('aiDeadline',None)
 def fits(state,p):
     return p['id'] not in state['taken'] and person_key(p) not in used_people([state['yourXI'],state['opponentXI']]) and any(s['id'] not in state['yourXI'] and p['role'] in s['accepts'] for s in SLOTS)
 def validate_order(order):
@@ -17,9 +27,11 @@ def validate_order(order):
     return list(order)
 
 def act(state, action, player_id=None, slot_id=None, *, squads, order=None):
-    squads=squads_for(squads,state.get('competition'),state.get('edition'))
+    squads=filter_squads(squads_for(squads,state.get('competition'),state.get('edition')),state.get('preset'))
     if state.get('abandoned'): raise HTTPException(409,'This practice game has ended')
     if action=='exit':
+        if state.get('resultViewed'):
+            state['screen']='landing'; return
         state['abandoned']=True; state['screen']='landing'
         if state.get('match'):
             state['match']['result']['winner']='opp'; state['match']['result']['margin']='by forfeit'
@@ -60,14 +72,12 @@ def act(state, action, player_id=None, slot_id=None, *, squads, order=None):
     state['yourXI'][slot_id]=player
     state['taken'][player_id]=True
     state['rolled']=None
-    state['pickNumber']+=1
-    state['turn']='opp'
-    state['aiDeadline']=time.time()+AI_PICK_SECONDS
+    finish_pick(state,time.time())
 
 def advance(state, squads, ts):
     if state.get('abandoned') or state['screen']!='draft' or state['turn']!='opp' or ts<state.get('aiDeadline',float('inf')):
         return False
-    squads=squads_for(squads,state.get('competition'),state.get('edition'))
+    squads=filter_squads(squads_for(squads,state.get('competition'),state.get('edition')),state.get('preset'))
     used=used_people([state['yourXI'],state['opponentXI']])
     slot=rng.choice([s for s in SLOTS if s['id'] not in state['opponentXI']])
     candidates=sorted([p for squad in squads for p in squad['players'] if p['id'] not in state['taken'] and person_key(p) not in used and p['role'] in slot['accepts']],key=lambda p:-p['rating'])
@@ -75,9 +85,7 @@ def advance(state, squads, ts):
     opponent=rng.choice(candidates[:5])
     state['opponentXI'][slot['id']]=opponent
     state['taken'][opponent['id']]=True
-    state['pickNumber']+=1
-    state['turn']='done' if len(state['yourXI'])==11 else 'you'
-    state.pop('aiDeadline',None)
+    finish_pick(state,ts)
     return True
 
 def advance_game(session, game):

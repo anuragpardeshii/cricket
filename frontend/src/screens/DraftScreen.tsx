@@ -2,6 +2,7 @@ import { FeedbackToggle } from '../components/GameFeedback';
 import { poolName } from '../game/types';
 import { PlayerRating } from '../components/PlayerRating';
 import { Dice } from '../components/Dice';
+import { DraftProgress } from '../components/DraftProgress';
 import { useState } from 'react';
 import { TeamFormation } from '../components/TeamFormation';
 import { TeamBar } from '../components/TeamBar';
@@ -23,6 +24,7 @@ export function DraftScreen({ game }: { game: Game }) {
   return <main className="mx-auto min-h-dvh w-full max-w-7xl px-5 pb-10 pt-6 sm:px-8 lg:px-12 lg:pt-9">
     <header className="flex flex-wrap gap-y-3 items-center justify-between border-b border-neutral/10 pb-5"><Brand /><div className="flex max-w-full flex-wrap items-center justify-end gap-3"><Eyebrow>Pick {Math.min(state.pickNumber, 22)} / 22</Eyebrow><PracticeExit busy={game.busy} onExit={actions.exitMatch}/><FeedbackToggle/><ThemeToggle /></div></header>
     <TeamBar members={[{id:'you',name:'You',xi:state.yourXI},{id:'ai',name:'AI',xi:state.opponentXI,is_ai:true}]} currentId={state.turn==='done'?undefined:state.turn==='opp'?'ai':'you'} selectedId={preview} yourId="you" onPreview={setPreview}/>
+    {state.turn !== 'done' && <DraftProgress state={state} seats={[{id:'you',name:'You',count:Object.keys(state.yourXI).length},{id:'opp',name:'AI',count:Object.keys(state.opponentXI).length}]} currentId={state.turn}/>}
 
     <div className="grid gap-8 pt-7 lg:grid-cols-[minmax(0,1fr)_minmax(340px,.83fr)] lg:gap-12">
       <section className="min-w-0">
@@ -31,7 +33,7 @@ export function DraftScreen({ game }: { game: Game }) {
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl" aria-live="polite">{state.turn === 'done' ? 'BOTH XIs LOCKED' : yourTurn ? 'YOUR PICK' : `${state.opponentName} PICKING`}</h1>
           <div className="ml-auto flex items-center gap-2"><Eyebrow>Rerolls</Eyebrow>{Array.from({ length: 3 }, (_, i) => <span key={i} className={`size-2 rounded-full ${i < rerollsLeft ? 'bg-amber' : 'bg-neutral/15'}`} />)}</div>
         </div>
-        <p className="mt-3 max-w-lg text-sm leading-6 text-muted">Roll a {poolName(state.competition,state.edition)} squad, choose one player, then place them in a compatible XI slot.</p>
+        <p className="mt-3 max-w-lg text-sm leading-6 text-muted">Roll a {poolName(state.competition,state.edition)} squad, choose one player, then place them in a compatible XI slot. {rerollsLeft} optional rerolls left across your whole draft.</p>
 
         <div className="mt-7 min-h-28">
           {yourTurn && (!state.rolled || state.rolling) && <button disabled={game.busy} onClick={() => actions.rollSquad()} aria-live="polite" className="flex min-h-32 w-full items-center justify-center gap-6 rounded-2xl border border-amber/50 bg-amber/5 text-xl font-black tracking-widest text-amber transition hover:bg-amber/10 focus-visible:outline-2 focus-visible:outline-amber disabled:cursor-wait"><Dice rolling={state.rolling}/>{state.rolling ? 'ROLLING…' : 'ROLL SQUAD'}</button>}

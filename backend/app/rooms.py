@@ -10,6 +10,7 @@ from .catalog import load_catalog, SLOTS
 from .game import simulate, rng, validate_order, match_overs
 from .commentary import describe_finish
 from .draft_pool import eligible_picks, person_key, used_people
+from . import draft_turns
 
 OVER_SECONDS=1
 ODI_OVER_SECONDS=.5
@@ -19,16 +20,18 @@ def playback_seconds(competition):
     """Seconds between visible over updates for a room match."""
     return ODI_OVER_SECONDS if competition=='odi' else OVER_SECONDS
 
-def member(user_id,name): return dict(id=uid(),uid=user_id,name=name,xi={},is_ai=user_id is None,ready=user_id is None,rerollsUsed=0,recentSquads=[])
+def member(user_id,name): return dict(id=uid(),uid=user_id,userId=user_id,name=name,xi={},is_ai=user_id is None,ready=user_id is None,rerollsUsed=0,recentSquads=[])
 def new_state(user_id,body):
     return dict(phase='lobby',format=body.format,capacity=body.capacity,seconds=body.pick_seconds,
-                competition=getattr(body,'competition',None),edition=None,members=[member(user_id,body.name)],turn=0,draftRevision=0,deadline=None,matches=[],taken=[],champion=None,rolled=None)
+                competition=getattr(body,'competition',None),edition=None,members=[member(user_id,body.name)],turn=0,draftRevision=0,deadline=None,matches=[],taken=[],champion=None,rolled=None,**draft_turns.initial())
 def eligible(state,players):
     players=pool_players(state,players)
     teams=[m['xi'] for m in state['members']]
     return eligible_picks(teams,teams[state['turn']],players,SLOTS,state['taken'])
 
 def pool_players(state,players):
+    from .presets import filter_players
+    players=filter_players(players,state.get('preset'))
     selected=state.get('competition')
     edition=state.get('edition')
     return [p for p in players if (not selected or p.get('competition')==selected)
@@ -37,6 +40,8 @@ def pool_players(state,players):
 def start(state,ts):
     if state['phase']!='lobby': raise HTTPException(409,'Room already started')
     humans=[m for m in state['members'] if m['uid'] is not None]
+    if state.get('cupId') and (len(humans)!=2 or {m['uid'] for m in humans}!=set(state['allowedUsers'])):
+        raise HTTPException(409,'Both scheduled players must join this cup fixture; AI cannot replace them')
     if not humans or not all(m.get('ready',False) for m in humans):
         raise HTTPException(409,'Every human player must be ready before the host can start')
     # Bots are room members without a login identity; they cannot authenticate or act.
@@ -90,9 +95,10 @@ def pick(state,players,ts,player_id=None,slot_id=None,automatic=False):
     state['lastPick']=dict(name=m['name'],player=choice['player']['name'],automatic=automatic,is_ai=m.get('is_ai',False))
     state['rolled']=None
     state['draftRevision']=state.get('draftRevision',0)+1
-    if all(len(m['xi'])==11 for m in state['members']):
+    next_turn=draft_turns.after_pick(state,[m['xi'] for m in state['members']],state['turn'])
+    if next_turn is None:
         state['phase']='live'; fixtures(state,ts); return
-    state['turn']=(state['turn']+1)%len(state['members'])
+    state['turn']=next_turn
     state['deadline']=ts+(AI_PICK_SECONDS if state['members'][state['turn']].get('is_ai') else state['seconds'])
 
 def kick_threshold(state):
@@ -118,11 +124,17 @@ def forfeit_match(state,match,ts):
 def remove_member(room,state,target,ts,reason):
     if target['uid'] is None: raise HTTPException(409,'This player has already left')
     removed_user=target['uid']
+    target.setdefault('userId',removed_user)
     state.setdefault('removedUsers',[]).append(removed_user)
     target['uid']=None; target['departed']=True
     state['lastRemoval']=dict(name=target['name'],reason=reason)
     state['votes']={}  # A changed electorate starts fresh votes.
-    if state['phase'] in ['lobby','draft']:
+    if state.get('cupId') and state['phase']=='draft':
+        target['forfeited']=True
+        a,b=[m['id'] for m in state['members']]
+        match=dict(id=uid(),round=1,a=a,b=b,status='pending',sources=[])
+        state['matches']=[match]; forfeit_match(state,match,ts); state['phase']='live'
+    elif state['phase'] in ['lobby','draft']:
         target['is_ai']=True
         if state['phase']=='draft' and state['members'][state['turn']]['id']==target['id']:
             state['deadline']=min(state['deadline'],ts+AI_PICK_SECONDS)
@@ -137,6 +149,7 @@ def remove_member(room,state,target,ts,reason):
         if successor: room.owner_id=successor
 
 def vote_kick(room,state,voter_id,target_id,ts):
+    if state.get('cupId'): raise HTTPException(409,'Cup opponents cannot remove each other; you can withdraw instead')
     if state['phase'] not in ['lobby','draft','live']: raise HTTPException(409,'Voting is closed')
     voter=next(m for m in state['members'] if m['uid']==voter_id)
     target=next((m for m in state['members'] if m['id']==target_id and m['uid'] is not None),None)
@@ -256,10 +269,11 @@ def project(room,user_id,ts):
     state.pop('lobbyDeadline',None)
     votes=state.pop('votes',{})
     state.pop('removedUsers',None)
+    state.pop('allowedUsers',None)
     state['kickRequired']=kick_threshold(state)
     for m in state['members']:
         m['kickVotes']=len(votes.get(m['id'],[])); m['voted']=viewer['id'] in votes.get(m['id'],[])
-        m.pop('uid'); m.pop('recentSquads',None)
+        m.pop('uid'); m.pop('userId',None); m.pop('recentSquads',None)
     for source in room.state['matches']:
         match=copy.deepcopy({k:v for k,v in source.items() if k!='plan'})
         state['matches'].append(match)
@@ -300,3 +314,5 @@ def tick():
                 players=pools[key]
             if advance(state,players,ts):
                 room.state=state; room.version+=1; session.add(Audit(action='room.clock',resource=room.id))
+                from .progression import archive_room
+                archive_room(session,room)

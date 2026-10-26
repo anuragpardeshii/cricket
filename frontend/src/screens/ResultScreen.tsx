@@ -23,7 +23,8 @@ export function ResultScreen({ game }: { game: Game }) {
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4"><h1 className="text-2xl font-black tracking-tight sm:text-3xl">{headline}</h1><p className="text-xs text-muted sm:text-sm">{result.winner === 'tie' ? 'Scores level' : `Won ${result.margin}`}</p></div>
       <div className="grid divide-y divide-neutral/10 border-t border-neutral/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">{[['Player of the match', result.mvp], ['Highest scorer', result.highestScorer], ['Best bowler', result.bestBowler]].map(([label, award]) => typeof award === 'object' && award && <div key={String(label)} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3 sm:block">{label==='Player of the match'&&<Trophy variant="player" className="float-right ml-2 h-20 w-12"/>}<p className="text-[10px] uppercase tracking-wide text-amber">{String(label)}</p><p className="text-sm font-bold sm:mt-1">{award.name}</p><p className="text-xs text-muted sm:mt-1">{award.line}</p></div>)}</div>
     </Panel>
-    <ResultActions text={shareText} busy={game.busy} onExit={() => setExitOpen(true)} onPlayAgain={() => { void actions.startPractice(); }}/>
+    <ResultActions text={shareText} busy={game.busy} onExit={() => setExitOpen(true)} onPlayAgain={() => { void actions.startPractice(state.preset, (state.draftRulesVersion ?? 1) >= 2 ? 2 : 1); }}/>
+    {state.resultViewed&&<div className="my-5 flex flex-wrap gap-5 text-sm text-amber"><a href="/achievements">View your trophies & match history ↗</a><a href="/groups">Challenge your friend group ↗</a></div>}
     {state.match?.scorecards && <Scorecard cards={state.match.scorecards} names={{you:'YOU',opp:state.opponentName}}/>}
     {state.toast && <p className="mt-3 text-sm text-danger" role="status">{state.toast}</p>}
   </main>;

@@ -31,11 +31,12 @@ def test_every_edition_completes_eight_unique_xis(competition,edition,count,monk
     assert state['phase']=='live'
     # Practice human rolls and the delayed AI both respect the same edition.
     practice=game.initial(competition,edition)
-    game.act(practice,'roll',squads=catalog['squads'])
-    assert all(p['edition']==edition and p['competition']==competition for p in practice['rolled']['players'])
-    player=practice['rolled']['players'][0]
-    slot=next(s['id'] for s in catalog['slots'] if player['role'] in s['accepts'])
-    game.act(practice,'pick',player['id'],slot,squads=catalog['squads'])
+    for _ in range(2):
+        game.act(practice,'roll',squads=catalog['squads'])
+        assert all(p['edition']==edition and p['competition']==competition for p in practice['rolled']['players'])
+        player=next(p for p in practice['rolled']['players'] if game.fits(practice,p))
+        slot=next(s['id'] for s in catalog['slots'] if s['id'] not in practice['yourXI'] and player['role'] in s['accepts'])
+        game.act(practice,'pick',player['id'],slot,squads=catalog['squads'])
     game.advance(practice,catalog['squads'],practice['aiDeadline'])
     assert all(p['edition']==edition and p['competition']==competition for p in practice['opponentXI'].values())
 

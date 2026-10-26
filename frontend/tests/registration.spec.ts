@@ -5,7 +5,7 @@ test('registration accepts seven characters and rejects six', async ({ page }) =
   await page.goto('/register');
   await page.getByLabel('Username', { exact: true }).fill(`pw${suffix}`);
   await page.getByLabel('Email address', { exact: true }).fill(`pw${suffix}@example.com`);
-  await page.getByLabel('Phone number', { exact: true }).fill(suffix.slice(-10));
+  await page.getByLabel('Phone number (optional)', { exact: true }).fill(suffix.slice(-10));
   await page.getByLabel('Password', { exact: true }).fill('Abc12!');
   await expect(page.locator('#password-feedback')).toContainText('Use at least 7 characters.');
   await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('aria-invalid', 'true');

@@ -27,7 +27,9 @@ Import `anuragpardeshii/cricket` into Vercel. Choose:
 | Output Directory | `dist` |
 | Node.js | 22.x |
 
-The committed `frontend/vercel.json` supports this frontend-only first deployment, including direct links to `/rooms`, `/login`, `/register` and `/dashboard`. No frontend environment variables are needed. API paths intentionally remain unavailable until Render is connected.
+The committed `frontend/vercel.json` supports direct links to `/rooms`, `/login`, `/register`, `/dashboard`, `/groups`, `/achievements`, and `/share/achievement/:token`. No frontend environment variables are needed. API paths intentionally remain unavailable until Render is connected.
+
+For the groups and achievements release, run migrations through `0014` before deploying the new frontend. `0013` adds independent records, friend groups, cup state and achievement unlocks; `0014` adds hashed one-use account recovery codes. Existing rooms and accounts are retained. Already-deleted room results cannot be reconstructed. Recovery codes need no email service; users generate and save one from their trophy cabinet. Production database backups must include these new tables.
 
 Note the stable production domain, for example `https://your-cricket.vercel.app`. The initial frontend can build, but login and gameplay will work only after the API proxy is configured in step 4. Use the production domain, not a changing preview/deployment URL.
 

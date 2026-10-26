@@ -1,11 +1,14 @@
 import { useTurnFeedback, useWinFeedback } from '../components/GameFeedback';
+import type { DraftRules } from '../components/DraftProgress';
 import type { Competition } from './types';
 import { useEffect, useRef, useState } from 'react';
 import { SLOTS } from './data';
 import { api, type Account, type BrowserSession } from '../api';
 import type { FeedEntry, MatchPlan, MomentumBar, Player, Screen, Side, Slot, Squad, XI } from './types';
 
-interface GameState {
+interface GameState extends DraftRules {
+  preset?: string | null;
+  resultViewed?: boolean;
   competition?: Competition;
   edition?: number | null;
   screen: Screen;
@@ -39,7 +42,7 @@ interface GameState {
 }
 
 const freshState = (): GameState => ({
-  competition: 't20', edition: null, screen: 'landing', opponentName: 'AI', opponentJoined: false,
+  competition: 't20', edition: null, resultViewed: false, screen: 'landing', opponentName: 'AI', opponentJoined: false,
   turn: 'you', pickNumber: 1, rerollsUsed: 0,
   rolling: false, rollName: '', rolled: null, selectedId: null,
   yourXI: {}, opponentXI: {}, taken: {}, recentSquads: [], opponentThinking: false,
@@ -91,7 +94,8 @@ export function useGame() {
   const load = (game: SavedGame) => {
     saved.current = game; sessionStorage.setItem('out-game', game.id); setOpponentCount(game.opponentCount);
     update({ ...game.state, opponentName: 'AI', opponentJoined: true, selectedId: null,
-      opponentXI: game.state.opponentXI ?? {}, opponentThinking: game.state.turn === 'opp', rolling: false });
+      opponentXI: game.state.opponentXI ?? {}, opponentThinking: game.state.turn === 'opp', rolling: false,
+      ...(game.state.resultViewed ? {screen: 'result' as const} : {}) });
   };
   useEffect(() => { let active = true;
     api<BrowserSession>('/auth/me').then(async a => {
@@ -126,9 +130,9 @@ export function useGame() {
     }, 750);
     return () => { active = false; clearInterval(timer); };
   }, [state.screen, state.turn]);
-  const startPractice = () => request(async () => {
+  const startPractice = (preset?: string | null, rulesVersion: 1 | 2 = 2) => request(async () => {
     if (!account) await api<BrowserSession>('/auth/guest', {});
-    const game = await api<SavedGame>('/games', {});
+    const game = await api<SavedGame>('/games', { ...(preset ? { preset } : {}), draft_rules_version: rulesVersion });
     clearTimers();
     update(freshState());
     load(game);
@@ -199,8 +203,19 @@ export function useGame() {
       opponentScore: last.oppScore, matchDone: true, wicketPulse: false, screen: 'result' });
   };
 
+  useEffect(() => {
+    if (state.screen !== 'result' || !saved.current) return;
+    let active = true; let timer: ReturnType<typeof setTimeout>;
+    const id = saved.current.id;
+    const persist = async () => {
+      try { const game = await api<SavedGame>(`/games/${id}/complete`, {}); if (active && saved.current?.id === id) { saved.current = game; update({ toast: null, resultViewed: true }); } }
+      catch { if (active) { update({ toast: 'Saving your result interrupted. Retrying…' }); timer = setTimeout(() => { void persist(); }, 3000); } }
+    };
+    void persist(); return () => { active = false; clearTimeout(timer); };
+  }, [state.screen]);
+
   return {
-    state, busy, account, ready,
+    state, busy: busy || (state.screen === 'result' && !state.resultViewed), account, ready,
     rerollsLeft,
     noFit,
     yourCount: countXI(state.yourXI),

@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 
 type Room = {
   id:string; code:string; version:number; you:string; serverTime:number;
-  state:{phase:string; turn:number; draftRevision:number; deadline:number; seconds:number; members:{id:string;name:string;ready:boolean;xi:Record<string,{id:string;name:string}>}[];
+  state:{phase:string; turn:number; draftRevision:number; draftRound:number; turnPicks:number; deadline:number; seconds:number; members:{id:string;name:string;ready:boolean;xi:Record<string,{id:string;name:string}>}[];
     rolled:{players:{id:string;name:string}[];allowedSlots:Record<string,string[]>}|null;
     matches:{timeline:{text?:string;over:string;innings:number}[]}[]};
 };
@@ -51,6 +51,7 @@ test('ready gate, private rolls, live scorecards and win feedback',async({browse
     const started=a.waitForResponse(r=>r.url().endsWith(path+'/actions')&&r.request().method()==='POST');
     await a.getByRole('button',{name:'Start match',exact:true}).click();
     room=await(await started).json();
+    await expect(a.getByRole('region',{name:'Draft turn order'})).toContainText('Chance 1 of 2');
     const initialDeadline=room.state.deadline;
     await expect(a.getByRole('timer')).toHaveText(/2[0-8]s to pick/);
     const rolled=a.waitForResponse(r=>r.url().endsWith(path+'/actions')&&r.request().postDataJSON().action==='roll');
@@ -68,6 +69,18 @@ test('ready gate, private rolls, live scorecards and win feedback',async({browse
     const picked=a.waitForResponse(r=>r.url().endsWith(path+'/actions')&&r.request().postDataJSON().action==='pick');
     await a.getByRole('button',{name:`Place ${player.name} at position`,exact:false}).first().click();
     room=await(await picked).json();
+    expect(room.state.turn).toBe(0);
+    await expect(a.getByRole('region',{name:'Draft turn order'})).toContainText('Chance 2 of 2');
+    await a.reload();
+    await expect(a.getByRole('region',{name:'Draft turn order'})).toContainText('Chance 2 of 2');
+    const secondRoll=a.waitForResponse(r=>r.url().endsWith(path+'/actions')&&r.request().postDataJSON().action==='roll');
+    await a.getByRole('button',{name:'ROLL SQUAD',exact:true}).click();
+    room=await(await secondRoll).json();
+    const secondPlayer=room.state.rolled!.players.find(p=>room.state.rolled!.allowedSlots[p.id])!;
+    await a.locator('button[aria-pressed]').filter({has:a.getByText(secondPlayer.name,{exact:true})}).click();
+    const secondPick=a.waitForResponse(r=>r.url().endsWith(path+'/actions')&&r.request().postDataJSON().action==='pick');
+    await a.getByRole('button',{name:`Place ${secondPlayer.name} at position`,exact:false}).first().click();
+    room=await(await secondPick).json();
     await expect(b.getByRole('heading',{name:'Your turn',exact:true})).toBeVisible();
     expect(Object.values(room.state.members[0].xi).map(p=>p.id)).toContain(player.id);
     const nextRoll=b.waitForResponse(r=>r.url().endsWith(path+'/actions')&&r.request().postDataJSON().action==='roll');
@@ -93,7 +106,16 @@ test('ready gate, private rolls, live scorecards and win feedback',async({browse
       if(!room.state.rolled)room=await post(page,path+'/actions',{action:'roll',version:room.version,draft_revision:room.state.draftRevision});
       const [id,slots]=Object.entries(room.state.rolled!.allowedSlots)[0];
       room=await post(page,path+'/actions',{action:'pick',version:room.version,draft_revision:room.state.draftRevision,player_id:id,slot_id:slots[0]});
+      if(room.state.draftRound===2&&room.state.turn===1&&room.state.turnPicks===0){
+        await expect(b.getByRole('region',{name:'Draft turn order'})).toContainText('Round 2 of 6 · Last to first');
+        await expect(b.getByRole('region',{name:'Draft turn order'})).toContainText('Chance 1 of 2');
+        await b.screenshot({path:'test-results/snake-draft-mobile.png',fullPage:true});
+      }
+      if(room.state.draftRound===6&&room.state.turn===0&&room.state.phase==='draft'){
+        await expect(a.getByRole('region',{name:'Draft turn order'})).toContainText('Chance 1 of 1 · Final XI pick');
+      }
     }
+    expect(room.state.members.map(m=>Object.keys(m.xi).length)).toEqual([11,11]);
     await expect(a.getByRole('region',{name:'Match highlights',exact:true})).toBeVisible();
     await expect(a.getByRole('heading',{name:'The opening act',exact:true})).toBeVisible();
     await expect(a.getByLabel('Current score')).toContainText('OV 2');

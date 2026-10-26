@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+.locked-trophy { filter: grayscale(1); opacity: .58; }
+.locked-trophy .trophy-glint, .locked-trophy .trophy-float { animation: none !important; }
+.achievement-dialog::backdrop { background: rgb(0 0 0 / .75); }
+@media (prefers-reduced-motion: reduce) { .achievement-card { transition: none; transform: none !important; } }
+
 @font-face {
   font-family: Archivo;
   src: url('./assets/fonts/archivo-latin.woff2') format('woff2');

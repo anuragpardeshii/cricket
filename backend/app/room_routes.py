@@ -11,6 +11,8 @@ from .main import Strict,authenticated,db,limit,audit
 from .db import Room,User
 from .catalog import load_catalog
 from .draft_pool import validate_edition
+from .presets import rules,validate_pool
+from .progression import archive_room
 from . import rooms
 router=APIRouter(prefix='/api/rooms',dependencies=[Depends(authenticated)])
 class CreateRoom(Strict):
@@ -21,6 +23,7 @@ class CreateRoom(Strict):
     pick_seconds:int=Field(ge=10,le=120)
     competition:Literal['t20','odi','ipl']='odi'
     edition:int|None=None
+    preset:Literal['open-ipl','under-85']|None=None
     lobby_minutes:int|None=Field(default=None,ge=1,le=30)  # Accepted for older clients; ignored.
     @model_validator(mode='after')
     def check(self):
@@ -50,8 +53,11 @@ def create(body:CreateRoom,auth=Depends(authenticated),session=Depends(db)):
     limit('room-create:'+auth.user_id,10,3600)
     user=session.get(User,auth.user_id)
     body.name=user.username if not user.is_guest else 'Player 1'
+    if body.preset:
+        validate_pool(session,body.preset,body.capacity); body.competition=rules(body.preset)['competition']
     for _ in range(12):
         room=Room(owner_id=auth.user_id,visibility=body.visibility,code=''.join(secrets.choice('ABCDEFGHJKLMNPQRSTUVWXYZ23456789') for _ in range(4)),state=rooms.new_state(auth.user_id,body))
+        room.state['preset']=body.preset
         try:
             with session.begin_nested(): session.add(room); session.flush()
             break
@@ -66,6 +72,10 @@ def join(body:JoinRoom,request:Request,auth=Depends(authenticated),session=Depen
     room=session.scalar(select(Room).where(Room.code==body.code).with_for_update())
     if not room: raise HTTPException(404,'Room not found. Check the four-character code and try again.')
     state=copy.deepcopy(room.state)
+    if state.get('allowedUsers') and auth.user_id not in state['allowedUsers']: raise HTTPException(403,'This room is reserved for the scheduled cup players')
+    if state.get('groupId'):
+        from .community_routes import group_for
+        group_for(session,state['groupId'],auth.user_id)
     if auth.user_id in state.get('removedUsers',[]): raise HTTPException(403,'You have exited or been removed from this room.')
     if any(m['uid']==auth.user_id for m in state['members']): return rooms.project(room,auth.user_id,time.time())
     if state['phase'] in ['draft','live']: raise HTTPException(409,'Game in progress. New players cannot join after the draft starts.')
@@ -116,6 +126,7 @@ def rename(room_id:UUID,body:Rename,auth=Depends(authenticated),session=Depends(
 @router.get('/{room_id}')
 def get(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id)
+    if room.state['phase']=='complete': archive_room(session,room); session.commit()
     return rooms.project(room,auth.user_id,time.time())
 @router.post('/{room_id}/actions')
 def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depends(db)):
@@ -124,7 +135,7 @@ def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depe
     needs_pool=state['phase']=='draft' and (ts>=state['deadline'] or your_pick)
     players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if needs_pool else []
     if rooms.advance(state,players,ts):
-        room.state=state; room.version+=1; session.commit()
+        room.state=state; room.version+=1; archive_room(session,room); session.commit()
         raise HTTPException(409,'The room advanced. Refresh and try again.')
     # Picks depend on the turn and rolled squad, not another team's formation,
     # name or vote. Keep a separate revision, while supporting older clients.
@@ -133,6 +144,14 @@ def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depe
     elif room.version!=body.version: raise HTTPException(409,'Room changed. Try again.')
     if body.action=='start':
         if room.owner_id!=auth.user_id: raise HTTPException(403,'Only the host can start')
+        if state.get('cupId'):
+            from .db import Cup
+            cup=session.scalar(select(Cup).where(Cup.id==state['cupId']).with_for_update())
+            if not cup or cup.state['status']!='active': raise HTTPException(409,'This cup has ended. Return to your group to start a new match.')
+            cup_state=copy.deepcopy(cup.state)
+            fixture=next((f for f in cup_state['fixtures'] if f.get('roomId')==room.id),None)
+            if not fixture or fixture['status']!='playing': raise HTTPException(409,'This fixture is no longer available')
+            fixture['started']=True; cup.state=cup_state
         rooms.start(state,ts)
     elif body.action=='formation':
         if state['phase']!='draft': raise HTTPException(409,'Batting order is locked once matches start')
@@ -142,7 +161,7 @@ def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depe
         if state['phase']!='draft' or state['members'][state['turn']]['uid']!=auth.user_id: raise HTTPException(403,'Wait for your turn')
         if body.action=='roll': rooms.roll(state,players,ts=ts)
         else: rooms.pick(state,players,ts,body.player_id,body.slot_id)
-    room.state=state; room.version+=1; audit(session,'room.'+body.action,auth.user_id,room.id); session.commit()
+    room.state=state; room.version+=1; archive_room(session,room); audit(session,'room.'+body.action,auth.user_id,room.id); session.commit()
     return rooms.project(room,auth.user_id,ts)
 
 class KickVote(Strict):
@@ -157,6 +176,7 @@ def kick_vote(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Dep
     passed=rooms.vote_kick(room,state,auth.user_id,body.target_id,ts)
     rooms.advance(state,players,ts)
     room.state=state; room.version+=1
+    archive_room(session,room)
     session.add(rooms.Audit(action='room.kicked' if passed else 'room.kick_vote',actor=auth.user_id,resource=room.id,details={'target':body.target_id}))
     session.commit(); return rooms.project(room,auth.user_id,ts)
 
@@ -166,7 +186,18 @@ def exit_room(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if state['phase']=='draft' and ts>=state['deadline'] else []
     rooms.advance(state,players,ts)
     target=next(m for m in state['members'] if m['uid']==auth.user_id)
+    if state.get('cupId') and state['phase']=='lobby':
+        # Leaving before a draft starts is a cancellation, never a scored loss.
+        from .db import Cup
+        cup=session.scalar(select(Cup).where(Cup.id==state['cupId']).with_for_update())
+        if cup:
+            cup_state=copy.deepcopy(cup.state)
+            for fixture in cup_state['fixtures']:
+                if fixture.get('roomId')==room.id: fixture.update(status='pending',roomId=None)
+            cup.state=cup_state
+        session.delete(room); session.commit(); return {'ok':True,'closed':True}
     rooms.remove_member(room,state,target,ts,'exited'); rooms.advance(state,players,ts)
+    room.state=state; archive_room(session,room)
     if not any(member['uid'] is not None for member in state['members']):
         audit(session,'room.closed',auth.user_id,room.id); session.delete(room); session.commit()
         return {'ok':True,'closed':True}

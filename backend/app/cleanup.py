@@ -1,4 +1,4 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, func
 from .db import Session, LoginSession, RateBucket, RoomSocketTicket, User, Game, Room, now
 with Session.begin() as session:
     session.execute(delete(LoginSession).where(LoginSession.expires < now()))
@@ -8,6 +8,8 @@ with Session.begin() as session:
     guests = session.scalars(select(User.id).where(
         User.is_guest.is_(True),
         ~select(Room.id).where(Room.owner_id == User.id).exists(),
+        ~select(Room.id).where(Room.state['members'].contains(func.jsonb_build_array(func.jsonb_build_object('userId',User.id)))).exists(),
+        ~select(Room.id).where(Room.state['members'].contains(func.jsonb_build_array(func.jsonb_build_object('uid',User.id)))).exists(),
         ~select(LoginSession.user_id).where(LoginSession.user_id == User.id).exists()
     ).with_for_update(skip_locked=True)).all()
     if guests:

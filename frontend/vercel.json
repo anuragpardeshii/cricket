@@ -4,6 +4,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/groups", "destination": "/index.html" },
+    { "source": "/achievements", "destination": "/index.html" },
+    { "source": "/share/achievement/:token", "destination": "/index.html" },
     {
       "source": "/api/:path*",
       "destination": "https://out-cricket-api.onrender.com/api/:path*"

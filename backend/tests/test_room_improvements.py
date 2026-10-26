@@ -86,7 +86,7 @@ def test_draft_revision_ignores_other_teams_formation_but_rejects_replays():
     assert sorted(statuses)==[200,409]
     visible=b.get(f"/api/rooms/{room['id']}").json()
     assert visible['state']['taken']==[player]
-    assert visible['state']['turn']==1
+    assert visible['state']['turn']==0 and visible['state']['turnPicks']==1
 
 
 def reference_eligible(state,players):

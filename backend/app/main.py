@@ -110,7 +110,7 @@ class Strict(BaseModel): model_config=ConfigDict(extra='forbid',strict=True)
 class Register(Strict):
     username: str=Field(pattern=r'^[A-Za-z0-9._-]{3,24}$')
     email: EmailStr=Field(max_length=254)
-    phone: str=Field(pattern=r'^[0-9]{10}$')
+    phone: str=Field(default='',pattern=r'^([0-9]{10})?$')
     country_code: str=Field(default='+91',pattern=r'^\+[1-9][0-9]{0,3}$')
     password: str=Field(min_length=7,max_length=128)
     @field_validator('password')
@@ -121,6 +121,14 @@ class Register(Strict):
 class Login(Strict):
     email: EmailStr=Field(max_length=254)
     password: str=Field(min_length=1,max_length=128)
+
+class Recover(Strict):
+    email: EmailStr=Field(max_length=254)
+    code: str=Field(min_length=16,max_length=64)
+    password: str=Field(min_length=7,max_length=128)
+    @field_validator('password')
+    @classmethod
+    def password_valid(cls,value): return Register.password_valid(value)
 class Action(Strict):
     action: Literal['start','roll','pick','match','formation','exit']
     version: int=Field(ge=0)
@@ -175,10 +183,30 @@ def guest(request:Request,response:Response,session=Depends(db)):
 @app.get('/api/health')
 def health(session=Depends(db)):
     session.execute(select(1)); return {'status':'ok'}
+
+def current_guest(session,request,account_id=None):
+    token=request.cookies.get(COOKIE,'')
+    auth=session.get(LoginSession,digest(token)) if token else None
+    if not auth or auth.expires<=now(): return None
+    user=session.get(User,auth.user_id)
+    if not user or not user.is_guest: return None
+    if user.is_blocked: raise HTTPException(403,'Account blocked. Contact an administrator.')
+    if not hmac.compare_digest(request.headers.get('x-csrf-token',''),auth.csrf): raise HTTPException(403,'Refresh this page before saving your guest progress')
+    # Match settlement locks rooms before player rows. Claims follow that order
+    # so a finishing match and a registration cannot deadlock each other.
+    list(session.scalars(select(Room).where(Room.state['members'].contains([{'uid':user.id}]) | Room.state['members'].contains([{'userId':user.id}])).order_by(Room.id).with_for_update()))
+    list(session.scalars(select(Game).where(Game.owner_id==user.id).order_by(Game.id).with_for_update()))
+    for user_id in sorted({user.id,account_id}-{None}):
+        session.scalar(select(User).where(User.id==user_id).with_for_update().execution_options(populate_existing=True))
+    if not user.is_guest: raise HTTPException(409,'This guest session has already been saved. Reload to continue.')
+    return user
+
 @app.post('/api/auth/register',status_code=201)
 def register(body:Register,request:Request,response:Response,session=Depends(db)):
     limit('auth-ip:'+request.client.host,10,300)
-    user=User(username=body.username.lower(),email=str(body.email).lower(),password_hash=ph.hash(body.password),mobile=body.country_code+body.phone)
+    user=current_guest(session,request) or User()
+    user.username=body.username.lower(); user.email=str(body.email).lower(); user.password_hash=ph.hash(body.password)
+    user.mobile=body.country_code+body.phone if body.phone else None; user.is_guest=False
     # Store a normalized country-code + national number; DB uniqueness handles concurrent signups.
     session.add(user)
     try:
@@ -190,17 +218,48 @@ def register(body:Register,request:Request,response:Response,session=Depends(db)
 def login(body:Login,request:Request,response:Response,session=Depends(db)):
     limit('auth-ip:'+request.client.host,10,300)
     limit('auth-account:'+str(body.email).lower(),10,300)
-    user=session.scalar(select(User).where(User.email==str(body.email).lower()).with_for_update())
+    user=session.scalar(select(User).where(User.email==str(body.email).lower()))
     try: valid=ph.verify(user.password_hash if user and not user.is_guest else DUMMY,body.password)
     except (VerifyMismatchError,InvalidHashError): valid=False
     if not valid or not user or user.is_guest:
         audit(session,'login.failed'); session.commit(); raise HTTPException(401,'Invalid email or password')
     if user.is_blocked:
         audit(session,'login.blocked',user.id); session.commit(); raise HTTPException(403,'Account blocked. Contact an administrator.')
+    verified_hash=user.password_hash
+    visitor=current_guest(session,request,user.id)
+    session.scalar(select(User).where(User.id==user.id).with_for_update().execution_options(populate_existing=True))
+    if user.is_blocked: raise HTTPException(403,'Account blocked. Contact an administrator.')
+    if user.password_hash!=verified_hash: raise HTTPException(409,'Account credentials changed. Sign in again.')
+    if visitor:
+        from .identity import claim_guest
+        claim_guest(session,visitor,user)
     result=issue(session,user,response,request); audit(session,'login.success',user.id); session.commit(); return result
 @app.get('/api/auth/me')
 def me(auth=Depends(authenticated),session=Depends(db)):
     user=session.get(User,auth.user_id); return session_view(user,auth.csrf)
+
+@app.post('/api/auth/recovery-code')
+def recovery_code(auth=Depends(account_required),session=Depends(db)):
+    from .db import AccountRecovery
+    limit('recovery-code:'+auth.user_id,5,3600)
+    session.scalar(select(User).where(User.id==auth.user_id).with_for_update())
+    token=secrets.token_urlsafe(24)
+    session.execute(insert(AccountRecovery).values(user_id=auth.user_id,token_hash=digest(token)).on_conflict_do_update(index_elements=['user_id'],set_={'token_hash':digest(token)}))
+    audit(session,'account.recovery_code_created',auth.user_id); session.commit()
+    return dict(code=token)
+
+@app.post('/api/auth/recover')
+def recover(body:Recover,request:Request,session=Depends(db)):
+    from .db import AccountRecovery
+    limit('recovery-ip:'+request.client.host,10,300)
+    limit('recovery-email:'+str(body.email).lower(),5,3600)
+    user=session.scalar(select(User).where(User.email==str(body.email).lower()).with_for_update())
+    recovery=session.get(AccountRecovery,user.id) if user else None
+    if not user or user.is_guest or user.is_blocked or not recovery or not hmac.compare_digest(recovery.token_hash,digest(body.code)):
+        raise HTTPException(401,'Email or recovery code is incorrect')
+    user.password_hash=ph.hash(body.password); session.delete(recovery)
+    session.execute(delete(LoginSession).where(LoginSession.user_id==user.id))
+    audit(session,'account.recovered',user.id); session.commit(); return {'ok':True}
 @app.post('/api/auth/logout')
 def logout(response:Response,auth=Depends(authenticated),session=Depends(db)):
     session.delete(auth); audit(session,'logout',auth.user_id); session.commit(); response.delete_cookie(COOKIE,path='/',secure=SECURE,httponly=True,samesite='strict'); return {'ok':True}
@@ -224,13 +283,19 @@ def catalog(competition:Literal['odi','t20','ipl']|None=None,edition:int|None=No
 class CreateGame(Strict):
     competition:Literal['odi','t20','ipl']='odi'
     edition:int|None=None
+    preset:Literal['open-ipl','under-85']|None=None
+    draft_rules_version:Literal[1,2]=2
 
 @app.post('/api/games',status_code=201)
 def create(body:CreateGame=CreateGame(),auth=Depends(authenticated),session=Depends(db)):
     limit('create:'+auth.user_id,20,3600)
-    # Practice is one simple format: a T20 draft across every historical T20
-    # World Cup edition. Keep accepting the old request fields during rollout.
-    game=Game(owner_id=auth.user_id,state=initial('t20',None))
+    # Classic practice remains T20; explicit presets use their frozen pool.
+    # Keep accepting the old competition/edition fields during rollout.
+    from .presets import rules,validate_pool
+    if body.preset: validate_pool(session,body.preset,2)
+    state=initial(rules(body.preset)['competition'] if body.preset else 't20',None,rules_version=body.draft_rules_version)
+    state['preset']=body.preset
+    game=Game(owner_id=auth.user_id,state=state)
     session.add(game); session.flush(); audit(session,'game.created',auth.user_id,game.id); session.commit(); return view(game)
 @app.get('/api/games')
 def games(auth=Depends(authenticated),session=Depends(db)):
@@ -239,6 +304,17 @@ def games(auth=Depends(authenticated),session=Depends(db)):
 def get_game(game_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     game=owned(session,game_id,auth.user_id,True)
     if advance_game(session,game): session.commit()
+    return view(game)
+
+@app.post('/api/games/{game_id}/complete')
+def complete_game(game_id:UUID,auth=Depends(authenticated),session=Depends(db)):
+    from .progression import archive_practice
+    game=owned(session,game_id,auth.user_id,True)
+    if not game.state.get('match') or game.state.get('abandoned'): raise HTTPException(409,'Finish this match before saving its result')
+    if not game.state.get('resultViewed'):
+        archive_practice(session,game)
+        state=copy.deepcopy(game.state); state['resultViewed']=True; game.state=state; game.version+=1
+        audit(session,'game.result_viewed',auth.user_id,game.id); session.commit()
     return view(game)
 @app.post('/api/games/{game_id}/actions')
 def action(game_id:UUID,body:Action,auth=Depends(authenticated),session=Depends(db)):
@@ -279,10 +355,11 @@ def dashboard(days:Literal['7','30','90']='30',session=Depends(db)):
     popular=Counter(p['squad'] for g in games for p in g.state['yourXI'].values())
     for room in rooms:
         popular.update(p['squad'] for m in room.state['members'] for p in m['xi'].values())
-    completed=sum(bool(g.state.get('match')) for g in games)+sum(m['status']=='complete' for r in rooms for m in r.state['matches'])
+    from .progression import engagement
+    community=engagement(session,cutoff); completed=community['completedMatches']
     colors=['#f5a623','#83a9c7','#7bbba0','#a6a1cf']
     segments=lambda counts:[dict(label=k,value=round(v/max(1,sum(counts.values()))*100,1),color=colors[i%4]) for i,(k,v) in enumerate(counts.items())]
-    return dict(totalRegistered=total,newRegistrations=new,activePlayers=len({e.actor for e in events if e.actor}),sessions=len(starts),draftStarts=sum(g.state['screen']!='lobby' for g in games)+sum(r.state['phase'] not in ['lobby','expired'] for r in rooms),matchesFinished=completed,rooms=len(rooms),liveRooms=sum(r.state['phase']=='live' for r in rooms),trend=trend,devices=segments(devices),audience=segments(audience),popular=[dict(name=k,picks=v) for k,v in popular.most_common(8)],sampleLimit=50000)
+    return dict(totalRegistered=total,newRegistrations=new,activePlayers=len({e.actor for e in events if e.actor}),sessions=len(starts),draftStarts=sum(g.state['screen']!='lobby' for g in games)+sum(r.state['phase'] not in ['lobby','expired'] for r in rooms),matchesFinished=completed,rooms=len(rooms),liveRooms=sum(r.state['phase']=='live' for r in rooms),trend=trend,devices=segments(devices),audience=segments(audience),popular=[dict(name=k,picks=v) for k,v in popular.most_common(8)],sampleLimit=50000,community=community)
 
 class BlockUser(Strict):
     blocked: bool
@@ -324,3 +401,5 @@ from .realtime import router as realtime_router
 from .voice import router as voice_router
 app.include_router(realtime_router)
 app.include_router(voice_router)
+from .community_routes import router as community_router
+app.include_router(community_router)

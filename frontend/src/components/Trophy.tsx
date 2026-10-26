@@ -1,7 +1,7 @@
 import { useId } from 'react';
-export function Trophy({className='h-24 w-16',variant='cup'}:{className?:string;variant?:'cup'|'player'}){
+export function Trophy({className='h-24 w-16',variant='cup',label}:{className?:string;variant?:'cup'|'player';label?:string}){
   const id=useId().replace(/:/g,''); const gold=`url(#${id}-gold)`,dark=`url(#${id}-dark)`,orb=`url(#${id}-orb)`;
-  return <svg role="img" aria-label={variant==='cup'?'Golden world championship trophy':'Player of the match trophy'} className={`gold-trophy ${className}`} viewBox="0 0 180 260">
+  return <svg role="img" aria-label={label??(variant==='cup'?'Golden world championship trophy':'Player of the match trophy')} className={`gold-trophy ${className}`} viewBox="0 0 180 260">
     <defs>
       <linearGradient id={`${id}-gold`}><stop stopColor="#6c3903"/><stop offset=".18" stopColor="#e0a21c"/><stop offset=".36" stopColor="#fff3a7"/><stop offset=".5" stopColor="#d9980d"/><stop offset=".7" stopColor="#ffdc65"/><stop offset=".88" stopColor="#9b5806"/><stop offset="1" stopColor="#f4c53a"/></linearGradient>
       <linearGradient id={`${id}-dark`} x2="0" y2="1"><stop stopColor="#413724"/><stop offset=".35" stopColor="#101316"/><stop offset="1" stopColor="#030405"/></linearGradient>

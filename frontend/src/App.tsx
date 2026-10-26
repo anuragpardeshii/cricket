@@ -7,6 +7,8 @@ import { MatchScreen } from './screens/MatchScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { DashboardPage } from './dashboard/DashboardPage';
 import { RegisterPage } from './registration/RegisterPage';
+import { GroupsPage } from './community/GroupsPage';
+import { AchievementsPage, SharedAchievementPage } from './community/AchievementsPage';
 
 function GameApp() {
   const game = useGame();
@@ -23,6 +25,9 @@ function GameApp() {
 export default function App() {
   const path = window.location.pathname.replace(/\/+$/, '');
   if (path === '/rooms') return <RoomsPage />;
+  if (path === '/groups') return <GroupsPage />;
+  if (path === '/achievements') return <AchievementsPage />;
+  if (path.startsWith('/share/achievement/')) return <SharedAchievementPage />;
   if (path === '/dashboard') return <DashboardPage />;
   if (path === '/login') return <LoginPage />;
   if (path === '/register') return <RegisterPage />;

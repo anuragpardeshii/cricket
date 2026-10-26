@@ -35,6 +35,7 @@ export function validateField(field: RegistrationField, values: RegistrationValu
     case 'country_code':
       return /^\+[1-9][0-9]{0,3}$/.test(value) ? undefined : 'Select a country code.';
     case 'phone':
+      if (!value) return undefined;
       if (!/^[0-9]{10}$/.test(value)) return 'Enter exactly 10 digits.';
       return undefined;
     case 'password': {

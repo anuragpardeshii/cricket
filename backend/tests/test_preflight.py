@@ -25,13 +25,15 @@ def action(c,g,act,**kw): return c.post(f"/api/games/{g['id']}/actions",json=dic
 def finish_ai(c,g):
     # Advance only the isolated test game's clock; production waits three seconds.
     import copy, time
-    with Session.begin() as session:
-        game=session.get(Game,g['id']); state=copy.deepcopy(game.state)
-        assert state['turn']=='opp'
-        state['aiDeadline']=time.time()-1; game.state=state
-    response=c.get(f"/api/games/{g['id']}")
-    assert response.status_code==200,response.text
-    return response.json()
+    while g['state']['turn']=='opp':
+        with Session.begin() as session:
+            game=session.get(Game,g['id']); state=copy.deepcopy(game.state)
+            state['aiDeadline']=time.time()-1; game.state=state
+        response=c.get(f"/api/games/{g['id']}")
+        assert response.status_code==200,response.text
+        g=response.json()
+    return g
+
 
 def test_auth_csrf_sensitive_data_and_logout():
     c=client(); token=c.cookies.get(COOKIE)
@@ -101,6 +103,8 @@ def test_draft_inventory_replay_and_complete_match():
     assert c.get('/api/dashboard').status_code==403
     with Session.begin() as session:
         session.scalar(select(User).where(User.username=='alice')).is_admin=True
+    assert c.get('/api/admin/analytics').json()['matchesFinished']==0
+    assert c.post(f"/api/games/{g['id']}/complete",json={}).status_code==200
     assert c.get('/api/admin/analytics').json()['matchesFinished']==1
     with Session() as s: assert len(list(s.scalars(select(Audit))))>=25
 
@@ -144,7 +148,8 @@ def test_concurrent_pick_is_not_duplicated():
     with ThreadPoolExecutor(max_workers=2) as pool: statuses=list(pool.map(pick,range(2)))
     assert sorted(statuses)==[200,409]
     final=finish_ai(c,c.get(f"/api/games/{g['id']}").json())
-    assert len(final['state']['yourXI'])==1 and final['opponentCount']==1
+    assert len(final['state']['yourXI'])==1 and final['opponentCount']==0
+    assert final['state']['turn']=='you' and final['state']['turnPicks']==1
 
 def test_catalog_backfill_idempotent_and_preserves_saved_data():
     from app.backfill_players import backfill
@@ -243,7 +248,7 @@ def test_room_membership_turns_and_timeout():
     rooms.tick()
     r=a.get(f"/api/rooms/{r['id']}").json()
     assert r['state']['lastPick']['automatic'] and len(r['state']['taken'])==1
-    assert r['state']['turn']==1 and r['version']>old
+    assert r['state']['turn']==0 and r['state']['turnPicks']==1 and r['version']>old
     assert 'uid' not in r['state']['members'][0]
     assert outsider.get(f"/api/rooms/{r['id']}").status_code==404
 
@@ -399,8 +404,8 @@ def test_partial_room_starts_with_ai_and_completes(humans):
         players=[p for squad in load_catalog(session)['squads'] for p in squad['players']]
         human_ids=[m['id'] for m in state['members'] if not m['is_ai']]
         assert all(m['uid'] is None for m in state['members'] if m['is_ai'])
-        # Clock handles disconnected humans, then gives bots a short independent turn.
-        for _ in range(humans): rooms.advance(state,players,state['deadline'])
+        # Both chances expire for each disconnected human before bots take over.
+        for _ in range(humans*2): rooms.advance(state,players,state['deadline'])
         assert state['members'][state['turn']]['is_ai']
         before=state['deadline']; rooms.advance(state,players,before)
         assert state['lastPick']['is_ai'] and state['deadline']==before+rooms.AI_PICK_SECONDS
@@ -464,11 +469,17 @@ def test_room_entry_status_messages(phase,message):
     assert guest.post('/api/rooms/join',json={'code':room['code']}).status_code==200
 
 
-def room_for(c,capacity=4,kind='knockout'):
+def room_for(c,capacity=4,kind='knockout',legacy=False):
     response=c.post('/api/rooms',json=dict(format=kind,capacity=capacity,pick_seconds=30,lobby_minutes=5))
     assert response.status_code==201,response.text
     assert len(response.json()['code'])==4
-    return response.json()
+    if legacy:
+        from app.db import Room
+        from app.draft_turns import initial
+        with Session.begin() as session:
+            row=session.get(Room,response.json()['id'])
+            row.state={k:v for k,v in row.state.items() if k not in initial()}
+    return c.get(f"/api/rooms/{response.json()['id']}").json()
 
 
 def test_practice_no_room_code_preview_order_and_exit():
@@ -573,12 +584,13 @@ def test_exit_during_draft_preserves_picks_and_formation_permissions():
 
 @pytest.mark.parametrize('kind',['knockout','league'])
 
-def test_exit_live_forfeits_without_revealing_future_and_tournament_finishes(kind):
+def test_exit_live_forfeits_without_revealing_future_and_tournament_finishes(kind,monkeypatch):
     import copy,time
     from app.db import Room
     from app import rooms
     from app.catalog import load_catalog
     a=client(); b=client('bob'); room=room_for(a,4,kind)
+    visible_now=time.time()
     b.post('/api/rooms/join',json={'code':room['code']})
     with Session.begin() as session:
         row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
@@ -588,9 +600,12 @@ def test_exit_live_forfeits_without_revealing_future_and_tournament_finishes(kin
         while state['phase']=='draft': rooms.advance(state,players,state['deadline'])
         for match in state['matches']:
             if match['status']=='live':
-                match['startedAt']=time.time()-7; match['endsAt']=time.time()+100
+                match['startedAt']=visible_now-2*rooms.playback_seconds(state.get('competition')); match['endsAt']=visible_now+100
         row.state=state
     departed_id=room['you']
+    from types import SimpleNamespace
+    from app import room_routes
+    monkeypatch.setattr(room_routes,'time',SimpleNamespace(time=lambda:visible_now))
     assert a.post(f"/api/rooms/{room['id']}/exit",json={}).status_code==200
     response=b.get(f"/api/rooms/{room['id']}"); assert response.status_code==200,response.text
     forfeits=[m for m in response.json()['state']['matches'] if m.get('forfeit')]
@@ -621,7 +636,11 @@ def test_practice_ai_delay_turn_guards_reload_and_exactly_once():
     import copy, time
     from app.game import tick, AI_PICK_SECONDS
     c=client(); g=action(c,create(c),'roll').json()
-    p,slot=next((p,s) for p in g['state']['rolled']['players'] for s in SLOTS if p['role'] in s['accepts'])
+    p,slot=next((p,s) for p in g['state']['rolled']['players'] for s in SLOTS if s['id'] not in g['state']['yourXI'] and p['role'] in s['accepts'])
+    g=action(c,g,'pick',player_id=p['id'],slot_id=slot['id']).json()
+    assert g['state']['turn']=='you' and g['state']['turnPicks']==1
+    g=action(c,g,'roll').json()
+    p,slot=next((p,s) for p in g['state']['rolled']['players'] for s in SLOTS if s['id'] not in g['state']['yourXI'] and p['role'] in s['accepts'])
     before=time.time()
     g=action(c,g,'pick',player_id=p['id'],slot_id=slot['id']).json()
     assert g['state']['turn']=='opp' and g['opponentCount']==0
@@ -639,8 +658,8 @@ def test_practice_ai_delay_turn_guards_reload_and_exactly_once():
     tick(); tick()
     after=c.get(f"/api/games/{g['id']}").json()
     assert after['version']==g['version']+1 and after['opponentCount']==1
-    assert after['state']['turn']=='you' and after['state']['pickNumber']==3
-    assert after['state']['order']==order and 'aiDeadline' not in after['state']
+    assert after['state']['turn']=='opp' and after['state']['pickNumber']==4 and after['state']['turnPicks']==1
+    assert after['state']['order']==order and after['state']['aiDeadline']>time.time()
     assert action(c,g,'roll').status_code==409
     with Session() as session:
         assert len(list(session.scalars(select(Audit).where(Audit.action=='game.ai_pick',Audit.resource==g['id']))))==1
@@ -650,7 +669,11 @@ def test_exit_cancels_waiting_practice_ai():
     from app.game import advance
     from app.catalog import load_catalog
     c=client(); g=action(c,create(c),'roll').json()
-    p,slot=next((p,s) for p in g['state']['rolled']['players'] for s in SLOTS if p['role'] in s['accepts'])
+    p,slot=next((p,s) for p in g['state']['rolled']['players'] for s in SLOTS if s['id'] not in g['state']['yourXI'] and p['role'] in s['accepts'])
+    g=action(c,g,'pick',player_id=p['id'],slot_id=slot['id']).json()
+    assert g['state']['turn']=='you' and g['state']['turnPicks']==1
+    g=action(c,g,'roll').json()
+    p,slot=next((p,s) for p in g['state']['rolled']['players'] for s in SLOTS if s['id'] not in g['state']['yourXI'] and p['role'] in s['accepts'])
     g=action(c,g,'pick',player_id=p['id'],slot_id=slot['id']).json()
     g=action(c,g,'exit').json()
     with Session() as session:
@@ -663,7 +686,7 @@ def test_room_roll_scope_turn_permissions_rerolls_and_timeout():
     from app.db import Room
     from app.catalog import load_catalog
     from app import rooms
-    a=client(); b=client('bob'); outsider=client('eve'); r=room_for(a,2)
+    a=client(); b=client('bob'); outsider=client('eve'); r=room_for(a,2,legacy=True)
     r=b.post('/api/rooms/join',json={'code':r['code']}).json()
     url=f"/api/rooms/{r['id']}/actions"
     r=ready_room(a,r,b)
@@ -740,7 +763,7 @@ def test_full_room_squad_visible_but_taken_players_cannot_be_picked(monkeypatch)
     from app import rooms
     from app.catalog import load_catalog
     from app.db import Room
-    a=client(); b=client('bob'); r=room_for(a,2)
+    a=client(); b=client('bob'); r=room_for(a,2,legacy=True)
     r=b.post('/api/rooms/join',json={'code':r['code']}).json()
     url=f"/api/rooms/{r['id']}/actions"
     r=ready_room(a,r,b)

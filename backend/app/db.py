@@ -107,3 +107,50 @@ class VoiceGrant(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
     # Retain the grant after logout so the media server can revoke that connection.
     session_hash: Mapped[str] = mapped_column(String(64))
+
+class FriendGroup(Base):
+    __tablename__ = 'friend_groups'
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    owner_id: Mapped[str] = mapped_column(ForeignKey('users.id'), index=True)
+    name: Mapped[str] = mapped_column(String(40))
+    invite: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class GroupMember(Base):
+    __tablename__ = 'group_members'
+    group_id: Mapped[str] = mapped_column(ForeignKey('friend_groups.id', ondelete='CASCADE'), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey('users.id'), primary_key=True)
+
+class Cup(Base):
+    __tablename__ = 'cups'
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    group_id: Mapped[str] = mapped_column(ForeignKey('friend_groups.id', ondelete='CASCADE'), index=True)
+    state: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class MatchArchive(Base):
+    __tablename__ = 'match_archive'
+    # Independent of temporary rooms/games, and unique per completed match.
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    group_id: Mapped[str | None] = mapped_column(ForeignKey('friend_groups.id'), index=True)
+    data: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)
+
+class MatchPlayer(Base):
+    __tablename__ = 'match_players'
+    match_id: Mapped[str] = mapped_column(ForeignKey('match_archive.id', ondelete='CASCADE'), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    won: Mapped[bool] = mapped_column(Boolean)
+
+class Achievement(Base):
+    __tablename__ = 'achievements'
+    user_id: Mapped[str] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    code: Mapped[str] = mapped_column(String(40), primary_key=True)
+    earned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    source: Mapped[str] = mapped_column(String(80))
+    share_token: Mapped[str | None] = mapped_column(String(64), unique=True)
+
+class AccountRecovery(Base):
+    __tablename__ = 'account_recovery'
+    user_id: Mapped[str] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64))
