@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from .db import Room, Session, Audit, uid
 from .catalog import load_catalog, SLOTS
-from .game import simulate, rng, validate_order, match_overs
+from .game import simulate_match, rng, validate_order
 from .commentary import describe_finish
 from .draft_pool import eligible_picks, person_key, used_people
 from . import draft_turns
@@ -119,7 +119,7 @@ def forfeit_match(state,match,ts):
     match['scorecards']=timeline[-1]['scorecards'] if timeline else []
     match['winner']=winner; match['status']='complete'; match['forfeit']=True
     match['result']=dict(winner='you' if winner==match['a'] and winner else 'opp' if winner else 'tie',margin='by forfeit' if winner else 'abandoned — both teams withdrew',mvp=None,highestScorer=None,bestBowler=None,yourScore=match['scores']['youScore'],opponentScore=match['scores']['oppScore'])
-    match.pop('endsAt',None)
+    match.pop('endsAt',None); match.pop('simulationLease',None); match.pop('simulationLeaseUntil',None)
 
 def remove_member(room,state,target,ts,reason):
     if target['uid'] is None: raise HTTPException(409,'This player has already left')
@@ -142,7 +142,7 @@ def remove_member(room,state,target,ts,reason):
     elif state['phase']=='live':
         target['forfeited']=True
         for match in state['matches']:
-            if match['status']=='live' and target['id'] in [match['a'],match['b']]: forfeit_match(state,match,ts)
+            if match['status'] in ['live','simulating'] and target['id'] in [match['a'],match['b']]: forfeit_match(state,match,ts)
         launch_ready(state,ts)
     if room.owner_id==removed_user:
         successor=next((m['uid'] for m in state['members'] if m['uid'] is not None),None)
@@ -179,7 +179,40 @@ def fixtures(state,ts):
     state['matches']=matches
     launch_ready(state,ts)
 
+def finish_simulation(state,match,plan,ts):
+    """Attach one completed full-match plan and start its timed reveal."""
+    match['plan']=plan
+    result=plan['result']
+    match['winner']=match['a'] if result['winner']=='you' else match['b'] if result['winner']=='opp' else None
+    interval=playback_seconds(state.get('competition'))
+    match['status']='live'; match['startedAt']=ts; match['endsAt']=ts+interval*len(plan['timeline'])
+    match.pop('simulationLease',None); match.pop('simulationLeaseUntil',None)
+
+def build_match_plan(state,match):
+    """Simulate outside database locks. Knockout ties replay the complete match."""
+    teams={m['id']:m for m in state['members']}
+    names={'you':teams[match['a']]['name'],'opp':teams[match['b']]['name']}
+    replays=0
+    while True:
+        plan=simulate_match(
+            teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),
+            teams[match['b']].get('order'),team_names=names,competition=state.get('competition') or 't20')
+        if state['format']!='knockout' or plan['result']['winner']!='tie':
+            if replays: plan['result']['fullMatchReplays']=replays
+            return plan
+        replays+=1
+        if replays>=12:
+            # A twelfth consecutive tied replay is effectively impossible. Use
+            # tournament performance to advance a side without a super over.
+            totals={'you':0,'opp':0}
+            for performance in plan['performances']: totals[performance['side']]+=performance['points']
+            winner='you' if totals['you']>=totals['opp'] else 'opp'
+            plan['result'].update(winner=winner,margin='after tied full-match replays, decided on match performance',fullMatchReplays=replays)
+            plan['timeline'][-1]['headline'],plan['timeline'][-1]['text']=describe_finish(plan['result'],plan['scorecards'],names)
+            return plan
+
 def launch_ready(state,ts):
+    from .out_engine import enabled as external_engine_enabled
     teams={m['id']:m for m in state['members']}; matches={m['id']:m for m in state['matches']}
     for match in state['matches']:
         if match['status']!='pending': continue
@@ -189,22 +222,10 @@ def launch_ready(state,ts):
             match['a'],match['b']=[p['winner'] for p in parents]
         if any(team not in teams or teams[team].get('forfeited') for team in [match['a'],match['b']]):
             forfeit_match(state,match,ts); continue
-        names={'you':teams[match['a']]['name'],'opp':teams[match['b']]['name']}
-        match['plan']=simulate(teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),teams[match['b']].get('order'),team_names=names,overs=match_overs(state.get('competition')))
-        result=match['plan']['result']
-        if result['winner']=='tie':
-            # Repeated six-ball tie-breaks, visible in the result.
-            tie_scores=[]
-            while True:
-                a=sum(rng.choice([0,1,2,4,6]) for _ in range(6)); b=sum(rng.choice([0,1,2,4,6]) for _ in range(6))
-                tie_scores.append(dict(a=a,b=b))
-                if a!=b: break
-            result['winner']='you' if a>b else 'opp'; result['margin']=f'after a six-ball tie-break ({a}–{b})'; result['tieBreaks']=tie_scores
-            last=match['plan']['timeline'][-1]
-            last['headline'],last['text']=describe_finish(result,match['plan']['scorecards'],names)
-        match['winner']=match['a'] if result['winner']=='you' else match['b']
-        interval=playback_seconds(state.get('competition'))
-        match['status']='live'; match['startedAt']=ts; match['endsAt']=ts+interval*len(match['plan']['timeline'])
+        if external_engine_enabled():
+            match['status']='simulating'
+        else:
+            finish_simulation(state,match,build_match_plan(state,match),ts)
 
 def standings(state):
     rows={m['id']:dict(id=m['id'],name=m['name'],played=0,won=0,points=0,runsFor=0,ballsFor=0,runsAgainst=0,ballsAgainst=0) for m in state['members']}
@@ -214,6 +235,7 @@ def standings(state):
             if match[key] not in rows: continue
             row=rows[match[key]]; row['played']+=1
             if match['winner']==match[key]: row['won']+=1; row['points']+=2
+            elif match.get('winner') is None: row['points']+=1
             if match.get('forfeit'): continue
             cards=match['plan']['scorecards']; own=next(c for c in cards if c['side']==side); against=next(c for c in cards if c['side']!=side)
             row['runsFor']+=sum(p['runs'] for p in own['batting']); row['runsAgainst']+=sum(p['runs'] for p in against['batting'])
@@ -276,6 +298,7 @@ def project(room,user_id,ts):
         m.pop('uid'); m.pop('userId',None); m.pop('recentSquads',None)
     for source in room.state['matches']:
         match=copy.deepcopy({k:v for k,v in source.items() if k!='plan'})
+        match.pop('simulationLease',None); match.pop('simulationLeaseUntil',None)
         state['matches'].append(match)
         plan=source.get('plan')
         if not plan: continue
@@ -316,3 +339,30 @@ def tick():
                 room.state=state; room.version+=1; session.add(Audit(action='room.clock',resource=room.id))
                 from .progression import archive_room
                 archive_room(session,room)
+
+def simulation_tick():
+    """Claim one queued match, simulate without a transaction, then attach it atomically."""
+    import secrets
+    with Session.begin() as session:
+        ids=list(session.scalars(select(Room.id).where(Room.state['phase'].astext=='live')))
+    for room_id in ids:
+        token=secrets.token_urlsafe(18); job=None
+        with Session.begin() as session:
+            room=session.scalar(select(Room).where(Room.id==room_id).with_for_update(skip_locked=True))
+            if not room: continue
+            state=copy.deepcopy(room.state); now=time.time()
+            match=next((m for m in state['matches'] if m['status']=='simulating' and m.get('simulationLeaseUntil',0)<now),None)
+            if not match: continue
+            match['simulationLease']=token; match['simulationLeaseUntil']=now+180
+            room.state=state; job=(copy.deepcopy(state),match['id'])
+        if not job: continue
+        state,match_id=job; match=next(m for m in state['matches'] if m['id']==match_id)
+        plan=build_match_plan(state,match)
+        with Session.begin() as session:
+            room=session.scalar(select(Room).where(Room.id==room_id).with_for_update())
+            if not room: return
+            current=copy.deepcopy(room.state); live=next((m for m in current['matches'] if m['id']==match_id),None)
+            if not live or live.get('simulationLease')!=token: return
+            finish_simulation(current,live,plan,time.time())
+            room.state=current; room.version+=1; session.add(Audit(action='room.simulated',resource=room.id))
+        return

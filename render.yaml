@@ -29,6 +29,12 @@ services:
         sync: false
       - key: LIVEKIT_API_SECRET
         sync: false
+      - key: OUT_ENGINE_URL
+        value: https://out-engine.onrender.com
+      - key: OUT_ENGINE_API_KEY
+        sync: false
+      - key: OUT_ENGINE_TIMEOUT_SECONDS
+        value: "90"
     buildFilter:
       paths:
         - backend/**
