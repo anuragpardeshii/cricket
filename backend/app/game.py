@@ -174,3 +174,17 @@ def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
     timeline[-1]['headline'],timeline[-1]['text']=describe_finish(result,scorecards,team_names or {'you':'Your team','opp':'AI'})
     timeline[-1]['kind']='result'
     return dict(timeline=timeline,result=result,firstBatting=first,scorecards=scorecards,performances=list(performances.values()),overs=overs)
+
+def simulate_match(you,opp,you_order=None,opp_order=None,team_names=None,competition='t20',seed=None):
+    """Use OUT Engine when configured, retaining the in-process simulator as an availability fallback."""
+    from . import out_engine
+    if out_engine.enabled():
+        try:
+            return out_engine.simulate(you,opp,you_order,opp_order,team_names,competition,seed)
+        except out_engine.EngineUnavailable:
+            import logging
+            logging.getLogger('out.engine').exception('remote_simulation_failed; using local simulator')
+            plan=simulate(you,opp,you_order,opp_order,team_names,match_overs(competition))
+            plan['engine']=dict(provider='local-fallback')
+            return plan
+    return simulate(you,opp,you_order,opp_order,team_names,match_overs(competition))

@@ -46,12 +46,20 @@ async def lifespan(app):
             try: await asyncio.to_thread(practice_tick)
             except Exception: logging.getLogger('out.security').error('practice_clock_failed')
             await asyncio.sleep(1)
-    tasks=[asyncio.create_task(clock()), asyncio.create_task(listen(signals)), asyncio.create_task(monitor(signals))]
+    async def simulator():
+        from .rooms import simulation_tick
+        while True:
+            try: await asyncio.to_thread(simulation_tick)
+            except Exception: logging.getLogger('out.engine').exception('room_simulation_worker_failed')
+            await asyncio.sleep(.25)
+    tasks=[asyncio.create_task(clock()),asyncio.create_task(simulator()),asyncio.create_task(listen(signals)),asyncio.create_task(monitor(signals))]
     try:
         yield
     finally:
         for task in tasks: task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        from .out_engine import close as close_engine_client
+        close_engine_client()
 
 app=FastAPI(lifespan=lifespan,title='OUT Cricket API',version='1.0.0',docs_url=None if SECURE else '/api/docs',openapi_url=None if SECURE else '/api/openapi.json',redoc_url=None)
 allowed_hosts={host.strip() for host in os.getenv('ALLOWED_HOSTS','localhost,127.0.0.1,testserver,api').split(',') if host.strip()}
@@ -324,6 +332,19 @@ def action(game_id:UUID,body:Action,auth=Depends(authenticated),session=Depends(
         raise HTTPException(409,'Game changed; refresh and try again')
     if game.version!=body.version: raise HTTPException(409,'Game changed; refresh and try again')
     state=copy.deepcopy(game.state)
+    if body.action=='match':
+        from .out_engine import enabled as external_engine_enabled
+        if external_engine_enabled() and not state.get('match'):
+            if len(state['yourXI'])!=11 or len(state['opponentXI'])!=11: raise HTTPException(409,'Complete both teams first')
+            # Release the game row before a cold engine request. A concurrent
+            # mutation wins through the existing version check when we return.
+            version=game.version; request_state=copy.deepcopy(state); session.commit()
+            from .game import simulate_match
+            plan=simulate_match(request_state['yourXI'],request_state['opponentXI'],request_state.get('order'),competition=request_state.get('competition') or 't20')
+            game=owned(session,game_id,auth.user_id,True)
+            if game.version!=version: raise HTTPException(409,'Game changed while the match was being prepared; try again')
+            state=copy.deepcopy(game.state); state['match']=plan; state['screen']='match'
+            game.state=state; game.version+=1; audit(session,'game.match',auth.user_id,game.id); session.commit(); return view(game)
     needs_pool=body.action in ['roll','pick'] and state.get('screen')=='draft' and state.get('turn')=='you'
     squads=load_catalog(session,state.get('competition'),state.get('edition'))['squads'] if needs_pool else []
     act(state,body.action,body.player_id,body.slot_id,squads=squads,order=body.order)
