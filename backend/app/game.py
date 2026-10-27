@@ -191,3 +191,17 @@ def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
     # Preserve actual batting-order context in the review.
     ordered=lambda xi,order:{key:xi[key] for key in (order or [slot['id'] for slot in SLOTS])}
     return review(plan,{'you':ordered(you,you_order),'opp':ordered(opp,opp_order)},names,venue)
+
+def simulate_match(you,opp,you_order=None,opp_order=None,team_names=None,competition='t20',seed=None):
+    """Use OUT Engine when configured, retaining the in-process simulator as an availability fallback."""
+    from . import out_engine
+    if out_engine.enabled():
+        try:
+            return out_engine.simulate(you,opp,you_order,opp_order,team_names,competition,seed)
+        except out_engine.EngineUnavailable:
+            import logging
+            logging.getLogger('out.engine').exception('remote_simulation_failed; using local simulator')
+            plan=simulate(you,opp,you_order,opp_order,team_names,match_overs(competition))
+            plan['engine']=dict(provider='local-fallback')
+            return plan
+    return simulate(you,opp,you_order,opp_order,team_names,match_overs(competition))

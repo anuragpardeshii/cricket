@@ -273,3 +273,14 @@ the higher-rated XI won 75 T20 matches with its normal order and 52 with special
 bowlers promoted to the top. The ODI baseline check averaged 287.8 first-innings
 runs, with a wide 53–545 range. These checks demonstrate order sensitivity and
 possible upsets; they do not establish statistically calibrated cricket forecasts.
+
+## Optional external engine branch
+
+`feature/out-engine-integration` layers external simulation on the shared gameplay
+features. Configure `OUT_ENGINE_URL` and the private `OUT_ENGINE_API_KEY` only on its
+backend. Room preparation runs outside PostgreSQL room locks, and the old local
+simulator remains the availability fallback. Every format resolves tied matches through
+full replays. Completed engine results use the same scorecard-based review as local
+results; venue pitch presets are sent to the engine, while local surface multipliers
+are not represented as engine parameters. Historical engine profiles may use different
+statistical inputs from the app’s visible editorial card rating.
