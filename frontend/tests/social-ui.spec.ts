@@ -75,7 +75,7 @@ test('completed review and same-room rematch',async({page})=>{
  await page.getByText('Scorecard details & team composition',{exact:true}).click();
  await expect(phase).toBeVisible();
  await page.getByText('Scorecard details & team composition',{exact:true}).click();
- await page.getByText('Your XI: season evidence & ratings',{exact:true}).first().click();await expect(page.getByText('3 wickets in 2 IPL matches.',{exact:true})).toBeVisible();
+ await expect(page.getByText('Your XI: season evidence & ratings',{exact:true})).toHaveCount(0);
  await page.screenshot({path:'test-results/match-review.png',fullPage:true});
  await page.getByRole('button',{name:'Play again',exact:true}).click();await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'ABCD',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Start match',exact:true})).toBeVisible();

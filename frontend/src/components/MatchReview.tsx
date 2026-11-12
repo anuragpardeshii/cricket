@@ -21,14 +21,6 @@ export function MatchReview({ analysis }: { analysis?: Analysis }) {
           <summary className="cursor-pointer text-sm text-amber">Scorecard details & team composition</summary>
           {details.map((note, i) => <p key={i} className="mt-3 text-xs leading-6 text-muted">{note}</p>)}
         </details>}
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm text-amber">Your XI: season evidence & ratings</summary>
-          <ul className="mt-3 space-y-4">{team.players.map((p, i) => <li key={i} className="text-xs leading-6">
-            <strong>{p.name} · {p.squad} · {p.rating}</strong>
-            <p>{p.note ?? 'Existing game estimate; season-specific evidence is not available for this card.'}</p>
-            {p.source && <a href={p.source} target="_blank" rel="noreferrer" className="text-amber underline">Season source ↗</a>}
-          </li>)}</ul>
-        </details>
       </article>;
     })}</div>
     <div className="mt-5 border-t border-neutral/15 pt-4">
