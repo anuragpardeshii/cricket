@@ -49,79 +49,117 @@ def wickets_lost(card):
     # Team totals include run-outs; bowler figures deliberately do not.
     return int(card['score'].split('/')[1].split()[0])
 
+def innings_totals(card):
+    import re
+    runs=int(card['score'].split('/')[0])
+    over=re.search(r'\((\d+)\.([0-5])\)',card['score'])
+    # Bowler balls exclude wides/no-balls; batter balls faced can differ.
+    balls=int(over[1])*6+int(over[2]) if over else sum(p['balls'] for p in card['bowling'])
+    return dict(runs=runs,wickets=wickets_lost(card),balls=balls)
+
+
+def overs_text(balls):
+    return f'{balls//6}.{balls%6}'
+
+
+def innings_snapshots(plan,side):
+    points={0:dict(runs=0,wickets=0,balls=0)}
+    for event in plan['timeline']:
+        if event.get('batting')!=side:continue
+        card=next((c for c in event.get('scorecards',[]) if c['side']==side),None)
+        if card:
+            totals=innings_totals(card)
+            points[totals['balls']]=totals
+    return dict(sorted(points.items()))
+
+
+def wicket_spell(points):
+    candidates=[]
+    for end,current in points.items():
+        for start,previous in points.items():
+            if not 0<end-start<=18:continue
+            wickets=current['wickets']-previous['wickets']; runs=current['runs']-previous['runs']
+            if wickets>=2 and runs>=0:candidates.append(dict(start=start,end=end,wickets=wickets,runs=runs))
+    return max(candidates,key=lambda p:(p['wickets'],-p['runs']),default=None)
+
+
+def phase_notes(plan,side,final):
+    points=innings_snapshots(plan,side); notes=[]
+    limits=[0,60,240,300] if plan.get('overs')==50 else [0,36,90,120]
+    for start,limit in zip(limits,limits[1:]):
+        end=min(limit,final['balls'])
+        if end<=start or start not in points or end not in points:continue
+        before,after=points[start],points[end]
+        notes.append(f"Overs {overs_text(start)}–{overs_text(end)}: {after['runs']-before['runs']} runs, {after['wickets']-before['wickets']} wickets.")
+    return notes
+
+
 def review(plan,teams,names,venue,*,external=False):
     cards={c['side']:c for c in plan['scorecards']}
+    totals={side:innings_totals(card) for side,card in cards.items()}
     metrics={}; reports=[]
+    winner=plan['result']['winner']; loser='opp' if winner=='you' else 'you'
+    first=plan['firstBatting']; chase='opp' if first=='you' else 'you'
+    target=totals[first]['runs']+1
+    tied=bool(plan['result'].get('tieResolution'))
     for side in ('you','opp'):
-        own=cards[side]; against=cards['opp' if side=='you' else 'you']
-        bat=own['batting']; bowl=against['bowling']
-        bat_runs=sum(p['runs'] for p in bat)
-        runs=int(own['score'].split('/')[0]); extras=max(0,runs-bat_runs); balls=sum(p['balls'] for p in bat)
+        other='opp' if side=='you' else 'you'
+        own=cards[side]; against=cards[other]; m=totals[side]
+        bat=own['batting']; bowl=[p for p in against['bowling'] if p['balls']>0 or p['wickets']>0 or p['runs']>0]
+        bat_runs=sum(p['runs'] for p in bat); extras=max(0,m['runs']-bat_runs)
         boundaries=sum(4*p.get('fours',0)+6*p.get('sixes',0) for p in bat)
         conceded=sum(p['runs'] for p in bowl); bowled=sum(p['balls'] for p in bowl)
-        bowler_wickets=sum(p['wickets'] for p in bowl); wickets=wickets_lost(against)
-        metrics[side]=dict(runs=runs,balls=balls,boundaryRuns=boundaries,wicketsTaken=wickets,economy=round(conceded*6/max(1,bowled),2))
-        top=max(bat,key=lambda p:p['runs']); best=max(bowl,key=lambda p:(p['wickets'],-p['runs']/max(1,p['balls'])))
-        squad=list(teams[side].values()); pace=sum(p['role']=='PACE' for p in squad); spin=sum(p['role']=='SPIN' for p in squad); ar=sum(p['role']=='AR' for p in squad)
-        tail=sum(p['runs'] for p in bat[7:]); top3=sum(p['runs'] for p in bat[:3])
-        notes=[f"{top['name']} supplied {top['runs']} from {top['balls']} balls; the top three contributed {top3} of {runs} runs and positions 8–11 added {tail}.",
-               f"Boundaries supplied {boundaries} runs ({round(100*boundaries/max(1,runs))}% of the batting total). Batters added {bat_runs-boundaries} through non-boundary scoring; extras supplied {extras}.",
-               f"{best['name']} was the leading wicket-taker with {best['wickets']}/{best['runs']}. The opposition lost {wickets} wickets ({bowler_wickets} credited to bowlers); bowling economy was {metrics[side]['economy']} runs per over.",
-               f"XI balance: {pace} specialist pace bowlers, {spin} specialist spinners and {ar} all-rounder(s). These are card roles, not a claim about a player's unrecorded skills."]
-        if not external:
-            batting=round(sum(skills(p)['batting'] for p in squad[:7])/min(7,len(squad)),1)
-            bowling=round(sum(skills(teams[side][k])['bowling'] for k in ['ar','b1','b2','b3','b4'])/5,1)
-            notes.append(f"Model inputs: first seven batting strength {batting}; five-bowler strength {bowling}. Specialist bowlers have a lower batting prior; all-rounders contribute to both skills. Ratings influence probabilities, never guarantee the result.")
-        evidence=[dict(name=p['name'],squad=p.get('squad',''),rating=p['rating'],**{k:v for k,v in p.get('ratingEvidence',{}).items() if k in ('note','source')}) for p in squad]
-        reports.append(dict(side=side,name=names[side],outcome='Won' if plan['result']['winner']==side else 'Lost',notes=notes,players=evidence))
-    for report in reports:
-        side=report['side']; other='opp' if side=='you' else 'you'; m=metrics[side]; rival=metrics[other]
-        phases=[]; last_runs=last_wickets=0
-        for label,limit in [('Powerplay',10 if plan.get('overs')==50 else 6),('Middle overs',40 if plan.get('overs')==50 else 15),('Closing overs',plan.get('overs',20))]:
-            samples=[e for e in plan['timeline'] if e.get('batting')==side and int(e['over'].split()[-1])<=limit]
-            if not samples:continue
-            snapshot=next((c for c in samples[-1].get('scorecards',[]) if c['side']==side),None)
-            if not snapshot:continue
-            total=int(snapshot['score'].split('/')[0]); lost=wickets_lost(snapshot)
-            if total!=last_runs or lost!=last_wickets:phases.append(f"{label}: {total-last_runs} runs, {lost-last_wickets} wickets")
-            last_runs,last_wickets=total,lost
-        if phases:report['notes'].append('Innings phases — '+ '; '.join(phases)+'. Only phases actually reached are shown.')
-        if m['boundaryRuns']>rival['boundaryRuns']:
-            report['notes'].append(f"What worked: {m['boundaryRuns']-rival['boundaryRuns']} more runs from boundaries than the opponent. Boundary scoring alone does not decide a chase; wickets and the target still matter.")
-        elif m['wicketsTaken']>rival['wicketsTaken']:
-            report['notes'].append(f"What worked: the team took {m['wicketsTaken']-rival['wicketsTaken']} more wickets. This advantage did not by itself guarantee enough runs.")
-        else:
-            report['notes'].append('What worked: the leading batter and bowler above provided this XI’s strongest recorded contributions; the overall comparison did not show an edge in boundaries or wickets taken.')
-        if side!=plan['result']['winner']:
-            if rival['wicketsTaken']>=8:
-                report['notes'].append(f"What hurt: losing {rival['wicketsTaken']} wickets exposed the lower order. Review batting depth alongside the bowling strength, especially if specialist bowlers are placed high in the batting order.")
-            elif m['economy']>rival['economy']:
-                report['notes'].append(f"What hurt: the attack conceded {m['economy']} per over versus {rival['economy']}. Compare the five bowling options in your next draft; the rates describe this match and may cover different innings lengths.")
+        bowler_wickets=sum(p['wickets'] for p in bowl)
+        economy=round(conceded*6/bowled,2) if bowled else None
+        metrics[side]=dict(runs=m['runs'],balls=m['balls'],boundaryRuns=boundaries,wicketsTaken=totals[other]['wickets'],economy=economy)
+        top=max(bat,key=lambda p:(p['runs'],p['balls']),default=None)
+        best=max(bowl,key=lambda p:(p['wickets'],-p['runs']/max(1,p['balls'])),default=None)
+        notes=[]
+        if top and top['runs']:
+            notes.append(f"Batting: {top['name']} top-scored with {top['runs']} from {top['balls']} balls, contributing {round(100*top['runs']/max(1,m['runs']))}% of the total.")
+        else:notes.append('Batting: no batter scored a run.')
+        if best and best['wickets']:
+            notes.append(f"Bowling: {best['name']} took {best['wickets']}/{best['runs']} in {overs_text(best['balls'])} overs.")
+        else:notes.append('Bowling: no bowler took a wicket.')
+        if tied:
+            summary='Scores finished level. The winner was selected by the disclosed fantasy-game tie rule.'
+        elif side==chase:
+            if side==winner:
+                summary=f"Reached the target of {target} with {10-m['wickets']} wickets and {max(0,plan.get('overs',20)*6-m['balls'])} balls remaining."
             else:
-                report['notes'].append('What hurt: the batting total did not win the contest despite that bowling economy. Review the scoring phases and batting order rather than assuming a famous XI must win.')
-    winner=plan['result']['winner']; loser='opp' if winner=='you' else 'you'
-    w,l=metrics[winner],metrics[loser]
+                ending='all out' if m['wickets']==10 else f"{m['runs']}/{m['wickets']}"
+                summary=f"Chasing {target}, finished {ending}, needing {target-m['runs']} more runs to win."
+        elif side==winner:
+            summary=f"Defended {m['runs']}: {names[other]} finished on {totals[other]['runs']}/{totals[other]['wickets']}."
+        else:
+            summary=f"Could not defend {m['runs']}: {names[other]} reached the target with {10-totals[other]['wickets']} wickets remaining."
+        squad=list(teams[side].values())
+        pace=sum(p['role']=='PACE' for p in squad); spin=sum(p['role']=='SPIN' for p in squad); ar=sum(p['role']=='AR' for p in squad)
+        details=[f"Scoring: {boundaries} boundary runs, {bat_runs-boundaries} other batter runs and {extras} extras.",
+                 f"The opposition lost {totals[other]['wickets']} wickets ({bowler_wickets} credited to bowlers)." + (f" Bowling economy: {economy} runs per over, excluding byes and leg-byes." if economy is not None else ''),
+                 f"Top three: {sum(p['runs'] for p in bat[:3])} runs. Positions 8–11: {sum(p['runs'] for p in bat[7:])} runs." if any(p['balls'] or p['runs'] for p in bat[7:]) else f"Top three: {sum(p['runs'] for p in bat[:3])} runs. Positions 8–11 did not face a ball or score.",
+                 f"XI roles: {pace} specialist pace bowlers, {spin} specialist spinners, {ar} all-rounder(s). Role counts alone do not establish which XI is better balanced."]
+        details.extend(phase_notes(plan,side,m))
+        if not external:
+            batting=round(sum(skills(p)['batting'] for p in squad[:7])/max(1,min(7,len(squad))),1)
+            bowling=round(sum(skills(teams[side][k])['bowling'] for k in ['ar','b1','b2','b3','b4'])/5,1)
+            details.append(f"Model inputs: first-seven batting strength {batting}; five-bowler strength {bowling}. These game estimates affect probabilities, not guaranteed outcomes.")
+        evidence=[dict(name=p['name'],squad=p.get('squad',''),rating=p['rating'],**{k:v for k,v in p.get('ratingEvidence',{}).items() if k in ('note','source')}) for p in squad]
+        reports.append(dict(side=side,name=names[side],outcome='Won' if winner==side else 'Lost',summary=summary,notes=notes,details=details,players=evidence))
     decisive_text=f"{names[winner]} won {plan['result']['margin']}. "
-    if plan['firstBatting']==winner:
-        decisive_text+=f"The chase finished {w['runs']-l['runs']} runs behind the first-innings total. "
+    if tied:
+        decisive_text+='Regulation scores were level; this was a fantasy-game tie decision, not a win on runs or wickets.'
     else:
-        decisive_text+=f"The target was passed in {w['balls']//6}.{w['balls']%6} overs. "
-    decisive_text+=f"Boundary runs were {w['boundaryRuns']} versus {l['boundaryRuns']}; wickets taken were {w['wicketsTaken']} versus {l['wicketsTaken']}. These are observed differences, not proof that a single selection caused the result."
-    if plan['result'].get('tieResolution'):decisive_text=f"Regulation scores stayed level. {names[winner]} won {plan['result']['margin']}. The scorecard is unchanged; the fantasy-game decision is separate from runs scored."
-    # Find a real wicket cluster from legal-ball progression in the losing innings.
-    snapshots=[e for e in plan['timeline'] if e.get('batting')==loser]
-    cluster=None
-    for i,event in enumerate(snapshots):
-        current=next((c for c in event.get('scorecards',[]) if c['side']==loser),None)
-        previous=next((c for c in snapshots[max(0,i-3)].get('scorecards',[]) if c['side']==loser),None) if i>=3 else None
-        if not current:continue
-        lost=wickets_lost(current)-(wickets_lost(previous) if previous else 0)
-        gained=int(current['score'].split('/')[0])-(int(previous['score'].split('/')[0]) if previous else 0)
-        if lost>=2 and (cluster is None or lost>cluster[0]):cluster=(lost,gained,event['over'])
-    if cluster:decisive_text+=f" A pressure spell ending at {cluster[2]} removed {cluster[0]} wickets for {cluster[1]} runs in at most three overs."
+        if winner==chase:
+            decisive_text+=f"They reached the target of {target} in {overs_text(totals[chase]['balls'])} overs."
+        else:
+            decisive_text+=f"{names[chase]} finished {totals[chase]['runs']}/{totals[chase]['wickets']} chasing {target}."
+        spell=wicket_spell(innings_snapshots(plan,loser))
+        if spell:
+            decisive_text+=f" {names[loser]} lost {spell['wickets']} wickets for {spell['runs']} runs between {overs_text(spell['start'])} and {overs_text(spell['end'])} overs."
     public_venue={k:venue[k] for k in ('id','name','city','fact','source','condition')}
     condition_note='Venue shown for match atmosphere; this engine response does not provide evidence that the venue altered its probabilities.' if external else f"Fantasy surface settings: boundary weight ×{venue['boundary']}, pace wicket chance ×{venue['pace']}, spin wicket chance ×{venue['spin']}. These are game-design assumptions, not measured pitch forecasts; the same rules apply to both teams."
     plan['venue']=public_venue
     plan['result']['analysis']=dict(decisive=decisive_text,teams=reports,metrics=metrics,venue=public_venue,conditions=condition_note,
-        method='Generated from this saved scorecard. Historical notes are sourced separately. A stronger XI can lose through match variation; no unobserved aggression, injury, dew or mentality is invented.')
+        method='Based on the saved scorecard. Contributions and scoring spells describe this match; they do not prove a player or selection caused the loss. Historical season evidence and model assumptions are shown separately.')
     return plan

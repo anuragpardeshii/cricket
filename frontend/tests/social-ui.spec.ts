@@ -57,7 +57,7 @@ test('install manifest and icons are available',async({request})=>{
 });
 
 test('completed review and same-room rematch',async({page})=>{
- const room:any={id:'test-room',code:'ABCD',version:1,serverTime:Date.now()/1000,you:'a',host:true,visibility:'private',standings:[],state:{phase:'complete',format:'knockout',capacity:2,competition:'ipl',seconds:30,turn:0,taken:[],champion:'b',kickRequired:1,members:[{id:'a',name:'Alice',xi:{},is_ai:false,ready:false},{id:'b',name:'Bob',xi:{},is_ai:false,ready:false}],matches:[{id:'m',a:'a',b:'b',status:'complete',winner:'b',round:1,scores:{youScore:'100/10',oppScore:'101/2'},result:{winner:'opp',margin:'by 8 wickets',analysis:{decisive:'Bob passed the target. Alice lost five wickets in the middle overs.',method:'Generated from the saved scorecard.',conditions:'Fantasy pitch assumptions are disclosed.',venue:{name:'Wankhede Stadium',city:'Mumbai',fact:'Home of Mumbai Indians.',source:'https://www.iplt20.com/venues',condition:'Batting surface'},teams:[{side:'you',name:'Alice',outcome:'Lost',notes:['Your top three scored 70 of 100 runs.'],players:[{name:'Jasprit Bumrah',squad:'MUMBAI INDIANS 2013',rating:78,note:'3 wickets in 2 IPL matches.',source:'https://www.mumbaiindians.com/news/from-2013-2024-the-jasprit-bumrah-road-to-greatness'}]},{side:'opp',name:'Bob',outcome:'Won',notes:['The attack took ten wickets.'],players:[]}]}}}]}};
+ const room:any={id:'test-room',code:'ABCD',version:1,serverTime:Date.now()/1000,you:'a',host:true,visibility:'private',standings:[],state:{phase:'complete',format:'knockout',capacity:2,competition:'ipl',seconds:30,turn:0,taken:[],champion:'b',kickRequired:1,members:[{id:'a',name:'Alice',xi:{},is_ai:false,ready:false},{id:'b',name:'Bob',xi:{},is_ai:false,ready:false}],matches:[{id:'m',a:'a',b:'b',status:'complete',winner:'b',round:1,scores:{youScore:'100/10',oppScore:'101/2'},result:{winner:'opp',margin:'by 8 wickets',analysis:{decisive:'Bob passed the target. Alice lost five wickets in the middle overs.',method:'Generated from the saved scorecard.',conditions:'Fantasy pitch assumptions are disclosed.',venue:{name:'Wankhede Stadium',city:'Mumbai',fact:'Home of Mumbai Indians.',source:'https://www.iplt20.com/venues',condition:'Batting surface'},teams:[{side:'you',name:'Alice',outcome:'Lost',summary:'Could not defend 100: Bob reached the target with 8 wickets remaining.',details:['Overs 6.0–15.0: 40 runs, 5 wickets.'],notes:['Your top three scored 70 of 100 runs.'],players:[{name:'Jasprit Bumrah',squad:'MUMBAI INDIANS 2013',rating:78,note:'3 wickets in 2 IPL matches.',source:'https://www.mumbaiindians.com/news/from-2013-2024-the-jasprit-bumrah-road-to-greatness'}]},{side:'opp',name:'Bob',outcome:'Won',notes:['The attack took ten wickets.'],players:[]}]}}}]}};
  await page.addInitScript(()=>sessionStorage.setItem('out-online-room','test-room'));
  let broadcast=()=>{};await page.routeWebSocket('**/api/rooms/test-room/live',socket=>{broadcast=()=>socket.send(JSON.stringify({type:'room',room}));socket.onMessage(broadcast)});
  await page.route('**/api/**',async route=>{
@@ -67,8 +67,14 @@ test('completed review and same-room rematch',async({page})=>{
   else if(path.endsWith('/rematch')){room.version++;room.state.phase='lobby';room.state.matches=[];room.state.champion=null;room.state.roundNumber=2;result={code:'ABCD'}}
   await route.fulfill({json:result});broadcast();
  });
- await page.goto('/rooms');await expect(page.getByRole('heading',{name:'Where the match was decided'})).toBeVisible();
+ await page.goto('/rooms');await expect(page.getByRole('heading',{name:'Match breakdown'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'Alice · Lost'})).toBeVisible();await expect(page.getByRole('heading',{name:'Bob · Won'})).toBeVisible();
+ await expect(page.getByText('Could not defend 100: Bob reached the target with 8 wickets remaining.',{exact:true})).toBeVisible();
+ const phase=page.getByText('Overs 6.0–15.0: 40 runs, 5 wickets.',{exact:true});
+ await expect(phase).not.toBeVisible();
+ await page.getByText('Scorecard details & team composition',{exact:true}).click();
+ await expect(phase).toBeVisible();
+ await page.getByText('Scorecard details & team composition',{exact:true}).click();
  await page.getByText('Your XI: season evidence & ratings',{exact:true}).first().click();await expect(page.getByText('3 wickets in 2 IPL matches.',{exact:true})).toBeVisible();
  await page.screenshot({path:'test-results/match-review.png',fullPage:true});
  await page.getByRole('button',{name:'Play again',exact:true}).click();await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();

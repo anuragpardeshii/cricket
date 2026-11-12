@@ -214,8 +214,7 @@ control disables both; browser audio requires an initial user interaction.
 New local simulations use separate batting/bowling role priors: specialist bowlers do
 not bat at their bowling rating. Stadium surface multipliers are explicit fantasy-game
 assumptions, not measured historical pitch data. IPL uses six Indian grounds; World Cup
-pools also include Lord’s, the MCG and SCG. The saved review reports actual innings phases,
-contributions, boundaries, wickets, economy and team balance. It does not invent claims
+pools also include Lord’s, the MCG and SCG. The review starts with the target/result and each team’s recorded batting and bowling contributions. Extra scorecard figures, XI role counts, season evidence and model assumptions are expandable. Wicket spells require actual endpoints within 18 legal balls; phase totals are omitted when a boundary snapshot is missing. Overall economy and role counts do not trigger claims that a player or team selection caused the loss. It does not invent claims
 about aggression, mentality, dew, injuries or unverified early-career statistics. Review
 text is derived locally without an AI API or another network request.
 

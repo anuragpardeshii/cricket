@@ -114,6 +114,7 @@ def test_review_counts_runouts_without_crediting_bowlers():
               timeline=[dict(over='OV 20',batting='opp',scorecards=cards)])
     analysis=match_review.review(plan,teams,dict(you='A',opp='B'),match_review.VENUES[0],external=True)['result']['analysis']
     assert analysis['metrics']['you']['wicketsTaken']==9
-    assert any('9 wickets (8 credited to bowlers)' in n for n in analysis['teams'][0]['notes'])
-    assert any('losing 9 wickets' in n for n in analysis['teams'][1]['notes'])
-    assert any('9 wickets' in n and 'Closing overs' in n for n in analysis['teams'][1]['notes'])
+    assert any('9 wickets (8 credited to bowlers)' in n for n in analysis['teams'][0]['details'])
+    assert 'needing 7 more runs to win' in analysis['teams'][1]['summary']
+    assert not any(n.startswith('Overs ') for n in analysis['teams'][1]['details'])
+    assert 'between' not in analysis['decisive']  # Sparse snapshots cannot prove a short spell.
