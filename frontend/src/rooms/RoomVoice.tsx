@@ -114,9 +114,9 @@ export default function RoomVoice({ room, available }: { room: Room; available: 
       voice.current = null; epoch.current++;
       media.current?.replaceChildren();
       setStatus('disconnected'); setPeers([]); setMicOn(false); setMicBusy(false); setPlaybackBlocked(false);
-      setError(reason === DisconnectReason.DUPLICATE_IDENTITY ? 'Voice chat was opened in another tab.' : reason === DisconnectReason.PARTICIPANT_REMOVED ? 'Your voice connection was ended.' : 'Voice disconnected. Join again when you are ready.');
+      setError(reason === DisconnectReason.DUPLICATE_IDENTITY ? 'Voice chat was opened in another tab.' : reason === DisconnectReason.PARTICIPANT_REMOVED ? 'Your voice connection was ended.' : 'Voice disconnected. Reconnect to listen again.');
     });
-    // Unlock playback from this gesture. Joining never captures a microphone.
+    // Connect as a listener. Microphone capture requires an explicit Unmute mic click.
     void current.startAudio().catch(() => { if (active()) setPlaybackBlocked(true); });
     try {
       const connection = await api<VoiceConnection>(`/rooms/${room.id}/voice`, {});
@@ -132,6 +132,21 @@ export default function RoomVoice({ room, available }: { room: Room; available: 
       setError(cause instanceof ApiError ? cause.message : 'Could not connect to voice chat. Check your connection and try again.');
     }
   };
+
+  useEffect(() => {
+    if (available) void join();
+    else leave();
+    // The component is keyed by room/member; connect when voice becomes available.
+  }, [available]);
+  useEffect(() => {
+    const resume = () => {
+      const current = voice.current;
+      if (current && !current.canPlaybackAudio) void current.startAudio().catch(() => setPlaybackBlocked(true));
+    };
+    window.addEventListener('pointerdown', resume);
+    window.addEventListener('keydown', resume);
+    return () => { window.removeEventListener('pointerdown', resume); window.removeEventListener('keydown', resume); };
+  }, []);
 
   const toggleMic = async () => {
     const current = voice.current;
@@ -158,13 +173,13 @@ export default function RoomVoice({ room, available }: { room: Room; available: 
   const humans = room.state.members.filter(member => !member.is_ai && !member.departed);
 
   return <div className="relative" aria-label="Room voice chat">
-    <p className="sr-only" role="status">{status === 'connecting' ? 'Joining voice…' : status === 'reconnecting' ? 'Reconnecting to voice…' : joined ? `${peers.length} in voice · ${micOn ? 'Your microphone is on' : 'Your microphone is off'}` : available ? 'Join with your microphone off.' : 'Voice chat is currently unavailable.'}</p>
-    {joined?<button type="button" className={button} aria-expanded={expanded} onClick={()=>setExpanded(v=>!v)}><Icon kind="headphones"/>Voice · {peers.length} <span aria-hidden="true">⌄</span></button>:status==='connecting'?<button type="button" className={button} onClick={leave}>Cancel joining</button>:<button type="button" className={`${button} border-amber/40 bg-amber/10 text-amber`} disabled={!available} title={available?'Join with your microphone off':'Voice is not configured on this deployment'} onClick={()=>{setExpanded(true);void join()}}><Icon kind="headphones"/>Join voice</button>}
+    <p className="sr-only" role="status">{status === 'connecting' ? 'Joining voice…' : status === 'reconnecting' ? 'Reconnecting to voice…' : joined ? `${peers.length} in voice · ${micOn ? 'Your microphone is on' : 'Your microphone is off'}` : available ? 'Voice is disconnected. Your microphone is off.' : 'Voice chat is currently unavailable.'}</p>
+    {joined?<button type="button" className={button} aria-expanded={expanded} onClick={()=>setExpanded(v=>!v)}><Icon kind="headphones"/>Voice · {peers.length} <span aria-hidden="true">⌄</span></button>:status==='connecting'?<button type="button" className={button} disabled>Connecting voice…</button>:<button type="button" className={`${button} border-amber/40 bg-amber/10 text-amber`} disabled={!available} title={available?'Reconnect with your microphone off':'Voice is not configured on this deployment'} onClick={()=>{setExpanded(true);void join()}}><Icon kind="headphones"/>{available?'Reconnect voice':'Voice unavailable'}</button>}
     {joined&&expanded&&<section aria-label="Voice controls" onKeyDown={e=>{if(e.key==='Escape')setExpanded(false)}} className="fixed right-3 top-32 z-40 mt-2 max-h-[70dvh] w-[min(420px,85vw)] overflow-y-auto rounded-xl border border-neutral/20 bg-panel p-3 shadow-xl sm:absolute sm:right-0 sm:top-full">
       <div className="flex flex-wrap items-center gap-2 border-b border-neutral/10 pb-3">
         <button type="button" className={`${button} ${micOn?'text-amber':''}`} disabled={micBusy||status!=='connected'} aria-pressed={micOn} onClick={()=>{void toggleMic()}}><Icon kind="mic" off={!micOn}/>{micBusy?'Please wait…':micOn?'Mute mic':'Unmute mic'}</button>
         <button type="button" className={button} aria-pressed={deafened} onClick={()=>setDeafened(v=>!v)}><Icon kind="headphones" off={deafened}/>{deafened?'Enable sound':'Turn off sound'}</button>
-        <button type="button" className={`${button} text-danger`} onClick={leave}>Leave voice</button>
+        <button type="button" className={`${button} text-danger`} onClick={leave}>Disconnect voice</button>
       </div>
       <ul className="grid gap-x-4 sm:grid-cols-2">{humans.map(member=>{
         const peer=peers.find(person=>person.id===member.id),personalMute=muted.has(member.id),yours=member.id===room.you;
@@ -176,8 +191,8 @@ export default function RoomVoice({ room, available }: { room: Room; available: 
         </li>;
       })}</ul>
       <p className="mt-2 text-[11px] text-muted">Muting a player affects only what you hear.</p>
-      {playbackBlocked&&<button type="button" className={`${button} mt-2 text-amber`} onClick={()=>{void voice.current?.startAudio().catch(()=>setError('Your browser could not enable audio. Try again.'))}}>Enable voice playback</button>}
     </section>}
+    {joined&&playbackBlocked&&<button type="button" className={`${button} ml-2 text-amber`} onClick={()=>{void voice.current?.startAudio().catch(()=>setError('Your browser could not enable audio. Try again.'))}}>Enable voice playback</button>}
     {error&&<p role="alert" className="fixed right-3 top-32 z-50 mt-2 w-64 rounded-lg border border-danger/30 bg-panel p-3 text-xs text-danger sm:absolute sm:right-0 sm:top-full">{error}<button type="button" className="ml-2 text-amber" onClick={()=>setError('')}>Dismiss</button></p>}
     <div ref={media} hidden/>
   </div>;

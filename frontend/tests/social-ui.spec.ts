@@ -33,6 +33,12 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  room.state.members[1].ready=true;broadcast();await page.getByRole('button',{name:'Ready',exact:true}).click();await page.getByRole('button',{name:'Start match',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Bob is picking'})).toBeVisible();await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();
  await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toBeDisabled();await expect(page.getByRole('button',{name:/Reroll/})).toHaveCount(0);
+ await expect(page.getByRole('log',{name:'Room messages'})).toBeVisible();
+ if(!mobile){
+  const chat=await page.getByRole('log',{name:'Room messages'}).boundingBox();
+  const picking=await page.getByRole('heading',{name:'Bob is picking'}).boundingBox();
+  expect(chat!.x+chat!.width).toBeLessThan(picking!.x);
+ }
  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  expect(errors).toEqual([]);
 });
@@ -61,4 +67,35 @@ test('completed review and same-room rematch',async({page})=>{
  await page.getByRole('button',{name:'Play again',exact:true}).click();await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'ABCD',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Start match',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>sessionStorage.getItem('out-online-room'))).toBe('test-room');
+});
+
+
+test('turn tone plays only on first chance, including the next snake round',async({page})=>{
+ const room:any={id:'tone-room',code:'TONE',version:1,serverTime:Date.now()/1000,you:'a',host:true,visibility:'private',standings:[],state:{phase:'lobby',format:'knockout',capacity:2,competition:'ipl',seconds:30,turn:0,taken:[],matches:[],champion:null,kickRequired:1,draftRevision:1,draftRulesVersion:2,draftRound:1,turnPicks:0,members:[{id:'a',name:'Alice',xi:{},is_ai:false,ready:false},{id:'b',name:'Bob',xi:{},is_ai:false,ready:false}]}};
+ await page.addInitScript(()=>{
+  sessionStorage.setItem('out-online-room','tone-room');
+  const w=window as any;w.tones=0;
+  const original=AudioContext.prototype.createOscillator;
+  AudioContext.prototype.createOscillator=function(){w.tones++;return original.call(this)};
+ });
+ let broadcast=()=>{};
+ await page.routeWebSocket('**/api/rooms/tone-room/live',socket=>{broadcast=()=>{room.version++;socket.send(JSON.stringify({type:'room',room}))};socket.onMessage(broadcast)});
+ await page.route('**/api/**',route=>{const path=new URL(route.request().url()).pathname;return route.fulfill({json:path==='/api/auth/me'?{csrf:'test',user:{id:'a',username:'Alice'}}:path.endsWith('/connection')?{ticket:'test',url:'/api/rooms/tone-room/live',voiceAvailable:false}:room})});
+ await page.goto('/rooms');await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();
+ await page.getByRole('button',{name:/Room chat/}).click(); // Unlock browser audio.
+ room.state.phase='draft';room.state.deadline=Date.now()/1000+120;broadcast();
+ await expect.poll(()=>page.evaluate(()=>(window as any).tones)).toBe(1);
+ room.state.turnPicks=1;room.state.taken=['first'];broadcast();
+ await expect(page.getByRole('status').filter({hasText:'Chance 2 of 2'})).toBeVisible();
+ expect(await page.evaluate(()=>(window as any).tones)).toBe(1);
+ room.state.turn=1;room.state.turnPicks=0;broadcast();
+ await expect(page.getByRole('heading',{name:'Bob is picking'})).toBeVisible();
+ room.state.turn=0;room.state.draftRound=2;broadcast();
+ await expect.poll(()=>page.evaluate(()=>(window as any).tones)).toBe(2);
+ room.state.turnPicks=1;broadcast();
+ await expect(page.getByRole('status').filter({hasText:'Chance 2 of 2'})).toBeVisible();
+ room.state.turnPicks=0;room.state.draftRound=3;broadcast(); // Snake endpoint repeats the same player.
+ await expect.poll(()=>page.evaluate(()=>(window as any).tones)).toBe(3);
+ room.state.roundNumber=2;room.state.draftRound=1;broadcast();
+ await expect.poll(()=>page.evaluate(()=>(window as any).tones)).toBe(4);
 });

@@ -60,7 +60,8 @@ test('real voice, listener-only mute, reconnect, microphone denial, and kick rem
     let roomGets = 0;
     b.on('request', request => { if (request.method() === 'GET' && request.url().endsWith(`/api/rooms/${room.id}`)) roomGets++; });
     for (const page of pages) {
-      await page.getByRole('button', { name: 'Join voice', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Join voice', exact: true })).toHaveCount(0);
+      await page.getByRole('button', { name: /^Voice ·/ }).click();
       await expect(page.getByRole('button', { name: 'Unmute mic', exact: true })).toBeVisible();
       expect(await page.evaluate(() => (window as unknown as { captures: number }).captures)).toBe(0);
     }
@@ -97,9 +98,9 @@ test('real voice, listener-only mute, reconnect, microphone denial, and kick rem
     await expect.poll(() => audioVolume(b, carol.you)).toBe(1);
     expect(await audioVolume(b, room.you)).toBe(0); // Deafen preserves personal mute.
 
-    await a.getByRole('button', { name: 'Leave voice', exact: true }).click();
+    await a.getByRole('button', { name: 'Disconnect voice', exact: true }).click();
     await expect(a.getByText('3/4 players', { exact: true })).toBeVisible();
-    await a.getByRole('button', { name: 'Join voice', exact: true }).click();
+    await a.getByRole('button', { name: 'Reconnect voice', exact: true }).click();
     await a.getByRole('button', { name: 'Unmute mic', exact: true }).click();
     await expect.poll(() => audioVolume(b, room.you)).toBe(0); // Mute survives republished tracks.
     await expect.poll(() => audioVolume(c, room.you)).toBe(1);
@@ -114,15 +115,14 @@ test('real voice, listener-only mute, reconnect, microphone denial, and kick rem
     // A temporary restore failure must retain the room and retry automatically.
     await b.route(`**/api/rooms/${room.id}`, route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"detail":"Temporary outage"}' }), { times: 1 });
     await b.reload();
-    await expect(b.getByRole('button', { name: 'Join voice', exact: true })).toBeEnabled();
-    await b.getByRole('button', { name: 'Join voice', exact: true }).click();
+    await b.getByRole('button', { name: /^Voice ·/ }).click();
     await expect.poll(() => audioVolume(b, room.you)).toBe(0); // Mute survives refresh in this tab.
     await b.evaluate(() => {
       navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Denied for test', 'NotAllowedError'));
     });
     await b.getByRole('button', { name: 'Unmute mic', exact: true }).click();
     await expect(b.getByRole('alert')).toContainText('Microphone access was denied');
-    await expect(b.getByRole('button', { name: 'Leave voice', exact: true })).toBeVisible();
+    await expect(b.getByRole('button', { name: 'Disconnect voice', exact: true })).toBeVisible();
 
     await b.setViewportSize({ width: 390, height: 844 });
     expect(await b.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -135,10 +135,10 @@ test('real voice, listener-only mute, reconnect, microphone denial, and kick rem
       socket.onmessage = null; socket.onclose = null; socket.close();
     });
     for(const page of [a,c]){const toggle=page.getByRole('button',{name:/^Voice ·/});if(await toggle.getAttribute('aria-expanded')==='true')await toggle.click()}
-    await a.getByRole('button', { name: `Vote to kick ${bobName}`, exact: true }).click();
-    await c.getByRole('button', { name: `Vote to kick ${bobName}`, exact: true }).click();
+    await a.getByRole('button', { name: `Vote to remove ${bobName}`, exact: true }).click();
+    await c.getByRole('button', { name: `Vote to remove ${bobName}`, exact: true }).click();
     await expect(b.getByRole('alert')).toContainText('Your voice connection was ended.');
-    await expect(b.getByRole('button', { name: 'Join voice', exact: true })).toBeVisible();
+    await expect(b.getByRole('button', { name: 'Reconnect voice', exact: true })).toBeVisible();
     expect(errors).toEqual([]);
   } finally {
     await Promise.all(contexts.map(context => context.close()));
