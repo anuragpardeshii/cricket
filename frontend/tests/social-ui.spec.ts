@@ -3,7 +3,7 @@ import { test,expect } from '@playwright/test';
 for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':'desktop'}`,async({page})=>{
  await page.setViewportSize(mobile?{width:390,height:844}:{width:1280,height:900});
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- const room:any={id:'test-room',code:'ABCD',version:1,serverTime:Date.now()/1000,you:'a',host:true,visibility:'private',standings:[],state:{phase:'lobby',format:'knockout',capacity:2,competition:'ipl',seconds:30,turn:0,taken:[],matches:[],champion:null,kickRequired:1,draftRevision:1,members:[{id:'a',name:'Alice',xi:{},is_ai:false,ready:false},{id:'b',name:'Bob',xi:{},is_ai:false,ready:true}]}};
+ const room:any={id:'test-room',code:'ABCD',version:1,serverTime:Date.now()/1000,you:'a',host:true,visibility:'private',standings:[],state:{phase:'lobby',format:'knockout',capacity:2,competition:'ipl',seconds:30,turn:0,taken:[],matches:[],champion:null,kickRequired:1,draftRevision:1,draftRulesVersion:2,draftRound:3,turnPicks:0,members:[{id:'a',name:'Alice',xi:{},is_ai:false,ready:false},{id:'b',name:'Bob',xi:{},is_ai:false,ready:true}]}};
  await page.addInitScript(()=>sessionStorage.setItem('out-online-room','test-room'));
  let broadcast=()=>{};
  await page.routeWebSocket('**/api/rooms/test-room/live',socket=>{broadcast=()=>socket.send(JSON.stringify({type:'room',room}));socket.onMessage(()=>broadcast())});
@@ -15,7 +15,7 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
   else if(path.endsWith('/ready')){room.state.members[0].ready=body.ready;room.version++}
   else if(path.endsWith('/settings')){room.state.seconds=body.pick_seconds;room.state.members.forEach((m:any)=>m.ready=false);room.version++}
   else if(path.endsWith('/chat')){room.state.chat=[{id:body.nonce,text:body.text,sender:'a',name:'Alice',sentAt:Date.now()/1000}];room.version++}
-  else if(path.endsWith('/actions')){room.state.phase='draft';room.state.turn=1;room.state.deadline=Date.now()/1000+120;room.state.rolled={country:'MUMBAI INDIANS',tournament:'2013',players:[{id:'332-22',name:'Jasprit Bumrah',role:'PACE',rating:78,squad:'MUMBAI INDIANS 2013'}],allowedSlots:{'332-22':['b1']}};room.version++}
+  else if(path.endsWith('/actions')){room.state.phase='draft';room.state.turn=1;room.state.lastPick={name:'Alice',player:'Sachin Tendulkar',automatic:true};room.state.deadline=Date.now()/1000+120;room.state.rolled={country:'MUMBAI INDIANS',tournament:'2013',players:[{id:'332-22',name:'Jasprit Bumrah',role:'PACE',rating:78,squad:'MUMBAI INDIANS 2013'}],allowedSlots:{'332-22':['b1']}};room.version++}
   await route.fulfill({json:result});broadcast();
  });
  await page.goto('/rooms');await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();
@@ -32,7 +32,7 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await page.screenshot({path:`test-results/social-lobby-${mobile?'mobile':'desktop'}.png`,fullPage:true});
  room.state.members[1].ready=true;broadcast();await page.getByRole('button',{name:'Ready',exact:true}).click();await page.getByRole('button',{name:'Start match',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Bob is picking'})).toBeVisible();await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();
- await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toBeDisabled();await expect(page.getByRole('button',{name:/Reroll/})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toHaveCount(0);await expect(page.getByRole('button',{name:/Reroll/})).toHaveCount(0);
  await expect(page.getByRole('log',{name:'Room messages'})).toBeVisible();
  if(!mobile){
   const chat=await page.getByRole('log',{name:'Room messages'}).boundingBox();
@@ -45,6 +45,8 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  }
  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:`test-results/draft-chat-${mobile?'mobile':'desktop'}.png`,fullPage:true});
+ room.state.turn=0;room.version++;broadcast();
+ await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toBeEnabled();
  expect(errors).toEqual([]);
 });
 

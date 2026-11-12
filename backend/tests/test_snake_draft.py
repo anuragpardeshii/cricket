@@ -62,7 +62,11 @@ def test_room_reconnect_second_chance_stale_actions_and_shared_rolls():
         rolled = active.post(path + '/actions', json={'action': 'roll', 'version': room['version']})
         assert rolled.status_code == 200, rolled.text
         room = rolled.json()
-        assert waiting.get(path).json()['state']['rolled']['country']==room['state']['rolled']['country']
+        visible=waiting.get(path).json()['state']['rolled']
+        assert visible['country']==room['state']['rolled']['country']
+        assert visible['tournament']==room['state']['rolled']['tournament']
+        assert visible['players']==[] and visible['allowedSlots']=={} and visible['unavailableIds']==[]
+        assert room['state']['rolled']['players']
         player, slots = next(iter(room['state']['rolled']['allowedSlots'].items()))
         payload = dict(action='pick', version=room['version'], draft_revision=room['state']['draftRevision'], player_id=player, slot_id=slots[0])
         picked = active.post(path + '/actions', json=payload)

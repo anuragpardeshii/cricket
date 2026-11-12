@@ -262,6 +262,9 @@ def project(room,user_id,ts):
     if state.get('rolled'):
         used=used_people(m['xi'] for m in state['members'])
         state['rolled']['unavailableIds']=[p['id'] for p in state['rolled']['players'] if person_key(p) in used]
+        if state['members'][state['turn']]['id']!=viewer['id']:
+            state['rolled']={k:state['rolled'][k] for k in ('country','tournament')}
+            state['rolled'].update(players=[],allowedSlots={},unavailableIds=[])
     state.pop('lobbyDeadline',None)
     votes=state.pop('votes',{})
     state.pop('removedUsers',None)
