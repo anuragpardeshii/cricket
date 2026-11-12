@@ -45,6 +45,10 @@ def decisive(factory,names):
     plan['timeline'][-1]['headline'],plan['timeline'][-1]['text']=describe_finish(plan['result'],plan['scorecards'],names)
     return plan
 
+def wickets_lost(card):
+    # Team totals include run-outs; bowler figures deliberately do not.
+    return int(card['score'].split('/')[1].split()[0])
+
 def review(plan,teams,names,venue,*,external=False):
     cards={c['side']:c for c in plan['scorecards']}
     metrics={}; reports=[]
@@ -55,14 +59,14 @@ def review(plan,teams,names,venue,*,external=False):
         runs=int(own['score'].split('/')[0]); extras=max(0,runs-bat_runs); balls=sum(p['balls'] for p in bat)
         boundaries=sum(4*p.get('fours',0)+6*p.get('sixes',0) for p in bat)
         conceded=sum(p['runs'] for p in bowl); bowled=sum(p['balls'] for p in bowl)
-        wickets=sum(p['wickets'] for p in bowl)
+        bowler_wickets=sum(p['wickets'] for p in bowl); wickets=wickets_lost(against)
         metrics[side]=dict(runs=runs,balls=balls,boundaryRuns=boundaries,wicketsTaken=wickets,economy=round(conceded*6/max(1,bowled),2))
         top=max(bat,key=lambda p:p['runs']); best=max(bowl,key=lambda p:(p['wickets'],-p['runs']/max(1,p['balls'])))
         squad=list(teams[side].values()); pace=sum(p['role']=='PACE' for p in squad); spin=sum(p['role']=='SPIN' for p in squad); ar=sum(p['role']=='AR' for p in squad)
         tail=sum(p['runs'] for p in bat[7:]); top3=sum(p['runs'] for p in bat[:3])
         notes=[f"{top['name']} supplied {top['runs']} from {top['balls']} balls; the top three contributed {top3} of {runs} runs and positions 8–11 added {tail}.",
                f"Boundaries supplied {boundaries} runs ({round(100*boundaries/max(1,runs))}% of the batting total). Batters added {bat_runs-boundaries} through non-boundary scoring; extras supplied {extras}.",
-               f"{best['name']} was the leading wicket-taker with {best['wickets']}/{best['runs']}. The attack took {wickets} wickets at {metrics[side]['economy']} runs per over.",
+               f"{best['name']} was the leading wicket-taker with {best['wickets']}/{best['runs']}. The opposition lost {wickets} wickets ({bowler_wickets} credited to bowlers); bowling economy was {metrics[side]['economy']} runs per over.",
                f"XI balance: {pace} specialist pace bowlers, {spin} specialist spinners and {ar} all-rounder(s). These are card roles, not a claim about a player's unrecorded skills."]
         if not external:
             batting=round(sum(skills(p)['batting'] for p in squad[:7])/min(7,len(squad)),1)
@@ -78,14 +82,14 @@ def review(plan,teams,names,venue,*,external=False):
             if not samples:continue
             snapshot=next((c for c in samples[-1].get('scorecards',[]) if c['side']==side),None)
             if not snapshot:continue
-            total=int(snapshot['score'].split('/')[0]); lost=sum(p['wickets'] for p in snapshot['bowling'])
+            total=int(snapshot['score'].split('/')[0]); lost=wickets_lost(snapshot)
             if total!=last_runs or lost!=last_wickets:phases.append(f"{label}: {total-last_runs} runs, {lost-last_wickets} wickets")
             last_runs,last_wickets=total,lost
         if phases:report['notes'].append('Innings phases — '+ '; '.join(phases)+'. Only phases actually reached are shown.')
         if m['boundaryRuns']>rival['boundaryRuns']:
             report['notes'].append(f"What worked: {m['boundaryRuns']-rival['boundaryRuns']} more runs from boundaries than the opponent. Boundary scoring alone does not decide a chase; wickets and the target still matter.")
         elif m['wicketsTaken']>rival['wicketsTaken']:
-            report['notes'].append(f"What worked: the attack took {m['wicketsTaken']-rival['wicketsTaken']} more wickets. This advantage did not by itself guarantee enough runs.")
+            report['notes'].append(f"What worked: the team took {m['wicketsTaken']-rival['wicketsTaken']} more wickets. This advantage did not by itself guarantee enough runs.")
         else:
             report['notes'].append('What worked: the leading batter and bowler above provided this XI’s strongest recorded contributions; the overall comparison did not show an edge in boundaries or wickets taken.')
         if side!=plan['result']['winner']:
@@ -111,7 +115,7 @@ def review(plan,teams,names,venue,*,external=False):
         current=next((c for c in event.get('scorecards',[]) if c['side']==loser),None)
         previous=next((c for c in snapshots[max(0,i-3)].get('scorecards',[]) if c['side']==loser),None) if i>=3 else None
         if not current:continue
-        lost=sum(p['wickets'] for p in current['bowling'])-(sum(p['wickets'] for p in previous['bowling']) if previous else 0)
+        lost=wickets_lost(current)-(wickets_lost(previous) if previous else 0)
         gained=int(current['score'].split('/')[0])-(int(previous['score'].split('/')[0]) if previous else 0)
         if lost>=2 and (cluster is None or lost>cluster[0]):cluster=(lost,gained,event['over'])
     if cluster:decisive_text+=f" A pressure spell ending at {cluster[2]} removed {cluster[0]} wickets for {cluster[1]} runs in at most three overs."

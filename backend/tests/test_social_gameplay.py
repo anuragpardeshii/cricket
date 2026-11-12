@@ -100,3 +100,20 @@ def test_nonhost_rematch_keeps_host_code_and_both_rounds_history():
     with Session() as session:
         records=list(session.scalars(select(MatchArchive).where(MatchArchive.id.like('room:'+room['id']+':%'))))
         assert len(records)==2 and sum(bool(r.data['rematch']) for r in records)==1
+
+
+def test_review_counts_runouts_without_crediting_bowlers():
+    slots=json.loads(Path('app/catalog.json').read_text())['slots']
+    teams={side:{s['id']:dict(name=s['id'],role=s['accepts'][0],rating=85) for s in slots} for side in ('you','opp')}
+    def card(side,runs,wickets,bowling_wickets):
+        return dict(side=side,score=f'{runs}/{wickets} (20.0)',
+                    batting=[dict(name=side,runs=runs,balls=120,fours=0,sixes=0)],
+                    bowling=[dict(name='Bowler',runs=runs,balls=120,wickets=bowling_wickets)])
+    cards=[card('you',106,0,0),card('opp',100,9,8)]
+    plan=dict(scorecards=cards,result=dict(winner='you',margin='by 6 runs'),firstBatting='you',overs=20,
+              timeline=[dict(over='OV 20',batting='opp',scorecards=cards)])
+    analysis=match_review.review(plan,teams,dict(you='A',opp='B'),match_review.VENUES[0],external=True)['result']['analysis']
+    assert analysis['metrics']['you']['wicketsTaken']==9
+    assert any('9 wickets (8 credited to bowlers)' in n for n in analysis['teams'][0]['notes'])
+    assert any('losing 9 wickets' in n for n in analysis['teams'][1]['notes'])
+    assert any('9 wickets' in n and 'Closing overs' in n for n in analysis['teams'][1]['notes'])
