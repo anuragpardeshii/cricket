@@ -37,9 +37,14 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  if(!mobile){
   const chat=await page.getByRole('log',{name:'Room messages'}).boundingBox();
   const picking=await page.getByRole('heading',{name:'Bob is picking'}).boundingBox();
-  expect(chat!.x+chat!.width).toBeLessThan(picking!.x);
+  expect(chat!.x).toBeGreaterThan(picking!.x+picking!.width);
+  const panel=await page.getByRole('complementary',{name:'Room chat',exact:true}).boundingBox();
+  expect(panel!.height).toBeGreaterThan(700);
+  const composer=await page.getByRole('textbox',{name:'Chat message'}).boundingBox();
+  expect(composer!.y).toBeGreaterThan(panel!.y+panel!.height-100);
  }
  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:`test-results/draft-chat-${mobile?'mobile':'desktop'}.png`,fullPage:true});
  expect(errors).toEqual([]);
 });
 
