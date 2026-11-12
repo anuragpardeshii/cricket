@@ -703,7 +703,7 @@ def test_room_roll_scope_turn_permissions_rerolls_and_timeout():
     assert r['state']['deadline']>deadline and r['state']['members'][0]['rerollsUsed']==0
     assert r['state']['deadline']==r['serverTime']+r['state']['seconds']
     deadline=r['state']['deadline']
-    assert b.get(f"/api/rooms/{r['id']}").json()['state']['rolled'] is None
+    assert b.get(f"/api/rooms/{r['id']}").json()['state']['rolled']['country']==r['state']['rolled']['country']
     assert a.get(f"/api/rooms/{r['id']}").json()['state']['rolled']==rolled
     with Session() as session:
         players=[p for squad in load_catalog(session)['squads'] for p in squad['players']]

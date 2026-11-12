@@ -1,3 +1,4 @@
+import { PlayerEvidence } from '../components/PlayerEvidence';
 import { FeedbackToggle } from '../components/GameFeedback';
 import { poolName } from '../game/types';
 import { PlayerRating } from '../components/PlayerRating';
@@ -53,6 +54,7 @@ export function DraftScreen({ game }: { game: Game }) {
           {state.opponentThinking && <Panel className="flex min-h-32 items-center justify-center gap-3 border-dashed"><span className="size-2 animate-pulse rounded-full bg-neutral/40" /><span className="text-sm text-muted">{state.opponentName} is on the clock…</span></Panel>}
           {state.turn === 'done' && <Panel className="border-amber/40 bg-amber/5 p-6 text-center"><p className="text-2xl font-black">BOTH XIs LOCKED</p><ActionButton onClick={actions.startMatch} className="mt-5 w-full">Simulate match</ActionButton></Panel>}
         </div>
+        <PlayerEvidence player={selected}/>
         {selected && <p className="mt-3 text-center font-mono text-[11px] tracking-wide text-cream" role="status">SELECT A GLOWING SLOT TO PLACE {selected.name.toUpperCase()}</p>}
         {state.toast && <p className="mt-4 rounded-xl border border-neutral/10 bg-panel px-4 py-3 font-mono text-xs leading-5 text-cream/75" role="status">{state.toast}</p>}
       </section>

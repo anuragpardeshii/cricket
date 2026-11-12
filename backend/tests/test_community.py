@@ -239,9 +239,13 @@ def test_rematch_invitation_is_shared_preserves_group_and_is_a_friendly():
     one=a.post('/api/rooms/'+room['id']+'/rematch',json={}); two=b.post('/api/rooms/'+room['id']+'/rematch',json={})
     assert one.status_code==two.status_code==200 and one.json()==two.json()
     next_room=b.post('/api/rooms/join',json=two.json()).json()
-    assert next_room['state']['groupId']==group['id'] and not next_room['state']['cupId']
+    assert next_room['state']['groupId']==group['id'] and not next_room['state'].get('cupId')
     assert next_room['state']['preset']=='under-85'
-    assert a.get('/api/rooms/'+room['id']).json()['state']['rematchCode']==one.json()['code']
+    assert one.json()['code']==room['code'] and next_room['id']==room['id']
+    assert a.get('/api/rooms/'+room['id']).json()['host'] is True
+    assert not b.get('/api/rooms/'+room['id']).json()['host']
+    assert len(next_room['state']['members'])==2
+    assert all(not m['ready'] for m in next_room['state']['members'])
 
 def test_public_rematch_preserves_visibility_and_guest_display_name():
     c=guest()

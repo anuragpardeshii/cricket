@@ -83,8 +83,7 @@ test('friends join a cup, earn colorful trophies, share a public card and keep t
     const winner = final.state.champion === final.you ? a : b;
     await winner.getByRole('button', { name: 'Back to tournament', exact: true }).click();
     await a.getByRole('button', { name: 'Play again', exact: true }).click();
-    await expect(b.getByRole('button', { name: /Your rematch is waiting/ })).toBeVisible();
-    await b.getByRole('button', { name: /Your rematch is waiting/ }).click();
+    expect((await (await a.request.get(`/api/rooms/${roomId}`)).json()).code).toBe(room.code);
     await expect(b.getByRole('heading', { name: 'Waiting room', exact: true })).toBeVisible();
     expect(await a.evaluate(() => sessionStorage.getItem('out-online-room'))).toBe(await b.evaluate(() => sessionStorage.getItem('out-online-room')));
     await a.goto('/achievements');

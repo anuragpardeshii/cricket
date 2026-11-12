@@ -1,3 +1,4 @@
+import { MatchReview } from '../components/MatchReview';
 import { Trophy } from '../components/Trophy';
 import { useRef, useState } from 'react';
 import { Scorecard } from '../components/Scorecard';
@@ -50,6 +51,7 @@ function MatchDetail({match,who,scorecardsOnly}:{match:RoomMatch;who:(id:string|
   const names={you:who(match.a),opp:who(match.b)};
   const awards=[['Player of the match',match.result?.mvp],['Highest scorer',match.result?.highestScorer],['Best bowler',match.result?.bestBowler]] as const;
   return <div className="tournament-reveal">
+    {match.venue&&<p className="mb-3 text-xs text-amber">{match.venue.name} · {match.venue.city}</p>}
     {!live&&<Panel className="mb-5 overflow-hidden">
       <div className="flex items-center justify-between border-b border-neutral/10 px-4 py-3"><h3 className="text-xs font-bold uppercase tracking-wider">{live?'Live match':complete?'Match result':'Next match'}</h3><span className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted">{live&&<span className="size-1.5 animate-pulse rounded-full bg-success"/>}{match.forfeit?'Forfeit':match.status}</span></div>
       <div className="grid grid-cols-2 divide-x divide-neutral/10">{[['a','youScore'],['b','oppScore']].map(([side,score])=>{
@@ -61,6 +63,7 @@ function MatchDetail({match,who,scorecardsOnly}:{match:RoomMatch;who:(id:string|
     </Panel>}
     {scorecardsOnly&&(live||complete)&&<div className="mb-5"><div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-bold">The scorebook</h3><button onClick={()=>window.print()} className="text-xs text-amber">Print / save</button></div>{match.scorecards?.length?<Scorecard cards={match.scorecards} names={names} live={live}/>:<p className="rounded-xl border border-neutral/10 bg-panel p-5 text-sm text-muted">{live?'Waiting for the first over. The scorecard updates live.':match.forfeit?'Match forfeited before a scorecard was recorded.':'No scorecard recorded.'}</p>}</div>}
     {live&&!scorecardsOnly&&<><p className="mb-3 text-sm font-semibold text-cream">{names.you} <span className="font-normal text-muted">vs</span> {names.opp}</p><CommentaryFeed entries={match.timeline??[]} names={names} live/></>}
+    {complete&&<MatchReview analysis={match.result?.analysis}/>}
     {complete&&!scorecardsOnly&&Boolean(match.timeline?.length)&&<details className="mb-6 rounded-xl border border-neutral/10 bg-panel p-4"><summary className="cursor-pointer text-sm font-semibold">Replay the match highlights</summary><div className="mt-5"><CommentaryFeed entries={match.timeline??[]} names={names} live={false}/></div></details>}
     {match.status==='pending'&&<div className="rounded-xl border border-dashed border-neutral/20 p-6 text-sm text-muted">The next chapter awaits. Teams will be confirmed when the preceding matches finish.</div>}
   </div>;

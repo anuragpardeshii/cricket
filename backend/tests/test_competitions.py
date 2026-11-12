@@ -71,7 +71,7 @@ def test_random_fixture_draw_preserves_bracket_and_every_league_pair(monkeypatch
     assert members==[dict(id=str(i)) for i in range(4)]
 
 
-def test_roll_is_private_and_competition_is_validated():
+def test_roll_is_shared_and_competition_is_validated():
     a,b=client(),client('bob')
     settings=dict(format='knockout',capacity=2,pick_seconds=30,competition='ipl')
     assert a.post('/api/rooms',json={**settings,'competition':'unknown'}).status_code==422
@@ -81,7 +81,7 @@ def test_roll_is_private_and_competition_is_validated():
     room=a.post(path+'/actions',json={'action':'roll','version':room['version']}).json()
     assert room['state']['rolled']['players']
     assert all(p['competition']=='ipl' for p in room['state']['rolled']['players'])
-    assert b.get(path).json()['state']['rolled'] is None
+    assert b.get(path).json()['state']['rolled']['country']==room['state']['rolled']['country']
     assert 'lobbyDeadline' not in room['state']
 
 

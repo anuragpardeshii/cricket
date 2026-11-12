@@ -108,8 +108,9 @@ def tick():
         games=session.scalars(select(Game).where(Game.state['screen'].astext=='draft',Game.state['turn'].astext=='opp').with_for_update(skip_locked=True).limit(50)).all()
         for game in games: advance_game(session,game)
 
-def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
+def _simulate_once(you,opp,you_order=None,opp_order=None,team_names=None,overs=20,venue=None):
     import copy
+    from .match_review import skills
     first=rng.choice(['you','opp']); second='opp' if first=='you' else 'you'
     teams={'you':you,'opp':opp}; scores={'you':'—','opp':'—'}; timeline=[]; scorecards=[]
     first_runs=0
@@ -132,7 +133,7 @@ def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
                 batter=batters[striker]; card=batting[striker]
                 card['balls']+=1; balls+=1; bc['balls']+=1
                 contribution=contributions.setdefault(batter['name'],dict(runs=0,sixes=0,fours=0))
-                if rng.random()<max(.02,min(.095,.048+(bowler['rating']-batter['rating'])*.0018)):
+                if rng.random()<max(.02,min(.095,(.048+(skills(bowler)['bowling']-skills(batter)['batting'])*.0018)*(venue.get('spin',1) if bowler['role']=='SPIN' else venue.get('pace',1)))):
                     wickets+=1; bc['wickets']+=1; over_wickets+=1; fell=True
                     fielder=rng.choice(fielders); caught=rng.random()<.7
                     card['dismissal']=f"c {fielder['name']} b {bowler['name']}" if caught else f"b {bowler['name']}"
@@ -142,7 +143,7 @@ def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
                     if nxt<11:
                         striker=nxt; nxt+=1; batting[striker]['dismissal']='not out'
                 else:
-                    scored=rng.choices([0,1,2,4,6],[30,36,9,max(2,13+(batter['rating']-85)*.5),max(1,5+(batter['rating']-85)*.35)])[0]
+                    scored=rng.choices([0,1,2,4,6],[30,36,9,max(2,13+(skills(batter)['batting']-85)*.5)*venue.get('boundary',1),max(1,5+(skills(batter)['batting']-85)*.35)*venue.get('boundary',1)])[0]
                     runs+=scored; card['runs']+=scored; bc['runs']+=scored; contribution['runs']+=scored; deliveries.append(str(scored))
                     partnership+=scored
                     if scored in (4,6):
@@ -174,3 +175,11 @@ def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
     timeline[-1]['headline'],timeline[-1]['text']=describe_finish(result,scorecards,team_names or {'you':'Your team','opp':'AI'})
     timeline[-1]['kind']='result'
     return dict(timeline=timeline,result=result,firstBatting=first,scorecards=scorecards,performances=list(performances.values()),overs=overs)
+
+def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
+    from .match_review import choose_venue,decisive,review
+    venue=choose_venue(next(iter(you.values()),{}).get('competition')); names=team_names or {'you':'Your team','opp':'AI'}
+    plan=decisive(lambda:_simulate_once(you,opp,you_order,opp_order,names,overs,venue),names)
+    # Preserve actual batting-order context in the review.
+    ordered=lambda xi,order:{key:xi[key] for key in (order or [slot['id'] for slot in SLOTS])}
+    return review(plan,{'you':ordered(you,you_order),'opp':ordered(opp,opp_order)},names,venue)

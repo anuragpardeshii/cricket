@@ -1,3 +1,4 @@
+import { MatchReview } from '../components/MatchReview';
 import { Trophy } from '../components/Trophy';
 import { useState } from 'react';
 import { ThemeToggle } from '../theme/ThemeProvider';
@@ -25,6 +26,7 @@ export function ResultScreen({ game }: { game: Game }) {
     </Panel>
     <ResultActions text={shareText} busy={game.busy} onExit={() => setExitOpen(true)} onPlayAgain={() => { void actions.startPractice(state.preset, (state.draftRulesVersion ?? 1) >= 2 ? 2 : 1); }}/>
     {state.resultViewed&&<div className="my-5 flex flex-wrap gap-5 text-sm text-amber"><a href="/achievements">View your trophies & match history ↗</a><a href="/groups">Challenge your friend group ↗</a></div>}
+    <MatchReview analysis={result.analysis}/>
     {state.match?.scorecards && <Scorecard cards={state.match.scorecards} names={{you:'YOU',opp:state.opponentName}}/>}
     {state.toast && <p className="mt-3 text-sm text-danger" role="status">{state.toast}</p>}
   </main>;

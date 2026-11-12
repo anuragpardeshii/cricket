@@ -6,6 +6,7 @@ import type { DraftRules } from '../components/DraftProgress';
 export type Member = TeamMember & { rerollsUsed?: number; ready?: boolean };
 export type RoomMatch = {
   id: string; round: number; a: string | null; b: string | null; status: string;
+  venue?: {name:string;city:string};
   sources?: string[]; winner?: string | null; forfeit?: boolean;
   result?: MatchResult; scores?: { youScore: string; oppScore: string };
   scorecards?: ScorecardData[]; timeline?: TimelineEntry[];
@@ -13,6 +14,8 @@ export type RoomMatch = {
 export type Room = {
   visibility: 'public' | 'private'; id: string; code: string; version: number; serverTime: number; you: string; host: boolean;
   state: DraftRules & {
+    roundNumber?: number;
+    chat?: {id:string;sender:string;name:string;text:string;sentAt:number}[];
     preset?: string | null; groupId?: string | null; cupId?: string | null; rematchCode?: string;
     rolled?: Squad & { allowedSlots: Record<string, string[]>; unavailableIds?: string[] } | null;
     phase: string; format: string; capacity: number; competition?: string; edition?: number | null; seconds: number; deadline: number;

@@ -47,7 +47,7 @@ def test_completed_seats_are_skipped_and_legacy_rotation_is_preserved():
     assert draft_turns.after_pick(state, [full, full, full], 0) is None
 
 
-def test_room_reconnect_second_chance_stale_actions_and_private_rolls():
+def test_room_reconnect_second_chance_stale_actions_and_shared_rolls():
     a, b = client(), client('bob')
     room = a.post('/api/rooms', json=dict(format='knockout', capacity=2, competition='ipl', pick_seconds=30)).json()
     b.post('/api/rooms/join', json={'code': room['code']})
@@ -62,7 +62,7 @@ def test_room_reconnect_second_chance_stale_actions_and_private_rolls():
         rolled = active.post(path + '/actions', json={'action': 'roll', 'version': room['version']})
         assert rolled.status_code == 200, rolled.text
         room = rolled.json()
-        assert waiting.get(path).json()['state']['rolled'] is None
+        assert waiting.get(path).json()['state']['rolled']['country']==room['state']['rolled']['country']
         player, slots = next(iter(room['state']['rolled']['allowedSlots'].items()))
         payload = dict(action='pick', version=room['version'], draft_revision=room['state']['draftRevision'], player_id=player, slot_id=slots[0])
         picked = active.post(path + '/actions', json=payload)

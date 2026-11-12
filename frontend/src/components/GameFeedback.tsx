@@ -16,7 +16,7 @@ export function FeedbackToggle(){
 function once(key:string){try{if(sessionStorage.getItem(key))return false;sessionStorage.setItem(key,'1')}catch{/* Fall back to the mounted hook's guard. */}return true}
 export function useTurnFeedback(active:boolean,key?:string){
   const last=useRef('');
-  useEffect(()=>{if(!active||!key||last.current===key)return;last.current=key;if(once(`out-turn-${key}`)&&document.visibilityState==='visible'){try{navigator.vibrate?.([100,60,100])}catch{/* Haptics are optional. */}}},[active,key]);
+  useEffect(()=>{if(!active||!key||last.current===key)return;last.current=key;if(once(`out-turn-${key}`)&&enabled()){try{navigator.vibrate?.([80,40,80]);if(context?.state==='running'){const tone=context.createOscillator(),gain=context.createGain();tone.frequency.value=740;gain.gain.setValueAtTime(.055,context.currentTime);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+.2);tone.connect(gain);gain.connect(context.destination);tone.start();tone.stop(context.currentTime+.22);tone.onended=()=>{tone.disconnect();gain.disconnect()}}}catch{/* Feedback is optional on unsupported devices. */}}},[active,key]);
 }
 export function useWinFeedback(key?:string){
   const last=useRef('');

@@ -162,20 +162,23 @@ def friendly(group_id:UUID,body:CupBody,auth=Depends(account_required),session=D
 def rematch(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     from .room_routes import locked
     room=locked(session,room_id,auth.user_id)
+    # Repeated/concurrent clicks return the reset lobby, without another reset.
+    if room.state['phase']=='lobby' and room.state.get('rematchOf'):
+        return dict(code=room.code)
     if room.state['phase']!='complete': raise HTTPException(409,'Finish this tournament first')
     archive_room(session,room)
-    next_room=session.get(Room,room.state.get('rematchRoomId')) if room.state.get('rematchRoomId') else None
-    if not next_room:
-        limit('room-rematch:'+auth.user_id,20,3600)
-        host=next(m for m in room.state['members'] if m['uid']==auth.user_id)
-        body=SimpleNamespace(format=room.state['format'],capacity=room.state['capacity'],pick_seconds=room.state['seconds'],competition=room.state.get('competition'),name=host['name'])
-        next_room=make_room(session,auth.user_id,preset=room.state.get('preset'),group_id=room.state.get('groupId'),body=body)
-        next_room.visibility='private' if room.state.get('groupId') else room.visibility
-        next_room.state={**next_room.state,'rematchOf':room.id}
-        state=copy.deepcopy(room.state); state.update(rematchRoomId=next_room.id,rematchCode=next_room.code); room.state=state; room.version+=1
+    limit('room-rematch:'+auth.user_id,20,3600)
+    old=room.state
+    host=next(m for m in old['members'] if m['uid']==room.owner_id)
+    body=SimpleNamespace(format=old['format'],capacity=old['capacity'],pick_seconds=old['seconds'],competition=old.get('competition'),name=host['name'])
+    state=rooms.new_state(room.owner_id,body)
+    state['members']=[{**rooms.member(m['uid'],m['name']),'id':m['id']} for m in old['members'] if m['uid'] is not None]
+    state.update(preset=old.get('preset'),groupId=old.get('groupId'),rematchOf=room.id,
+                 roundNumber=old.get('roundNumber',1)+1,removedUsers=old.get('removedUsers',[]),chat=old.get('chat',[]))
+    # The scored cup fixture was archived above; a rematch is a friendly.
+    room.state=state; room.version+=1
     audit(session,'room.rematch',auth.user_id,room.id); session.commit()
-    # Joining remains explicit; the other participants see the same invitation.
-    return dict(code=next_room.code)
+    return dict(code=room.code)
 
 @router.get('/progress')
 def progress(auth=Depends(authenticated),session=Depends(db)):

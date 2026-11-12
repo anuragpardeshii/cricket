@@ -19,6 +19,10 @@ def test_expanded_catalog_keeps_original_cards_and_matches_database():
     original=json.loads((ROOT/'migrations/data/catalog_v1.json').read_text())
     additions=json.loads((ROOT/'migrations/data/catalog_v2.json').read_text())['squads']
     current=json.loads((ROOT/'app/catalog.json').read_text())
+    evidence=json.loads((ROOT/'app/rating-evidence.json').read_text())
+    for squad in original['squads']:
+        for p in squad['players']:
+            if p['id'] in evidence:p['rating']=evidence[p['id']]['rating']
     for old,now in zip(original['squads'],current['squads']):
         assert old['country']==now['country'] and old['tournament']==now['tournament']
         assert now['players'][:len(old['players'])]==old['players']
@@ -35,7 +39,7 @@ def test_expanded_catalog_keeps_original_cards_and_matches_database():
         assert all(p['squad']==f"{squad['country']} {squad['tournament'][-4:]}" for p in squad['players'])
     def without_metadata(catalog):
         for squad in catalog['squads']:
-            for p in squad['players']: p.pop('personId',None); p.pop('competition',None); p.pop('edition',None)
+            for p in squad['players']: p.pop('personId',None); p.pop('competition',None); p.pop('edition',None); p.pop('ratingEvidence',None)
         return catalog
     with Session() as session:
         assert without_metadata(load_catalog(session))==current
@@ -121,4 +125,6 @@ def test_all_previously_published_cards_are_preserved():
         frozen=json.loads((ROOT/f'migrations/data/catalog_v{version}.json').read_text())
         for squad in frozen['squads']:
             for player in squad['players']:
+                reviewed=json.loads((ROOT/'app/rating-evidence.json').read_text()).get(player['id'])
+                if reviewed:player={**player,'rating':reviewed['rating']}
                 assert cards[player['id']]==player

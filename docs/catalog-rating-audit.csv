@@ -1,0 +1,432 @@
+team,edition,cards,previous_80s,reviewed_cards,remaining_80s,min_rating,max_rating,status
+INDIA,WORLD CUP 2011,15,3,0,3,77,96,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 2003,16,5,4,5,76,97,season evidence added
+WEST INDIES,WORLD CUP 1979,12,0,0,0,77,97,existing estimates; season review pending
+SRI LANKA,WORLD CUP 1996,14,4,1,4,75,95,season evidence added
+PAKISTAN,WORLD CUP 1992,14,3,4,3,77,97,season evidence added
+ENGLAND,WORLD CUP 2019,15,1,0,1,80,95,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 1999,15,4,1,4,74,98,season evidence added
+NEW ZEALAND,WORLD CUP 2015,16,4,0,4,78,93,existing estimates; season review pending
+INDIA,WORLD CUP 1983,11,2,0,2,75,95,existing estimates; season review pending
+INDIA,WORLD CUP 2023,15,0,0,0,79,98,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 2023,15,0,0,0,79,96,existing estimates; season review pending
+ENGLAND,WORLD CUP 2023,15,0,0,0,81,92,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 2023,15,1,0,1,80,94,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 2023,15,0,0,0,77,96,existing estimates; season review pending
+PAKISTAN,WORLD CUP 2023,15,0,0,0,79,93,existing estimates; season review pending
+SRI LANKA,WORLD CUP 2023,15,2,0,2,75,91,existing estimates; season review pending
+AFGHANISTAN,WORLD CUP 2023,15,0,0,0,75,94,existing estimates; season review pending
+BANGLADESH,WORLD CUP 2023,15,0,0,0,77,91,existing estimates; season review pending
+NETHERLANDS,WORLD CUP 2023,15,1,0,1,73,85,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2024,15,0,0,0,83,99,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2024,15,1,0,1,80,95,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2024,15,0,0,0,78,94,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2024,15,1,0,1,80,96,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2024,15,0,0,0,83,95,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2024,15,1,0,1,74,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2024,15,2,0,2,77,90,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2024,15,0,0,0,84,93,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2024,15,0,0,0,77,93,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2024,15,0,0,0,82,93,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2024,26,1,0,1,70,93,existing estimates; season review pending
+ROYAL CHALLENGERS BENGALURU,IPL 2024,25,1,0,1,71,97,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2024,28,1,1,1,72,97,season evidence added
+KOLKATA KNIGHT RIDERS,IPL 2024,26,0,0,0,70,96,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2024,26,0,0,0,70,97,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2024,24,0,0,0,71,94,existing estimates; season review pending
+DELHI CAPITALS,IPL 2024,28,0,0,0,71,94,existing estimates; season review pending
+PUNJAB KINGS,IPL 2024,25,0,0,0,70,93,existing estimates; season review pending
+LUCKNOW SUPER GIANTS,IPL 2024,27,0,0,0,72,96,existing estimates; season review pending
+GUJARAT TITANS,IPL 2024,28,0,0,0,71,96,existing estimates; season review pending
+CANADA,T20 WORLD CUP 2024,15,2,0,2,72,81,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2024,15,2,0,2,74,86,existing estimates; season review pending
+NAMIBIA,T20 WORLD CUP 2024,16,0,0,0,70,86,existing estimates; season review pending
+NEPAL,T20 WORLD CUP 2024,15,3,0,3,73,85,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2024,15,1,0,1,74,85,existing estimates; season review pending
+OMAN,T20 WORLD CUP 2024,15,0,0,0,75,83,existing estimates; season review pending
+PAPUA NEW GUINEA,T20 WORLD CUP 2024,15,2,0,2,70,80,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2024,15,3,0,3,74,85,existing estimates; season review pending
+UGANDA,T20 WORLD CUP 2024,15,0,0,0,69,79,existing estimates; season review pending
+UNITED STATES,T20 WORLD CUP 2024,15,3,0,3,76,85,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2023,25,1,0,1,71,93,existing estimates; season review pending
+DELHI CAPITALS,IPL 2023,25,0,0,0,71,94,existing estimates; season review pending
+GUJARAT TITANS,IPL 2023,25,0,0,0,74,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2023,22,0,0,0,73,96,existing estimates; season review pending
+LUCKNOW SUPER GIANTS,IPL 2023,25,0,0,0,72,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2023,24,1,1,2,70,97,season evidence added
+PUNJAB KINGS,IPL 2023,22,0,0,0,70,93,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2023,25,1,0,1,70,97,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2023,25,0,0,0,71,94,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2023,25,0,0,0,73,97,existing estimates; season review pending
+NAMIBIA,T20 WORLD CUP 2022,16,0,0,0,72,86,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2022,16,2,0,2,74,85,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2022,15,1,0,1,76,93,existing estimates; season review pending
+UNITED ARAB EMIRATES,T20 WORLD CUP 2022,15,3,0,3,72,84,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2022,15,1,0,1,72,86,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2022,15,3,0,3,76,85,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2022,15,0,0,0,77,96,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2022,15,3,0,3,73,87,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2022,15,1,0,1,73,96,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2022,15,1,0,1,80,94,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2022,15,0,0,0,81,94,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2022,15,0,0,0,79,93,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2022,15,1,0,1,76,90,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2022,15,0,0,0,81,97,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2022,15,1,0,1,77,93,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2022,15,0,0,0,82,97,existing estimates; season review pending
+AFGHANISTAN,WORLD CUP 2019,15,2,0,2,77,96,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 2019,15,0,0,0,82,94,existing estimates; season review pending
+BANGLADESH,WORLD CUP 2019,15,1,0,1,75,90,existing estimates; season review pending
+INDIA,WORLD CUP 2019,15,1,0,1,80,98,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 2019,15,0,0,0,79,93,existing estimates; season review pending
+PAKISTAN,WORLD CUP 2019,15,1,0,1,79,93,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 2019,15,1,0,1,78,93,existing estimates; season review pending
+SRI LANKA,WORLD CUP 2019,15,2,0,2,75,89,existing estimates; season review pending
+WEST INDIES,WORLD CUP 2019,15,1,0,1,77,96,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 1992,14,14,1,13,80,91,season evidence added
+ENGLAND,WORLD CUP 1992,14,14,1,13,80,94,season evidence added
+INDIA,WORLD CUP 1992,14,10,0,10,78,96,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 1992,14,14,2,12,80,96,season evidence added
+SOUTH AFRICA,WORLD CUP 1992,14,11,1,10,80,93,season evidence added
+SRI LANKA,WORLD CUP 1992,14,8,0,8,75,94,existing estimates; season review pending
+WEST INDIES,WORLD CUP 1992,14,13,0,13,80,86,existing estimates; season review pending
+ZIMBABWE,WORLD CUP 1992,14,14,1,13,80,91,season evidence added
+AUSTRALIA,WORLD CUP 1996,14,11,2,9,80,96,season evidence added
+ENGLAND,WORLD CUP 1996,15,15,0,15,80,80,existing estimates; season review pending
+INDIA,WORLD CUP 1996,14,13,2,12,80,97,season evidence added
+KENYA,WORLD CUP 1996,14,14,0,14,80,80,existing estimates; season review pending
+NETHERLANDS,WORLD CUP 1996,14,14,0,14,80,80,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 1996,14,14,0,14,80,80,existing estimates; season review pending
+PAKISTAN,WORLD CUP 1996,14,5,2,3,77,96,season evidence added
+SOUTH AFRICA,WORLD CUP 1996,14,7,1,7,80,96,season evidence added
+UNITED ARAB EMIRATES,WORLD CUP 1996,14,14,0,14,80,80,existing estimates; season review pending
+WEST INDIES,WORLD CUP 1996,15,15,1,14,80,92,season evidence added
+ZIMBABWE,WORLD CUP 1996,14,14,1,13,80,92,season evidence added
+AUSTRALIA,WORLD CUP 1999,15,9,4,6,80,97,season evidence added
+BANGLADESH,WORLD CUP 1999,15,15,0,15,80,80,existing estimates; season review pending
+ENGLAND,WORLD CUP 1999,15,15,0,15,80,80,existing estimates; season review pending
+INDIA,WORLD CUP 1999,15,14,2,12,80,96,season evidence added
+KENYA,WORLD CUP 1999,15,15,0,15,80,80,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 1999,15,14,1,13,80,97,season evidence added
+PAKISTAN,WORLD CUP 1999,15,9,2,7,77,96,season evidence added
+SCOTLAND,WORLD CUP 1999,15,15,0,15,80,80,existing estimates; season review pending
+SRI LANKA,WORLD CUP 1999,15,6,0,6,75,94,existing estimates; season review pending
+WEST INDIES,WORLD CUP 1999,15,15,0,15,80,80,existing estimates; season review pending
+ZIMBABWE,WORLD CUP 1999,15,15,0,15,80,80,existing estimates; season review pending
+BANGLADESH,WORLD CUP 2003,16,15,0,15,80,83,existing estimates; season review pending
+CANADA,WORLD CUP 2003,15,15,0,15,80,80,existing estimates; season review pending
+ENGLAND,WORLD CUP 2003,15,15,0,15,80,80,existing estimates; season review pending
+INDIA,WORLD CUP 2003,15,9,3,8,77,99,season evidence added
+KENYA,WORLD CUP 2003,15,15,0,15,80,80,existing estimates; season review pending
+NAMIBIA,WORLD CUP 2003,16,16,0,16,80,80,existing estimates; season review pending
+NETHERLANDS,WORLD CUP 2003,16,16,0,16,80,80,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 2003,15,13,1,12,80,94,season evidence added
+PAKISTAN,WORLD CUP 2003,15,13,0,13,80,96,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 2003,16,8,1,8,80,96,season evidence added
+SRI LANKA,WORLD CUP 2003,15,10,2,10,79,98,season evidence added
+WEST INDIES,WORLD CUP 2003,15,14,0,14,80,91,existing estimates; season review pending
+ZIMBABWE,WORLD CUP 2003,17,17,0,17,80,80,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 2007,15,9,0,9,79,96,existing estimates; season review pending
+BANGLADESH,WORLD CUP 2007,16,12,0,12,80,91,existing estimates; season review pending
+BERMUDA,WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+CANADA,WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+ENGLAND,WORLD CUP 2007,16,15,0,15,80,81,existing estimates; season review pending
+INDIA,WORLD CUP 2007,15,7,0,7,78,96,existing estimates; season review pending
+IRELAND,WORLD CUP 2007,15,14,0,14,80,88,existing estimates; season review pending
+KENYA,WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+NETHERLANDS,WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 2007,17,14,0,14,80,92,existing estimates; season review pending
+PAKISTAN,WORLD CUP 2007,15,12,0,12,80,88,existing estimates; season review pending
+SCOTLAND,WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 2007,15,11,0,11,80,96,existing estimates; season review pending
+SRI LANKA,WORLD CUP 2007,15,11,0,11,80,93,existing estimates; season review pending
+WEST INDIES,WORLD CUP 2007,15,14,0,14,80,91,existing estimates; season review pending
+ZIMBABWE,WORLD CUP 2007,15,14,0,14,80,84,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 2011,16,13,0,13,80,96,existing estimates; season review pending
+BANGLADESH,WORLD CUP 2011,15,10,0,10,79,91,existing estimates; season review pending
+CANADA,WORLD CUP 2011,16,15,0,15,78,80,existing estimates; season review pending
+ENGLAND,WORLD CUP 2011,19,17,0,17,80,94,existing estimates; season review pending
+IRELAND,WORLD CUP 2011,15,14,0,14,80,85,existing estimates; season review pending
+KENYA,WORLD CUP 2011,15,15,0,15,80,80,existing estimates; season review pending
+NETHERLANDS,WORLD CUP 2011,15,13,0,13,76,82,existing estimates; season review pending
+NEW ZEALAND,WORLD CUP 2011,15,9,0,9,80,93,existing estimates; season review pending
+PAKISTAN,WORLD CUP 2011,15,13,0,13,80,85,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 2011,15,8,0,8,80,96,existing estimates; season review pending
+SRI LANKA,WORLD CUP 2011,15,11,0,11,80,92,existing estimates; season review pending
+WEST INDIES,WORLD CUP 2011,15,11,0,11,80,95,existing estimates; season review pending
+ZIMBABWE,WORLD CUP 2011,15,14,0,14,80,82,existing estimates; season review pending
+AFGHANISTAN,WORLD CUP 2015,16,9,0,9,77,87,existing estimates; season review pending
+AUSTRALIA,WORLD CUP 2015,15,7,0,7,80,96,existing estimates; season review pending
+BANGLADESH,WORLD CUP 2015,17,9,0,9,77,91,existing estimates; season review pending
+ENGLAND,WORLD CUP 2015,15,8,0,8,80,94,existing estimates; season review pending
+INDIA,WORLD CUP 2015,16,1,0,1,80,98,existing estimates; season review pending
+IRELAND,WORLD CUP 2015,16,14,0,14,80,85,existing estimates; season review pending
+PAKISTAN,WORLD CUP 2015,17,13,0,13,80,85,existing estimates; season review pending
+SCOTLAND,WORLD CUP 2015,15,11,0,11,80,83,existing estimates; season review pending
+SOUTH AFRICA,WORLD CUP 2015,15,6,0,6,80,96,existing estimates; season review pending
+SRI LANKA,WORLD CUP 2015,20,12,0,12,76,89,existing estimates; season review pending
+UNITED ARAB EMIRATES,WORLD CUP 2015,15,15,0,15,80,80,existing estimates; season review pending
+WEST INDIES,WORLD CUP 2015,17,9,0,9,80,96,existing estimates; season review pending
+ZIMBABWE,WORLD CUP 2015,15,12,0,12,80,87,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2007,15,9,0,9,79,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2007,15,10,0,10,80,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2007,15,7,0,7,80,95,existing estimates; season review pending
+KENYA,T20 WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2007,15,12,0,12,80,92,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2007,15,13,0,13,80,85,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2007,15,15,0,15,80,80,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2007,15,11,0,11,80,90,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2007,15,12,0,12,80,93,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2007,15,14,0,14,80,91,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2007,15,14,0,14,80,84,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2009,15,12,0,12,80,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2009,15,9,0,9,79,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2009,15,13,0,13,80,94,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2009,16,5,0,5,80,95,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2009,15,14,0,14,80,85,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2009,15,15,0,15,80,80,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2009,16,12,0,12,80,92,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2009,16,14,0,14,80,87,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2009,15,14,0,14,80,83,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2009,15,8,0,8,80,96,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2009,15,10,0,10,79,93,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2009,15,14,0,14,80,91,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2010,15,10,0,10,77,87,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2010,15,12,0,12,80,93,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2010,15,9,0,9,79,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2010,15,14,0,14,80,88,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2010,15,4,0,4,77,95,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2010,15,14,0,14,80,85,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2010,15,10,0,10,80,92,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2010,15,13,0,13,80,87,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2010,15,9,0,9,80,96,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2010,15,10,0,10,80,93,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2010,15,13,0,13,80,91,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2010,15,14,0,14,80,82,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2012,15,9,0,9,78,87,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2012,15,9,0,9,79,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2012,15,10,0,10,80,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2012,15,11,0,11,80,94,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2012,15,4,0,4,80,98,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2012,15,14,0,14,80,85,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2012,15,8,0,8,79,93,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2012,15,13,0,13,80,85,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2012,15,9,0,9,80,96,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2012,15,10,0,10,76,89,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2012,15,10,0,10,80,96,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2012,15,14,0,14,80,82,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2014,15,9,0,9,77,87,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2014,15,10,0,10,79,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2014,15,8,0,8,77,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2014,15,9,0,9,80,94,existing estimates; season review pending
+HONG KONG,T20 WORLD CUP 2014,15,14,0,14,80,84,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2014,15,2,0,2,80,98,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2014,15,14,0,14,80,85,existing estimates; season review pending
+NEPAL,T20 WORLD CUP 2014,15,14,0,14,80,81,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2014,15,10,0,10,76,82,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2014,15,5,0,5,78,93,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2014,15,13,0,13,80,85,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2014,15,7,0,7,80,96,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2014,15,10,0,10,79,89,existing estimates; season review pending
+UNITED ARAB EMIRATES,T20 WORLD CUP 2014,15,14,0,14,78,80,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2014,15,10,0,10,80,96,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2014,15,13,0,13,80,87,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2016,15,6,0,6,77,96,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2016,15,7,0,7,80,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2016,17,7,0,7,77,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2016,16,3,0,3,80,95,existing estimates; season review pending
+HONG KONG,T20 WORLD CUP 2016,15,14,0,14,80,84,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2016,16,2,0,2,77,99,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2016,15,13,0,13,80,85,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2016,15,8,0,8,76,82,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2016,15,3,0,3,78,93,existing estimates; season review pending
+OMAN,T20 WORLD CUP 2016,18,14,0,14,76,82,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2016,19,10,0,10,80,93,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2016,15,9,0,9,80,84,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2016,15,4,0,4,80,96,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2016,17,9,0,9,75,89,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2016,19,10,0,10,77,96,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2016,17,13,0,13,78,87,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2021,16,3,0,3,78,96,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2021,15,2,0,2,80,96,existing estimates; season review pending
+BANGLADESH,T20 WORLD CUP 2021,17,5,0,5,77,91,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2021,18,1,0,1,80,94,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2021,15,0,0,0,79,99,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2021,15,4,0,4,74,86,existing estimates; season review pending
+NAMIBIA,T20 WORLD CUP 2021,15,2,0,2,72,86,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2021,15,6,0,6,79,85,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2021,16,2,0,2,79,94,existing estimates; season review pending
+OMAN,T20 WORLD CUP 2021,15,7,0,7,76,83,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2021,16,1,0,1,77,93,existing estimates; season review pending
+PAPUA NEW GUINEA,T20 WORLD CUP 2021,16,7,0,7,70,80,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2021,16,6,0,6,76,84,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2021,15,3,0,3,80,97,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2021,16,3,0,3,79,93,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2021,17,7,0,7,78,96,existing estimates; season review pending
+AFGHANISTAN,T20 WORLD CUP 2026,15,4,0,4,74,96,existing estimates; season review pending
+AUSTRALIA,T20 WORLD CUP 2026,15,5,0,5,80,97,existing estimates; season review pending
+CANADA,T20 WORLD CUP 2026,15,9,0,9,73,81,existing estimates; season review pending
+ENGLAND,T20 WORLD CUP 2026,15,6,0,6,78,94,existing estimates; season review pending
+INDIA,T20 WORLD CUP 2026,15,0,0,0,84,99,existing estimates; season review pending
+IRELAND,T20 WORLD CUP 2026,15,6,0,6,76,86,existing estimates; season review pending
+ITALY,T20 WORLD CUP 2026,15,15,0,15,80,80,existing estimates; season review pending
+NAMIBIA,T20 WORLD CUP 2026,15,5,0,5,70,85,existing estimates; season review pending
+NEPAL,T20 WORLD CUP 2026,15,8,0,8,74,85,existing estimates; season review pending
+NETHERLANDS,T20 WORLD CUP 2026,15,3,0,3,74,85,existing estimates; season review pending
+NEW ZEALAND,T20 WORLD CUP 2026,15,3,0,3,80,94,existing estimates; season review pending
+OMAN,T20 WORLD CUP 2026,15,13,0,13,76,80,existing estimates; season review pending
+PAKISTAN,T20 WORLD CUP 2026,15,5,0,5,80,93,existing estimates; season review pending
+SCOTLAND,T20 WORLD CUP 2026,15,6,0,6,74,85,existing estimates; season review pending
+SOUTH AFRICA,T20 WORLD CUP 2026,15,4,0,4,75,96,existing estimates; season review pending
+SRI LANKA,T20 WORLD CUP 2026,15,4,0,4,75,92,existing estimates; season review pending
+UNITED ARAB EMIRATES,T20 WORLD CUP 2026,15,13,0,13,76,84,existing estimates; season review pending
+UNITED STATES,T20 WORLD CUP 2026,15,8,0,8,76,85,existing estimates; season review pending
+WEST INDIES,T20 WORLD CUP 2026,15,3,0,3,80,92,existing estimates; season review pending
+ZIMBABWE,T20 WORLD CUP 2026,15,8,0,8,73,87,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2008,26,21,0,21,80,93,existing estimates; season review pending
+DECCAN CHARGERS,IPL 2008,20,15,0,15,80,95,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2008,21,12,0,12,75,96,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2008,26,21,0,21,78,92,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2008,27,20,0,20,77,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2008,30,20,0,20,76,96,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2008,26,23,0,23,78,93,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2008,25,19,0,19,80,98,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2009,23,18,0,18,80,93,existing estimates; season review pending
+DECCAN CHARGERS,IPL 2009,28,23,0,23,80,95,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2009,19,11,0,11,75,93,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2009,20,17,0,17,80,92,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2009,24,18,0,18,80,92,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2009,22,13,0,13,78,96,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2009,29,27,0,27,78,93,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2009,23,16,0,16,80,98,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2010,27,21,0,21,80,93,existing estimates; season review pending
+DECCAN CHARGERS,IPL 2010,24,17,0,17,80,95,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2010,22,13,0,13,75,93,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2010,23,19,0,19,80,92,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2010,24,16,0,16,77,92,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2010,26,17,0,17,80,96,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2010,25,22,0,22,78,88,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2010,23,13,0,13,80,98,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2011,24,18,0,18,80,93,existing estimates; season review pending
+DECCAN CHARGERS,IPL 2011,27,22,0,22,80,90,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2011,22,16,0,16,80,93,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2011,19,14,0,14,77,95,existing estimates; season review pending
+KOCHI TUSKERS KERALA,IPL 2011,20,16,0,16,80,93,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2011,18,11,0,11,79,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2011,25,16,0,16,78,97,existing estimates; season review pending
+PUNE WARRIORS INDIA,IPL 2011,25,19,0,19,77,92,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2011,21,19,0,19,80,88,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2011,24,18,0,18,80,98,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2012,24,18,0,18,80,93,existing estimates; season review pending
+DECCAN CHARGERS,IPL 2012,34,28,0,28,80,90,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2012,22,14,0,14,80,96,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2012,32,27,0,27,77,95,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2012,26,15,0,15,75,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2012,28,17,0,17,78,97,existing estimates; season review pending
+PUNE WARRIORS INDIA,IPL 2012,24,17,0,17,77,90,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2012,31,28,0,28,79,86,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2012,28,20,0,20,80,98,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2013,26,16,0,16,80,93,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2013,23,15,0,15,76,95,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2013,26,19,0,19,76,95,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2013,25,16,0,16,75,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2013,31,17,1,17,78,97,season evidence added
+PUNE WARRIORS INDIA,IPL 2013,26,16,0,16,80,92,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2013,27,23,0,23,79,94,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2013,34,24,0,24,78,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2013,27,20,0,20,80,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2014,21,11,0,11,77,93,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2014,20,10,0,10,77,96,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2014,23,11,0,11,76,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2014,21,10,0,10,80,97,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2014,22,13,1,13,75,95,season evidence added
+RAJASTHAN ROYALS,IPL 2014,25,18,0,18,80,94,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2014,22,13,0,13,78,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2014,24,14,0,14,75,93,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2015,25,16,0,16,77,93,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2015,20,9,0,9,77,96,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2015,19,8,0,8,76,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2015,17,6,0,6,73,97,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2015,29,16,1,16,77,95,season evidence added
+RAJASTHAN ROYALS,IPL 2015,17,10,0,10,80,94,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2015,27,14,0,14,77,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2015,24,13,0,13,75,93,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2016,26,11,0,11,77,96,existing estimates; season review pending
+GUJARAT LIONS,IPL 2016,24,15,0,15,75,93,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2016,23,9,0,9,73,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2016,23,10,0,10,79,97,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2016,29,16,1,16,78,95,season evidence added
+RISING PUNE SUPERGIANTS,IPL 2016,27,15,0,15,77,94,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2016,29,14,0,14,73,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2016,23,10,0,10,75,93,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2017,28,9,0,9,77,96,existing estimates; season review pending
+GUJARAT LIONS,IPL 2017,29,19,0,19,75,93,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2017,27,8,0,8,73,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2017,24,9,0,9,78,97,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2017,27,12,1,12,73,96,season evidence added
+RISING PUNE SUPERGIANT,IPL 2017,29,11,0,11,79,95,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2017,26,11,0,11,73,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2017,25,10,0,10,75,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2018,26,11,0,11,74,93,existing estimates; season review pending
+DELHI DAREDEVILS,IPL 2018,26,8,0,8,77,96,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2018,19,9,0,9,77,92,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2018,16,6,0,6,80,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2018,27,10,1,10,75,97,season evidence added
+RAJASTHAN ROYALS,IPL 2018,25,11,0,11,78,97,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2018,25,7,0,7,73,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2018,26,8,0,8,75,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2019,26,10,0,10,74,93,existing estimates; season review pending
+DELHI CAPITALS,IPL 2019,25,9,0,9,77,94,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2019,23,6,0,6,75,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2019,24,8,0,8,73,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2019,27,8,1,8,75,97,season evidence added
+RAJASTHAN ROYALS,IPL 2019,25,8,0,8,76,95,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2019,25,8,0,8,73,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2019,23,5,0,5,75,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2020,22,4,0,4,74,93,existing estimates; season review pending
+DELHI CAPITALS,IPL 2020,25,2,0,2,73,95,existing estimates; season review pending
+KINGS XI PUNJAB,IPL 2020,25,5,0,5,75,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2020,24,6,0,6,73,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2020,25,10,1,10,75,98,season evidence added
+RAJASTHAN ROYALS,IPL 2020,25,6,0,6,74,95,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2020,22,6,0,6,78,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2020,27,9,0,9,77,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2021,26,6,0,6,71,93,existing estimates; season review pending
+DELHI CAPITALS,IPL 2021,29,4,0,4,73,95,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2021,27,6,0,6,73,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2021,26,6,1,6,72,97,season evidence added
+PUNJAB KINGS,IPL 2021,27,5,0,5,75,96,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2021,28,2,0,2,72,95,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2021,29,8,0,8,75,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2021,28,7,0,7,77,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2022,26,4,0,4,71,93,existing estimates; season review pending
+DELHI CAPITALS,IPL 2022,24,2,0,2,71,95,existing estimates; season review pending
+GUJARAT TITANS,IPL 2022,24,3,0,3,75,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2022,27,7,0,7,74,96,existing estimates; season review pending
+LUCKNOW SUPER GIANTS,IPL 2022,22,3,0,3,72,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2022,27,7,1,7,72,97,season evidence added
+PUNJAB KINGS,IPL 2022,25,4,0,4,73,94,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2022,25,6,0,6,72,94,existing estimates; season review pending
+ROYAL CHALLENGERS BANGALORE,IPL 2022,23,4,0,4,75,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2022,24,4,0,4,72,96,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2025,28,7,0,7,73,93,existing estimates; season review pending
+DELHI CAPITALS,IPL 2025,25,6,0,6,73,94,existing estimates; season review pending
+GUJARAT TITANS,IPL 2025,27,0,0,0,72,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2025,23,2,0,2,77,96,existing estimates; season review pending
+LUCKNOW SUPER GIANTS,IPL 2025,26,7,0,7,72,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2025,29,9,0,9,71,99,existing estimates; season review pending
+PUNJAB KINGS,IPL 2025,27,8,0,8,73,96,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2025,22,3,0,3,71,94,existing estimates; season review pending
+ROYAL CHALLENGERS BENGALURU,IPL 2025,24,3,0,3,71,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2025,23,8,0,8,77,97,existing estimates; season review pending
+CHENNAI SUPER KINGS,IPL 2026,30,11,0,11,72,94,existing estimates; season review pending
+DELHI CAPITALS,IPL 2026,26,7,0,7,73,94,existing estimates; season review pending
+GUJARAT TITANS,IPL 2026,27,4,0,4,72,96,existing estimates; season review pending
+KOLKATA KNIGHT RIDERS,IPL 2026,29,6,0,6,73,96,existing estimates; season review pending
+LUCKNOW SUPER GIANTS,IPL 2026,26,8,0,8,72,96,existing estimates; season review pending
+MUMBAI INDIANS,IPL 2026,29,9,0,9,71,99,existing estimates; season review pending
+PUNJAB KINGS,IPL 2026,25,10,0,10,73,94,existing estimates; season review pending
+RAJASTHAN ROYALS,IPL 2026,27,8,0,8,72,93,existing estimates; season review pending
+ROYAL CHALLENGERS BENGALURU,IPL 2026,26,9,0,9,71,98,existing estimates; season review pending
+SUNRISERS HYDERABAD,IPL 2026,29,15,0,15,70,97,existing estimates; season review pending

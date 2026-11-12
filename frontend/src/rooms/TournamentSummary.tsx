@@ -17,7 +17,7 @@ export function TournamentSummary({ room, who, onScorecards }: { room: Room; who
   useEffect(()=>{
     if (!won || state.phase!=='complete' || seen.current) return;
     seen.current=true;
-    try { if(sessionStorage.getItem(`out-celebrated-${room.id}`))return; sessionStorage.setItem(`out-celebrated-${room.id}`,'1'); } catch { /* Still celebrate once in this visit. */ }
+    try { if(sessionStorage.getItem(`out-celebrated-${room.id}:${state.roundNumber??1}`))return; sessionStorage.setItem(`out-celebrated-${room.id}:${state.roundNumber??1}`,'1'); } catch { /* Still celebrate once in this visit. */ }
     setOpen(true);
   },[won,state.phase,room.id]);
   useEffect(()=>{

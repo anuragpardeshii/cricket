@@ -16,6 +16,7 @@ export type Screen = 'landing' | 'lobby' | 'draft' | 'match' | 'result';
 export interface Player {
   id: string;
   personId?: string;
+  ratingEvidence?: {note:string;source?:string|null};
   competition?: Competition;
   edition?: number;
   name: string;
@@ -89,6 +90,7 @@ export interface FeedEntry extends CommentaryLine {
 }
 
 export interface MatchResult {
+  analysis?: import('../components/MatchReview').Analysis;
   winner: Side | 'tie';
   margin: string;
   highestScorer?: { name: string; line: string; side: Side };

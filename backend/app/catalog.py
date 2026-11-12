@@ -10,6 +10,7 @@ from .draft_pool import competition, person_key
 
 # Slot compatibility is a game rule, not player inventory.
 SLOTS = json.loads(Path(__file__).with_name('catalog.json').read_text())['slots']
+_EVIDENCE=json.loads(Path(__file__).with_name('rating-evidence.json').read_text())
 _CACHE = {}
 _CACHE_LOCK = RLock()
 
@@ -52,6 +53,8 @@ def load_catalog(session, selected=None, edition=None):
         item['players'].append(dict(id=player.id, name=player.name, role=player.role, rating=player.rating,
                                    squad=f'{squad.country} {squad.tournament[-4:]}', competition=competition(squad.tournament),
                                    edition=int(squad.tournament[-4:])))
+        evidence=_EVIDENCE.get(player.id)
+        item['players'][-1]['ratingEvidence']=evidence if evidence and evidence['rating']==player.rating else dict(note='Existing game estimate; verified season statistics are not yet attached. Do not interpret this as measured season form.',source=None)
         item['players'][-1]['personId']=person_key(item['players'][-1])
     if not squads:
         raise HTTPException(503, 'Player catalog unavailable')

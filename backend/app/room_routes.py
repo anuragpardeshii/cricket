@@ -119,7 +119,9 @@ def rename(room_id:UUID,body:Rename,auth=Depends(authenticated),session=Depends(
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); name=body.name.strip()
     if state['phase']!='lobby': raise HTTPException(409,'Names are locked once player selection starts')
     if not name or any(m['name'].lower()==name.lower() and m['uid']!=auth.user_id for m in state['members']): raise HTTPException(409,'Choose a different name')
-    person=next(m for m in state['members'] if m['uid']==auth.user_id); person['name']=name
+    person=next(m for m in state['members'] if m['uid']==auth.user_id)
+    if person.get('ready'): raise HTTPException(409,'Press Not ready before changing your name')
+    person['name']=name
     room.state=state; room.version+=1; audit(session,'room.renamed',auth.user_id,room.id); session.commit()
     return rooms.project(room,auth.user_id,time.time())
 
@@ -203,3 +205,41 @@ def exit_room(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
         return {'ok':True,'closed':True}
     room.state=state; room.version+=1; audit(session,'room.exited',auth.user_id,room.id); session.commit()
     return {'ok':True,'closed':False}
+
+class ChatMessage(Strict):
+    text:str=Field(min_length=1,max_length=300)
+    nonce:str=Field(pattern=r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')
+
+@router.post('/{room_id}/chat')
+def chat(room_id:UUID,body:ChatMessage,auth=Depends(authenticated),session=Depends(db)):
+    limit('room-chat:'+auth.user_id,20,60)
+    room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state)
+    message=body.text.strip()
+    if not message or any(ord(c)<32 and c not in '\n\t' for c in message): raise HTTPException(422,'Enter a message without control characters')
+    person=next(m for m in state['members'] if m['uid']==auth.user_id)
+    messages=state.setdefault('chat',[])
+    if not any(m['id']==str(body.nonce) and m['sender']==person['id'] for m in messages):
+        messages.append(dict(id=str(body.nonce),sender=person['id'],name=person['name'],text=message,sentAt=time.time()))
+        state['chat']=messages[-60:]; room.state=state; room.version+=1
+        session.commit()
+    return rooms.project(room,auth.user_id,time.time())
+
+class RoomSettings(CreateRoom):
+    version:int=Field(ge=0)
+
+@router.post('/{room_id}/settings')
+def settings(room_id:UUID,body:RoomSettings,auth=Depends(authenticated),session=Depends(db)):
+    room=locked(session,room_id,auth.user_id)
+    if room.owner_id!=auth.user_id: raise HTTPException(403,'Only the host can change settings')
+    if room.state['phase']!='lobby': raise HTTPException(409,'Settings are locked after the draft starts')
+    if room.state.get('cupId'): raise HTTPException(409,'Scheduled cup settings are fixed')
+    if room.version!=body.version: raise HTTPException(409,'Room changed; review settings again')
+    if body.capacity<len(room.state['members']): raise HTTPException(409,'Capacity cannot be smaller than the current player count')
+    if body.preset:
+        validate_pool(session,body.preset,body.capacity); body.competition=rules(body.preset)['competition']
+    state=copy.deepcopy(room.state)
+    state.update(format=body.format,capacity=body.capacity,seconds=body.pick_seconds,competition=body.competition,preset=body.preset)
+    for person in state['members']: person['ready']=bool(person.get('is_ai'))
+    room.state=state; room.visibility=body.visibility; room.version+=1
+    audit(session,'room.settings',auth.user_id,room.id); session.commit()
+    return rooms.project(room,auth.user_id,time.time())

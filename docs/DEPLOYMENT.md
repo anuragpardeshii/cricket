@@ -239,3 +239,18 @@ After deployment, test with three independent browser sessions: join the same ro
 ## Competition pools and compact rooms
 
 Apply migration **0010** (`alembic upgrade head`) before serving the updated backend. It adds 15 squads without rewriting existing cards or saved results. New rooms and practice games accept `competition: "odi" | "t20" | "ipl"`; the default is ODI. The retired `lobby_minutes` field remains accepted for older clients but has no effect. Existing rooms without a competition keep their mixed pool. Room sockets now include only the visible over’s scorecards and reveal rolls only to the active picker. Deploy backend and frontend together. The animated trophies and winning sound require no external assets or credentials; haptics depend on browser/device support.
+
+
+## Social gameplay release
+
+Run migrations through `0015` before deploying this frontend. The new migration updates
+only the reviewed season ratings; it does not rewrite saved drafts or archived matches.
+Deploy the shared gameplay branch to a test backend/database first. Chat requires the
+existing authenticated WebSocket route and PostgreSQL notifications, with the existing
+one-second reconnect/polling fallback. It does not require Redis or another hosted service.
+
+Serve `/manifest.webmanifest`, `/sw.js`, `/icon-192.png`, `/icon-512.png` and `/teams/*`
+as static files over HTTPS. Installation is browser-dependent; online games still need
+connectivity. Do not cache `/api/*` or authenticated room responses in the service worker.
+Verify two-browser chat, host persistence across a rematch, settings/readiness, shared
+rolls and completed-match reviews before switching the production branch.

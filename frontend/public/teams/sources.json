@@ -1,0 +1,42 @@
+{
+  "Chennai Super Kings": {
+    "file": "chennai-super-kings.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1622%2Ficon-dark.svg"
+  },
+  "Delhi Capitals": {
+    "file": "delhi-capitals.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1396%2Ficon-dark.svg"
+  },
+  "Gujarat Titans": {
+    "file": "gujarat-titans.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F2879%2Ficon-dark.svg"
+  },
+  "Kolkata Knight Riders": {
+    "file": "kolkata-knight-riders.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1873%2Ficon-dark.svg"
+  },
+  "Lucknow Super Giants": {
+    "file": "lucknow-super-giants.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F2880%2Ficon-dark.svg"
+  },
+  "Mumbai Indians": {
+    "file": "mumbai-indians.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1854%2Ficon-dark.svg"
+  },
+  "Punjab Kings": {
+    "file": "punjab-kings.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F2040%2Ficon-dark.svg"
+  },
+  "Rajasthan Royals": {
+    "file": "rajasthan-royals.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1558%2Ficon-dark.svg"
+  },
+  "Royal Challengers Bengaluru": {
+    "file": "royal-challengers-bengaluru.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F2138%2Ficon-dark.svg"
+  },
+  "Sunrisers Hyderabad": {
+    "file": "sunrisers-hyderabad.svg",
+    "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1153%2Ficon-dark.svg"
+  }
+}
