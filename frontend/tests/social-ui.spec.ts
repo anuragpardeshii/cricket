@@ -25,7 +25,10 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await expect(page.getByText('0/2 players ready',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Edit name',exact:true})).toBeEnabled();
  await page.getByRole('button',{name:/Room chat/}).click();await page.getByRole('textbox',{name:'Chat message'}).fill('<script>alert(1)</script> Hello Bob');await page.getByRole('button',{name:'Send',exact:true}).click();
  await expect(page.getByRole('log')).toContainText('<script>alert(1)</script> Hello Bob');await expect(page.locator('aside script')).toHaveCount(0);
- await page.getByRole('button',{name:'＋ Add OUT. to your device'}).click();await expect(page.getByRole('status').filter({hasText:'Safari'})).toBeVisible();
+ room.host=false;room.version++;broadcast();
+ await expect(page.getByRole('button',{name:'Match settings',exact:true})).toHaveCount(0);
+ room.host=true;room.version++;broadcast();
+ await expect(page.getByRole('button',{name:'Match settings',exact:true})).toBeVisible();
  await page.screenshot({path:`test-results/social-lobby-${mobile?'mobile':'desktop'}.png`,fullPage:true});
  room.state.members[1].ready=true;broadcast();await page.getByRole('button',{name:'Ready',exact:true}).click();await page.getByRole('button',{name:'Start match',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Bob is picking'})).toBeVisible();await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();

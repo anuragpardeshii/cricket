@@ -127,6 +127,21 @@ Run `make migrate` to add the squads to an existing database; normal development
 
 For production build the frontend Docker `production` target, terminate HTTPS, set `APP_ENV=production`, exact `APP_ORIGIN`/`ALLOWED_HOSTS`, remove hot reload/bind mounts, use a private encrypted database connection and separate migration credentials. Configure backups, retention and monitoring, including alerts on `room_clock_failed`. See `docs/SECURITY.md`. The historical standalone HTML/ZIP are not deployable versions of the integrated app.
 
+## Live development updates
+
+Run `make dev-up` once to start or update the local development containers. Saving
+React or CSS files updates the browser through Vite hot reload. Frontend `public/`,
+`index.html`, Vite config and TypeScript config are mounted too; config changes may
+restart Vite. Polling is enabled to support Docker mounts and machines with exhausted
+file watchers. Set `CHOKIDAR_USEPOLLING=false` for native filesystem watching when
+running Vite directly if preferred.
+
+Saving backend Python files restarts the development API through Uvicorn reload.
+This can briefly reconnect room sockets. Dependency changes still require
+`make dev-up` to rebuild; database migrations require `make migrate`. Production
+Render/Vercel deployments continue to use production builds, without development
+hot reload.
+
 ## Playing from another device during development
 
 The default listener is private to this machine. For a trusted LAN, put `WEB_HOST=<this computer's LAN IP>` and `BIND_ADDRESS=0.0.0.0` in `.env`, then run `make dev-up`. Every participant must use `http://<that IP>:<WEB_PORT>/rooms`; this keeps host validation and CSRF Origin consistent. Do not put a URL scheme or path in `WEB_HOST`. Public internet play requires deploying the stack with HTTPS as described above; a room code does not expose a localhost server to other devices.

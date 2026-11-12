@@ -33,7 +33,7 @@ services:
       LIVEKIT_PUBLIC_URL: ws://${WEB_HOST:-localhost}:7880
       LIVEKIT_API_KEY: devkey
       LIVEKIT_API_SECRET: secret
-    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000', --reload, --no-proxy-headers, --ws-max-size, '4096', --ws-max-queue, '8']
+    command: [uvicorn, app.main:app, --host, 0.0.0.0, --port, '8000', --reload, --reload-dir, /app/app, --no-proxy-headers, --ws-max-size, '4096', --ws-max-queue, '8']
     volumes:
       - ./backend/app:/app/app:ro
     depends_on:
@@ -62,6 +62,10 @@ services:
     ports: ['${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-5173}:5173']
     volumes:
       - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+      - ./frontend/tsconfig.json:/app/tsconfig.json:ro
     depends_on:
       api: {condition: service_healthy}
   test-db:
