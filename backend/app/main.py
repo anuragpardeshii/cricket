@@ -266,6 +266,9 @@ def logout(response:Response,auth=Depends(authenticated),session=Depends(db)):
 
 def view(game):
     state=copy.deepcopy(game.state)
+    if state.get('match'):
+        from .match_review import refresh_named_review
+        refresh_named_review(state['match'])
     if state.get('rolled'):
         state['rolled']['players']=[p for p in state['rolled']['players'] if p['id'] not in state['taken'] and person_key(p) not in used_people([state['yourXI'],state['opponentXI']])]
     return dict(id=game.id,version=game.version,state=state,opponentCount=len(game.state['opponentXI']))

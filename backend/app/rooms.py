@@ -285,6 +285,8 @@ def project(room,user_id,ts):
         match['scores']={k:plan['timeline'][count-1][k] if count else '—' for k in ['youScore','oppScore']}
         if match['status']=='complete':
             match['result']=copy.deepcopy(plan['result']); match['scorecards']=copy.deepcopy(plan['scorecards'])
+            from .match_review import refresh_named_review
+            refresh_named_review(match)
         else:
             match.pop('winner',None)
             match['scorecards']=copy.deepcopy(plan['timeline'][count-1]['scorecards']) if count else []

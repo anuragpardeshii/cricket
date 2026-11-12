@@ -88,6 +88,17 @@ def collapse_fact(plan,side,name,target=None):
     if not spell or spell['wickets']<3:return None
     before,after=points[spell['start']],points[spell['end']]
     line1=f"{name} lost {spell['wickets']} wickets for {spell['runs']} runs between {overs_text(spell['start'])} and {overs_text(spell['end'])} overs."
+    dismissed={}
+    for event in plan.get('timeline',[]):
+        if event.get('batting')!=side:continue
+        card=next((c for c in event.get('scorecards',[]) if c['side']==side),None)
+        if card:
+            dismissed[innings_totals(card)['balls']]={p.get('id',p['name']):p['name'] for p in card['batting']
+                if p.get('dismissal') not in (None,'','not out','did not bat')}
+    previous=dismissed.get(spell['start'],{}); current=dismissed.get(spell['end'],{})
+    names=[name for key,name in current.items() if key not in previous]
+    if names and len(names)==spell['wickets']:
+        line1+=' Dismissed: '+', '.join(names)+'.'
     remaining=max(0,plan.get('overs',20)*6-spell['end'])
     if after['wickets']==10:
         line2=f"That ended the innings at {after['runs']} all out."
@@ -121,6 +132,55 @@ def phase_notes(plan,side,final):
     return notes
 
 
+def named_contributions(own, against):
+    """Describe recorded performances without inferring temperament or causation."""
+    bat=sorted(own['batting'],key=lambda p:(p['runs'],-p['balls']),reverse=True)
+    scorers=[p for p in bat if p['runs']>0]
+    total=innings_totals(own)['runs']
+    def innings(p):
+        unbeaten=' not out' if p.get('dismissal')=='not out' else ''
+        return f"{p['name']} {p['runs']}{unbeaten} from {p['balls']} balls"
+    if scorers:
+        leaders=scorers[:3]
+        notes=["Batting: "+'; '.join(innings(p) for p in leaders)+f". {'Together they supplied' if len(leaders)>1 else 'That contributed'} {sum(p['runs'] for p in leaders)} of {total} team runs."]
+    else: notes=['Batting: no batter scored a run.']
+    bowl=sorted([p for p in against['bowling'] if p['balls'] or p['wickets']],
+                key=lambda p:(p['wickets'],-p['runs']/max(1,p['balls'])),reverse=True)
+    def spell(p):
+        text=f"{p['name']} took {p['wickets']}/{p['runs']} in {overs_text(p['balls'])} overs"
+        victims=[b['name'] for b in against['batting']
+                 if b.get('dismissal','').endswith('b '+p['name'])
+                 and not b.get('dismissal','').lower().startswith('run out')]
+        if victims:text+=' (dismissed '+', '.join(victims)+')'
+        return text
+    takers=[p for p in bowl if p['wickets']][:2]
+    notes.append('Bowling: '+'; '.join(spell(p) for p in takers)+'.' if takers else 'Bowling: no bowler took a wicket.')
+    details=[]
+    for title,players in [('Top three',own['batting'][:3]),('Middle order (4–7)',own['batting'][3:7]),('Lower order (8–11)',own['batting'][7:])]:
+        active=[p for p in players if p['balls'] or p['runs'] or p.get('dismissal') not in (None,'not out','did not bat')]
+        if active:details.append(title+': '+'; '.join(innings(p) for p in active)+'.')
+    expensive=max((p for p in bowl if p['balls']>=12),key=lambda p:p['runs']/p['balls'],default=None)
+    if expensive:
+        p=expensive
+        details.append(f"Highest economy among bowlers who delivered at least two overs: {p['name']}, {p['wickets']}/{p['runs']} from {overs_text(p['balls'])} overs ({p['runs']*6/p['balls']:.2f} runs per over).")
+    return notes,details
+
+
+def refresh_named_review(plan):
+    """Upgrade narrative on a response copy, without replaying a saved result."""
+    analysis=plan.get('result',{}).get('analysis')
+    cards={c['side']:c for c in plan.get('scorecards',[])}
+    if not analysis or not all(side in cards for side in ('you','opp')):return plan
+    if analysis.get('namedReviewVersion')==1:return plan
+    for team in analysis.get('teams',[]):
+        side=team['side']; other='opp' if side=='you' else 'you'
+        notes,details=named_contributions(cards[side],cards[other])
+        team['notes']=notes
+        team['details']=details+[n for n in team.get('details',[]) if not n.startswith(('Top three:', 'What worked:', 'What hurt:'))]
+    analysis['namedReviewVersion']=1
+    return plan
+
+
 def review(plan,teams,names,venue,*,external=False):
     cards={c['side']:c for c in plan['scorecards']}
     totals={side:innings_totals(card) for side,card in cards.items()}
@@ -139,15 +199,7 @@ def review(plan,teams,names,venue,*,external=False):
         bowler_wickets=sum(p['wickets'] for p in bowl)
         economy=round(conceded*6/bowled,2) if bowled else None
         metrics[side]=dict(runs=m['runs'],balls=m['balls'],boundaryRuns=boundaries,wicketsTaken=totals[other]['wickets'],economy=economy)
-        top=max(bat,key=lambda p:(p['runs'],p['balls']),default=None)
-        best=max(bowl,key=lambda p:(p['wickets'],-p['runs']/max(1,p['balls'])),default=None)
-        notes=[]
-        if top and top['runs']:
-            notes.append(f"Batting: {top['name']} top-scored with {top['runs']} from {top['balls']} balls, contributing {round(100*top['runs']/max(1,m['runs']))}% of the total.")
-        else:notes.append('Batting: no batter scored a run.')
-        if best and best['wickets']:
-            notes.append(f"Bowling: {best['name']} took {best['wickets']}/{best['runs']} in {overs_text(best['balls'])} overs.")
-        else:notes.append('Bowling: no bowler took a wicket.')
+        notes=[]  # Filled from named scorecard contributions below.
         if tied:
             summary='Scores finished level. The winner was selected by the disclosed fantasy-game tie rule.'
         elif side==chase:
@@ -165,7 +217,7 @@ def review(plan,teams,names,venue,*,external=False):
         details=[f"Scoring: {boundaries} boundary runs, {bat_runs-boundaries} other batter runs and {extras} extras.",
                  f"The opposition lost {totals[other]['wickets']} wickets ({bowler_wickets} credited to bowlers)." + (f" Bowling economy: {economy} runs per over, excluding byes and leg-byes." if economy is not None else ''),
                  f"Top three: {sum(p['runs'] for p in bat[:3])} runs. Positions 8–11: {sum(p['runs'] for p in bat[7:])} runs." if any(p['balls'] or p['runs'] for p in bat[7:]) else f"Top three: {sum(p['runs'] for p in bat[:3])} runs. Positions 8–11 did not face a ball or score.",
-                 f"XI roles: {pace} specialist pace bowlers, {spin} specialist spinners, {ar} all-rounder(s). Role counts alone do not establish which XI is better balanced."]
+                 f"XI roles: {pace} specialist pace bowlers, {spin} specialist spinners, {ar} all-rounder(s). Pace: {', '.join(p['name'] for p in squad if p['role']=='PACE') or 'none'}. Spin: {', '.join(p['name'] for p in squad if p['role']=='SPIN') or 'none'}. All-rounders: {', '.join(p['name'] for p in squad if p['role']=='AR') or 'none'}."]
         details.extend(phase_notes(plan,side,m))
         if not external and plan.get('model',{}).get('version')=='local-context-v1':
             context=plan['model']['teams'][side]
@@ -188,4 +240,4 @@ def review(plan,teams,names,venue,*,external=False):
     plan['venue']=public_venue
     plan['result']['analysis']=dict(decisive=decisive_text,collapses=collapses,cricketFact=HISTORICAL_COLLAPSES['odi' if plan.get('overs')==50 else 't20'] if collapses else None,teams=reports,metrics=metrics,venue=public_venue,conditions=condition_note,
         method='Based on the saved scorecard. Contributions and scoring spells describe this match; they do not prove a player or selection caused the loss. Historical season evidence and model assumptions are shown separately.')
-    return plan
+    return refresh_named_review(plan)

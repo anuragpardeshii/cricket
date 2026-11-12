@@ -83,3 +83,61 @@ def test_two_line_collapse_reports_chase_equation_and_real_match_context():
     assert 'still needed 51 from 30 balls with 7 wickets left' in fact['lines'][1]
     assert analysis['cricketFact']['title']=='2024 T20 World Cup final'
     assert analysis['cricketFact']['source'].startswith('https://www.icc-cricket.com/')
+
+
+def test_named_contributions_include_support_and_victims_but_not_run_out_credit():
+    plan,teams=fixture()
+    plan['scorecards'][0]['batting']=[
+        dict(name='Kohli',runs=70,balls=48,dismissal='b Starc'),
+        dict(name='Rohit',runs=45,balls=30,dismissal='not out'),
+        dict(name='Dhoni',runs=30,balls=25,dismissal='run out (Starc)')]
+    plan['scorecards'][0]['bowling'][1]['name']='Starc'
+    analysis=analyze(plan,teams)
+    batting=analysis['teams'][0]['notes'][0]
+    assert 'Kohli 70 from 48 balls' in batting
+    assert 'Rohit 45 not out from 30 balls' in batting
+    assert '145 of 150 team runs' in batting
+    bowling=analysis['teams'][1]['notes'][1]
+    assert 'dismissed Kohli' in bowling and 'Dhoni' not in bowling
+    assert 'Active bowler' in str(analysis['teams'][0]['details'])
+
+
+def test_legacy_review_refresh_preserves_scores_and_is_idempotent():
+    plan,teams=fixture();analyze(plan,teams)
+    analysis=plan['result']['analysis'];analysis.pop('namedReviewVersion')
+    analysis['teams'][0]['notes']=['What worked: the leading batter and bowler above provided this XI’s strongest recorded contributions.']
+    original=copy.deepcopy(plan)
+    refreshed=match_review.refresh_named_review(copy.deepcopy(plan))
+    assert 'you opener' in refreshed['result']['analysis']['teams'][0]['notes'][0]
+    assert 'What worked:' not in str(refreshed)
+    assert refreshed['scorecards']==original['scorecards']
+    assert refreshed['result']['winner']==original['result']['winner']
+    assert plan==original
+    again=copy.deepcopy(refreshed)
+    assert match_review.refresh_named_review(refreshed)==again
+
+
+def test_collapse_names_only_batters_dismissed_inside_recorded_window():
+    plan,teams=fixture()
+    for balls,runs,wickets in [(72,80,1),(90,100,4)]:
+        card=copy.deepcopy(plan['scorecards'][0]);card['score']=f'{runs}/{wickets} ({balls//6}.{balls%6})'
+        card['batting']=[dict(name=name,runs=10,balls=10,dismissal='b Starc' if i==0 or balls==90 else 'not out')
+                         for i,name in enumerate(['Earlier wicket','Kohli','Rohit','Dhoni'])]
+        plan['timeline'].append(dict(batting='you',scorecards=[card]))
+    fact=analyze(plan,teams)['collapses'][0]
+    assert 'Dismissed: Kohli, Rohit, Dhoni.' in fact['lines'][0]
+    assert 'Earlier wicket' not in str(fact)
+    assert len(fact['lines'])==2
+
+
+def test_practice_response_upgrades_legacy_notes_without_mutating_game():
+    from types import SimpleNamespace
+    from app.main import view
+    plan,teams=fixture();analyze(plan,teams)
+    plan['result']['analysis'].pop('namedReviewVersion')
+    plan['result']['analysis']['teams'][0]['notes']=['What worked: generic conclusion']
+    game=SimpleNamespace(id='test',version=1,state=dict(match=plan,opponentXI={}))
+    original=copy.deepcopy(game.state)
+    response=view(game)
+    assert 'you opener' in response['state']['match']['result']['analysis']['teams'][0]['notes'][0]
+    assert game.state==original
