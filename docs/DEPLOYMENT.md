@@ -15,6 +15,24 @@ The same-origin proxy keeps the existing Secure, HttpOnly, SameSite=Strict sessi
 
 ## 1. Reserve the frontend address
 
+### Production and engine testing branches
+
+Keep `main` as the production branch with the local simulator. The separate
+`feature/out-engine-integration` branch includes the external engine integration.
+Shared gameplay changes should land on `main` first and then be merged into the
+integration branch, resolving simulation-related conflicts without enabling the
+engine on `main`.
+
+To test the engine independently, use a separate frontend project, backend service,
+and test database for that branch. Give the test backend its own `APP_ORIGIN` and
+`ALLOWED_HOSTS`, and configure engine credentials only on that backend. Update the
+test frontend's API rewrite and WebSocket CSP hostname to point to the test backend.
+The committed frontend configuration points to production: deploying another branch
+alone does not isolate its API traffic. Use distinct service/database names when
+creating the test deployment, and do not connect it to the production database.
+
+The branch split does not itself create or change hosted deployments.
+
 Import `anuragpardeshii/cricket` into Vercel. Choose:
 
 | Setting | Value |

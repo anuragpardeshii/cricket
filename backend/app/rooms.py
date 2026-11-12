@@ -179,6 +179,29 @@ def fixtures(state,ts):
     state['matches']=matches
     launch_ready(state,ts)
 
+def build_match_plan(state,match):
+    """Build a local match plan. Knockout ties replay the complete match."""
+    teams={m['id']:m for m in state['members']}
+    names={'you':teams[match['a']]['name'],'opp':teams[match['b']]['name']}
+    replays=0
+    while True:
+        plan=simulate(
+            teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),
+            teams[match['b']].get('order'),team_names=names,overs=match_overs(state.get('competition')))
+        if state['format']!='knockout' or plan['result']['winner']!='tie':
+            if replays: plan['result']['fullMatchReplays']=replays
+            return plan
+        replays+=1
+        if replays>=12:
+            # A twelfth consecutive tied replay is effectively impossible. Use
+            # tournament performance to advance a side without a super over.
+            totals={'you':0,'opp':0}
+            for performance in plan['performances']: totals[performance['side']]+=performance['points']
+            winner='you' if totals['you']>=totals['opp'] else 'opp'
+            plan['result'].update(winner=winner,margin='after tied full-match replays, decided on match performance',fullMatchReplays=replays)
+            plan['timeline'][-1]['headline'],plan['timeline'][-1]['text']=describe_finish(plan['result'],plan['scorecards'],names)
+            return plan
+
 def launch_ready(state,ts):
     teams={m['id']:m for m in state['members']}; matches={m['id']:m for m in state['matches']}
     for match in state['matches']:
@@ -189,20 +212,9 @@ def launch_ready(state,ts):
             match['a'],match['b']=[p['winner'] for p in parents]
         if any(team not in teams or teams[team].get('forfeited') for team in [match['a'],match['b']]):
             forfeit_match(state,match,ts); continue
-        names={'you':teams[match['a']]['name'],'opp':teams[match['b']]['name']}
-        match['plan']=simulate(teams[match['a']]['xi'],teams[match['b']]['xi'],teams[match['a']].get('order'),teams[match['b']].get('order'),team_names=names,overs=match_overs(state.get('competition')))
+        match['plan']=build_match_plan(state,match)
         result=match['plan']['result']
-        if result['winner']=='tie':
-            # Repeated six-ball tie-breaks, visible in the result.
-            tie_scores=[]
-            while True:
-                a=sum(rng.choice([0,1,2,4,6]) for _ in range(6)); b=sum(rng.choice([0,1,2,4,6]) for _ in range(6))
-                tie_scores.append(dict(a=a,b=b))
-                if a!=b: break
-            result['winner']='you' if a>b else 'opp'; result['margin']=f'after a six-ball tie-break ({a}–{b})'; result['tieBreaks']=tie_scores
-            last=match['plan']['timeline'][-1]
-            last['headline'],last['text']=describe_finish(result,match['plan']['scorecards'],names)
-        match['winner']=match['a'] if result['winner']=='you' else match['b']
+        match['winner']=match['a'] if result['winner']=='you' else match['b'] if result['winner']=='opp' else None
         interval=playback_seconds(state.get('competition'))
         match['status']='live'; match['startedAt']=ts; match['endsAt']=ts+interval*len(match['plan']['timeline'])
 
@@ -214,6 +226,7 @@ def standings(state):
             if match[key] not in rows: continue
             row=rows[match[key]]; row['played']+=1
             if match['winner']==match[key]: row['won']+=1; row['points']+=2
+            elif match.get('winner') is None and not match.get('forfeit'): row['points']+=1
             if match.get('forfeit'): continue
             cards=match['plan']['scorecards']; own=next(c for c in cards if c['side']==side); against=next(c for c in cards if c['side']!=side)
             row['runsFor']+=sum(p['runs'] for p in own['batting']); row['runsAgainst']+=sum(p['runs'] for p in against['batting'])

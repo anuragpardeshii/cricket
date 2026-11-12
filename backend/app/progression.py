@@ -53,6 +53,8 @@ def cup_standings(state):
         for user_id in [f['a'],f['b']]: rows[user_id]['played']+=1
         if f.get('winner') in rows:
             row=rows[f['winner']]; row['won']+=1; row['points']+=2
+        elif not f.get('forfeit'):
+            for user_id in [f['a'],f['b']]: rows[user_id]['points']+=1
     result=sorted(rows.values(),key=lambda r:(-r['points'],r['name'].lower()))
     for row in result:
         row['rank']=1+sum(other['points']>row['points'] for other in result)
