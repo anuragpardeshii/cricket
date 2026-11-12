@@ -1,3 +1,4 @@
+import { InstallApp } from '../components/InstallApp';
 import { ThemeToggle } from '../theme/ThemeProvider';
 import { CricketGround } from '../components/CricketGround';
 import { useGame } from '../game/useGame';
@@ -22,11 +23,14 @@ export function LandingScreen({ game }: { game: Game }) {
     <header className="flex flex-wrap gap-y-3 items-center justify-between gap-4 border-b border-neutral/10 pb-5">
       <span className="hidden font-mono text-[11px] tracking-[.22em] text-muted sm:inline">CRICKET SQUAD DRAFT</span>
       <span className="sm:hidden"><Brand /></span>
-      <nav aria-label="Main navigation" className="flex items-center gap-2 sm:gap-3">
+      <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-2 sm:gap-3">
         <a href="/groups" className="px-2 text-xs text-amber">Groups</a><a href="/achievements" className="px-2 text-xs text-amber">Trophies</a>
         <ThemeToggle />
         {game.account?.user.is_admin && <a href="/dashboard" className="inline-flex min-h-10 items-center justify-center rounded-lg border border-neutral/20 px-3 font-mono text-[10px] font-semibold tracking-wider text-cream transition hover:border-amber hover:text-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber">DASHBOARD</a>}
+        <div className="flex items-center gap-2 sm:gap-3">
         {game.ready && !game.account && <a href="/register" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-accent-fill px-3 font-mono text-[10px] font-semibold tracking-wider text-on-accent transition hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber">REGISTER</a>}
+        <InstallApp />
+        </div>
       </nav>
     </header>
 
