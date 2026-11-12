@@ -113,7 +113,8 @@ def test_recent_rolls_prefer_different_historical_squads(monkeypatch):
 def test_match_length_follows_competition(monkeypatch):
     class StableRandom:
         def choice(self,values): return values[0]
-        def choices(self,_values,_weights): return [1]
+        def choices(self,values,weights): return [values[0] if isinstance(values[0],dict) else 1]
+        def gauss(self,mean,sd): return mean
         def random(self): return .5
     monkeypatch.setattr(game,'rng',StableRandom())
     roles=['OP','OP','BAT','BAT','BAT','AR','WK','PACE','PACE','PACE','SPIN']

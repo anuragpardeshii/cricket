@@ -54,7 +54,9 @@ def test_spell_and_phases_use_actual_score_differences_and_ball_intervals():
         card=copy.deepcopy(plan['scorecards'][0]);card['score']=f'{runs}/{wickets} ({balls//6}.{balls%6})'
         plan['timeline'].append(dict(batting='you',over=f'OV {balls//6}',scorecards=[card]))
     analysis=analyze(plan,teams)
-    assert 'A lost 3 wickets for 20 runs between 12.0 and 15.0 overs' in analysis['decisive']
+    assert 'A lost 3 wickets for 20 runs between 12.0 and 15.0 overs' in analysis['collapses'][0]['lines'][0]
+    assert len(analysis['collapses'][0]['lines'])==2
+    assert '80/0 to 100/3' in analysis['collapses'][0]['lines'][1]
     details=analysis['teams'][0]['details']
     assert 'Overs 0.0–6.0: 40 runs, 0 wickets.' in details
     assert 'Overs 6.0–15.0: 60 runs, 3 wickets.' in details
@@ -68,3 +70,16 @@ def test_fantasy_tie_decision_does_not_invent_a_successful_chase():
     assert 'Regulation scores were level' in analysis['decisive']
     assert 'reached the target' not in analysis['decisive']
     assert all('Scores finished level' in t['summary'] for t in analysis['teams'])
+
+
+def test_two_line_collapse_reports_chase_equation_and_real_match_context():
+    plan,teams=fixture()
+    for balls,runs,wickets in [(72,80,0),(90,100,3),(111,151,4)]:
+        card=copy.deepcopy(plan['scorecards'][1]);card['score']=f'{runs}/{wickets} ({balls//6}.{balls%6})'
+        plan['timeline'].append(dict(batting='opp',over=f'OV {(balls+5)//6}',scorecards=[card]))
+    analysis=analyze(plan,teams)
+    fact=analysis['collapses'][0]
+    assert fact['side']=='opp' and len(fact['lines'])==2
+    assert 'still needed 51 from 30 balls with 7 wickets left' in fact['lines'][1]
+    assert analysis['cricketFact']['title']=='2024 T20 World Cup final'
+    assert analysis['cricketFact']['source'].startswith('https://www.icc-cricket.com/')

@@ -83,6 +83,33 @@ def wicket_spell(points):
     return max(candidates,key=lambda p:(p['wickets'],-p['runs']),default=None)
 
 
+def collapse_fact(plan,side,name,target=None):
+    points=innings_snapshots(plan,side); spell=wicket_spell(points)
+    if not spell or spell['wickets']<3:return None
+    before,after=points[spell['start']],points[spell['end']]
+    line1=f"{name} lost {spell['wickets']} wickets for {spell['runs']} runs between {overs_text(spell['start'])} and {overs_text(spell['end'])} overs."
+    remaining=max(0,plan.get('overs',20)*6-spell['end'])
+    if after['wickets']==10:
+        line2=f"That ended the innings at {after['runs']} all out."
+    elif target is not None and after['runs']<target:
+        line2=f"At {after['runs']}/{after['wickets']}, they still needed {target-after['runs']} from {remaining} balls with {10-after['wickets']} wickets left."
+    else:
+        line2=f"The score moved from {before['runs']}/{before['wickets']} to {after['runs']}/{after['wickets']}, leaving {10-after['wickets']} wickets and {remaining} balls."
+    return dict(side=side,lines=[line1,line2])
+
+
+HISTORICAL_COLLAPSES={
+    't20':dict(title='2024 T20 World Cup final',lines=[
+        'South Africa needed 30 from the last 30 balls against India.',
+        'India won by seven runs after dismissing Klaasen, Jansen and Miller in the closing overs.'],
+        source='https://www.icc-cricket.com/tournaments/t20cricketworldcup/news/live-india-and-south-africa-face-off-in-t20-world-cup-final'),
+    'odi':dict(title='Australia v Afghanistan, 2023 World Cup',lines=[
+        'Australia were 91/7 while chasing 292.',
+        'Maxwell finished 201 not out and Australia won, showing that a collapse does not always decide the result.'],
+        source='https://www.icc-cricket.com/tournaments/cricketworldcup/news/maxwell-miracle-incredible-stats-behind-one-of-the-greatest-odi-knocks-ever'),
+}
+
+
 def phase_notes(plan,side,final):
     points=innings_snapshots(plan,side); notes=[]
     limits=[0,60,240,300] if plan.get('overs')==50 else [0,36,90,120]
@@ -98,7 +125,7 @@ def review(plan,teams,names,venue,*,external=False):
     cards={c['side']:c for c in plan['scorecards']}
     totals={side:innings_totals(card) for side,card in cards.items()}
     metrics={}; reports=[]
-    winner=plan['result']['winner']; loser='opp' if winner=='you' else 'you'
+    winner=plan['result']['winner']
     first=plan['firstBatting']; chase='opp' if first=='you' else 'you'
     target=totals[first]['runs']+1
     tied=bool(plan['result'].get('tieResolution'))
@@ -140,10 +167,11 @@ def review(plan,teams,names,venue,*,external=False):
                  f"Top three: {sum(p['runs'] for p in bat[:3])} runs. Positions 8–11: {sum(p['runs'] for p in bat[7:])} runs." if any(p['balls'] or p['runs'] for p in bat[7:]) else f"Top three: {sum(p['runs'] for p in bat[:3])} runs. Positions 8–11 did not face a ball or score.",
                  f"XI roles: {pace} specialist pace bowlers, {spin} specialist spinners, {ar} all-rounder(s). Role counts alone do not establish which XI is better balanced."]
         details.extend(phase_notes(plan,side,m))
-        if not external:
-            batting=round(sum(skills(p)['batting'] for p in squad[:7])/max(1,min(7,len(squad))),1)
-            bowling=round(sum(skills(teams[side][k])['bowling'] for k in ['ar','b1','b2','b3','b4'])/5,1)
-            details.append(f"Model inputs: first-seven batting strength {batting}; five-bowler strength {bowling}. These game estimates affect probabilities, not guaranteed outcomes.")
+        if not external and plan.get('model',{}).get('version')=='local-context-v1':
+            context=plan['model']['teams'][side]
+            details.append(f"Simulation balance: {context['battingDepth']} batting-capable roles, {context['bowlingOptions']} bowling options, {context['openersInOpeningPair']}/2 opening roles in the opening pair. Bowling choices account for over limits, pace/spin phase fit and pitch. Remaining batting depth, settling in and chase requirements affect scoring risk; simulated daily form adds variation. These are game rules, not proof of the cause of this result.")
+        elif external:
+            details.append('The external engine controls delivery probabilities and bowling choices; local balance bonuses are not added to its result.')
         evidence=[dict(name=p['name'],squad=p.get('squad',''),rating=p['rating'],**{k:v for k,v in p.get('ratingEvidence',{}).items() if k in ('note','source')}) for p in squad]
         reports.append(dict(side=side,name=names[side],outcome='Won' if winner==side else 'Lost',summary=summary,notes=notes,details=details,players=evidence))
     decisive_text=f"{names[winner]} won {plan['result']['margin']}. "
@@ -154,12 +182,10 @@ def review(plan,teams,names,venue,*,external=False):
             decisive_text+=f"They reached the target of {target} in {overs_text(totals[chase]['balls'])} overs."
         else:
             decisive_text+=f"{names[chase]} finished {totals[chase]['runs']}/{totals[chase]['wickets']} chasing {target}."
-        spell=wicket_spell(innings_snapshots(plan,loser))
-        if spell:
-            decisive_text+=f" {names[loser]} lost {spell['wickets']} wickets for {spell['runs']} runs between {overs_text(spell['start'])} and {overs_text(spell['end'])} overs."
+    collapses=[] if tied else [fact for side in ('you','opp') if (fact:=collapse_fact(plan,side,names[side],target if side==chase else None))]
     public_venue={k:venue[k] for k in ('id','name','city','fact','source','condition')}
     condition_note='Venue shown for match atmosphere; this engine response does not provide evidence that the venue altered its probabilities.' if external else f"Fantasy surface settings: boundary weight ×{venue['boundary']}, pace wicket chance ×{venue['pace']}, spin wicket chance ×{venue['spin']}. These are game-design assumptions, not measured pitch forecasts; the same rules apply to both teams."
     plan['venue']=public_venue
-    plan['result']['analysis']=dict(decisive=decisive_text,teams=reports,metrics=metrics,venue=public_venue,conditions=condition_note,
+    plan['result']['analysis']=dict(decisive=decisive_text,collapses=collapses,cricketFact=HISTORICAL_COLLAPSES['odi' if plan.get('overs')==50 else 't20'] if collapses else None,teams=reports,metrics=metrics,venue=public_venue,conditions=condition_note,
         method='Based on the saved scorecard. Contributions and scoring spells describe this match; they do not prove a player or selection caused the loss. Historical season evidence and model assumptions are shown separately.')
     return plan

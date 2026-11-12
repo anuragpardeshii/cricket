@@ -110,30 +110,38 @@ def tick():
 
 def _simulate_once(you,opp,you_order=None,opp_order=None,team_names=None,overs=20,venue=None):
     import copy
-    from .match_review import skills
+    from .team_context import composition,choose_bowler,delivery_model
     first=rng.choice(['you','opp']); second='opp' if first=='you' else 'you'
     teams={'you':you,'opp':opp}; scores={'you':'—','opp':'—'}; timeline=[]; scorecards=[]
     first_runs=0
+    orders={'you':you_order or [s['id'] for s in SLOTS],'opp':opp_order or [s['id'] for s in SLOTS]}
+    profiles={side:composition(xi,orders[side]) for side,xi in teams.items()}
+    form={side:{p['id']:max(-6,min(6,rng.gauss(0,3))) for p in xi.values()} for side,xi in teams.items()}
     for num,side in enumerate([first,second],1):
         highlights=MatchHighlights(overs); partnership=0
         other_side='opp' if side=='you' else 'you'
         order=(you_order if side=='you' else opp_order) or [s['id'] for s in SLOTS]
         batters=[teams[side][slot] for slot in order]
         fielders=list(teams[other_side].values())
-        bowlers=[teams[other_side][k] for k in ['ar','b1','b2','b3','b4']]
+        bowlers=[p for p in fielders if p['role'] in ('AR','PACE','SPIN')]
+        if len(bowlers)<5:
+            bowlers+=sorted((p for p in fielders if p not in bowlers),key=lambda p:p['rating'],reverse=True)[:5-len(bowlers)]
+        used={p['id']:0 for p in bowlers}; previous=None
         batting=[dict(id=p['id'],name=p['name'],runs=0,balls=0,fours=0,sixes=0,dismissal='did not bat',side=side) for p in batters]
         bowling=[dict(id=p['id'],name=p['name'],balls=0,runs=0,wickets=0,maidens=0,side=other_side) for p in bowlers]
         runs=wickets=balls=0; striker=0; non=1; nxt=2
         batting[0]['dismissal']=batting[1]['dismissal']='not out'
         for over in range(overs):
             start=runs; lines=[]; deliveries=[]; contributions={}; dismissals=[]; fell=False
-            bowler=bowlers[over%5]; bc=bowling[over%5]; over_wickets=0
+            bowler=choose_bowler(bowlers,used,previous,over,overs,venue,form[other_side],rng);previous=bowler['id']
+            bc=next(p for p in bowling if p['id']==bowler['id']); over_wickets=0
             for ball in range(6):
                 if wickets==10 or (num==2 and runs>first_runs): break
                 batter=batters[striker]; card=batting[striker]
+                wicket_chance,scoring_weights=delivery_model(batter,bowler,position=striker,faced=card['balls'],remaining_batters=[batters[non],*batters[nxt:]],wickets=wickets,runs=runs,balls=balls,overs=overs,target=first_runs+1 if num==2 else None,venue=venue,bat_form=form[side][batter['id']],bowl_form=form[other_side][bowler['id']])
                 card['balls']+=1; balls+=1; bc['balls']+=1
                 contribution=contributions.setdefault(batter['name'],dict(runs=0,sixes=0,fours=0))
-                if rng.random()<max(.02,min(.095,(.048+(skills(bowler)['bowling']-skills(batter)['batting'])*.0018)*(venue.get('spin',1) if bowler['role']=='SPIN' else venue.get('pace',1)))):
+                if rng.random()<wicket_chance:
                     wickets+=1; bc['wickets']+=1; over_wickets+=1; fell=True
                     fielder=rng.choice(fielders); caught=rng.random()<.7
                     card['dismissal']=f"c {fielder['name']} b {bowler['name']}" if caught else f"b {bowler['name']}"
@@ -143,7 +151,7 @@ def _simulate_once(you,opp,you_order=None,opp_order=None,team_names=None,overs=2
                     if nxt<11:
                         striker=nxt; nxt+=1; batting[striker]['dismissal']='not out'
                 else:
-                    scored=rng.choices([0,1,2,4,6],[30,36,9,max(2,13+(skills(batter)['batting']-85)*.5)*venue.get('boundary',1),max(1,5+(skills(batter)['batting']-85)*.35)*venue.get('boundary',1)])[0]
+                    scored=rng.choices([0,1,2,4,6],scoring_weights)[0]
                     runs+=scored; card['runs']+=scored; bc['runs']+=scored; contribution['runs']+=scored; deliveries.append(str(scored))
                     partnership+=scored
                     if scored in (4,6):
@@ -174,7 +182,7 @@ def _simulate_once(you,opp,you_order=None,opp_order=None,team_names=None,overs=2
     result=dict(winner=winner,margin=margin,mvp=award(mvp,f"{mvp['runs']} runs · {mvp['wickets']} wickets"),highestScorer=award(top,f"{top['runs']} ({top['balls']})"),bestBowler=award(best_bowler,f"{best_bowler['wickets']}/{best_bowler['runs']}"),yourScore=scores['you'],opponentScore=scores['opp'])
     timeline[-1]['headline'],timeline[-1]['text']=describe_finish(result,scorecards,team_names or {'you':'Your team','opp':'AI'})
     timeline[-1]['kind']='result'
-    return dict(timeline=timeline,result=result,firstBatting=first,scorecards=scorecards,performances=list(performances.values()),overs=overs)
+    return dict(timeline=timeline,result=result,firstBatting=first,scorecards=scorecards,performances=list(performances.values()),overs=overs,model=dict(version='local-context-v1',teams=profiles))
 
 def simulate(you,opp,you_order=None,opp_order=None,team_names=None,overs=20):
     from .match_review import choose_venue,decisive,review

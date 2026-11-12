@@ -236,3 +236,40 @@ Sources: [ICC 1996 tournament figures](https://www.icc-cricket.com/news/1996-cri
 [Mumbai Indians’ Bumrah season record](https://www.mumbaiindians.com/news/from-2013-2024-the-jasprit-bumrah-road-to-greatness),
 [IPL venues](https://www.iplt20.com/venues), and the ICC venue links stored in
 `backend/app/match_review.py`. No Bumrah 2011 IPL card was found; his first IPL season was 2013.
+
+## Team balance in the local simulator
+
+The local-context-v1 model samples every delivery; an XI's average rating never
+selects the winner. Individual role-adjusted skills remain inputs, alongside:
+
+- Batting order and a small opening-role fit effect.
+- Remaining batting depth: an exposed tail reduces discretionary risk, while
+  a demanding chase can still force attacking shots.
+- Settling in, the required scoring rate and late-innings intent.
+- Separate ODI/T20 base dismissal probabilities (0.034/0.048 before skill and
+  context adjustments), so ODI innings do not inherit T20 risk unchanged.
+- All available pace/spin/all-rounder bowling options, selected for phase and
+  pitch fit within four-over T20 or ten-over ODI quotas, without consecutive overs.
+- Bounded, independently sampled player form for that match.
+
+These are explicit fantasy-game rules, not statistically verified chemistry or
+player personality traits. No bonus is awarded for sharing a nationality, franchise,
+or era. Pace/spin phase effects use card roles rather than unrecorded career splits.
+A fuller bowling attack provides choices; it does not receive an automatic win bonus.
+The saved model version and team composition accompany each new local plan.
+
+A collapse requires at least three wickets within 18 legal balls, with recorded
+start/end scores. Its two lines give the wicket burst and resulting score/chase
+requirement; they can also describe a winning team's recovered collapse. Optional
+historical examples link to ICC reports of the 2024 T20 final and Australia's 2023
+recovery against Afghanistan, separately from the simulated match evidence.
+Old saved matches retain their original simulation. Engine-driven matches keep the
+external engine's pitch, matchups, intent, settling-in, form and captain model;
+local adjustments are not stacked onto its results.
+
+Local model sanity checks (100 fixed seeds per setting; a single representative
+85-rated XI versus a 90-rated XI on the balanced venue, not real-world calibration):
+the higher-rated XI won 75 T20 matches with its normal order and 52 with specialist
+bowlers promoted to the top. The ODI baseline check averaged 287.8 first-innings
+runs, with a wide 53–545 range. These checks demonstrate order sensitivity and
+possible upsets; they do not establish statistically calibrated cricket forecasts.
