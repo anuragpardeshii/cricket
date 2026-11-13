@@ -25,6 +25,22 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await expect(page.getByText('0/2 players ready',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Edit name',exact:true})).toBeEnabled();
  await page.getByRole('button',{name:/Room chat/}).click();await page.getByRole('textbox',{name:'Chat message'}).fill('<script>alert(1)</script> Hello Bob');await page.getByRole('button',{name:'Send',exact:true}).click();
  await expect(page.getByRole('log')).toContainText('<script>alert(1)</script> Hello Bob');await expect(page.locator('aside script')).toHaveCount(0);
+ const chatInput=page.getByRole('textbox',{name:'Chat message'});
+ await chatInput.fill('Great pick');
+ await chatInput.evaluate((el:HTMLInputElement)=>el.setSelectionRange(6,6));
+ await page.getByRole('button',{name:'Add emoji',exact:true}).click();
+ await page.getByRole('button',{name:'Cricket',exact:true}).click();
+ await expect(chatInput).toHaveValue('Great 🏏pick');
+ await expect(chatInput).toBeFocused();
+ await page.getByRole('button',{name:'Send',exact:true}).click();
+ await expect(page.getByRole('log')).toContainText('Great 🏏pick');
+ await chatInput.fill('x'.repeat(300));
+ await page.getByRole('button',{name:'Add emoji',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Cricket',exact:true})).toBeDisabled();
+ await page.getByRole('button',{name:'Add emoji',exact:true}).press('Escape');
+ await expect(page.getByRole('group',{name:'Choose an emoji'})).toHaveCount(0);
+ await chatInput.fill('');
+
  room.host=false;room.version++;broadcast();
  await expect(page.getByRole('button',{name:'Match settings',exact:true})).toHaveCount(0);
  room.host=true;room.version++;broadcast();
