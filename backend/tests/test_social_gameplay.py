@@ -102,7 +102,9 @@ def test_nonhost_rematch_keeps_host_code_and_both_rounds_history():
     first=a.get(path).json();first_ids={m['id'] for m in first['state']['matches']}
     result=b.post(path+'/rematch',json={});assert result.status_code==200,result.text
     assert result.json()['code']==room['code']
-    same=a.get(path).json();assert same['host'] and same['state']['phase']=='lobby'
+    same=a.get(path).json();assert same['host'] and same['state']['phase']=='complete'
+    assert same['state']['rematchCode']==room['code']
+    assert {m['id'] for m in same['state']['matches']}==first_ids
     assert not b.get(path).json()['host']
     assert a.post(path+'/rematch',json={}).json()==result.json()
     complete_room(room['id'])
@@ -128,3 +130,57 @@ def test_review_counts_runouts_without_crediting_bowlers():
     assert 'needing 7 more runs to win' in analysis['teams'][1]['summary']
     assert not any(n.startswith('Overs ') for n in analysis['teams'][1]['details'])
     assert 'between' not in analysis['decisive']  # Sparse snapshots cannot prove a short spell.
+
+
+def test_rematch_delegates_after_minute_and_creator_restores_host_on_return():
+    from test_community import complete_room
+    from app import rooms
+    a,b=client(),client('bob');room=room_for(a,2);path='/api/rooms/'+room['id']
+    b.post('/api/rooms/join',json={'code':room['code']});complete_room(room['id'])
+    b.post(path+'/rematch',json={})
+    lobby=b.post(path+'/ready',json={'ready':True}).json()
+    assert not lobby['host']
+    assert b.post(path+'/actions',json={'action':'start','version':lobby['version']}).status_code==403
+    with Session.begin() as session:
+        row=session.get(Room,room['id']);state=copy.deepcopy(row.state)
+        opened=state['rematchOpenedAt'];creator=row.owner_id
+        assert rooms.host_user(row,opened+59)==creator
+        assert rooms.host_user(row,opened+60)!=creator
+        state['rematchOpenedAt']-=61;row.state=state;row.version+=1
+    lobby=b.get(path).json();assert lobby['host'] and lobby['state']['temporaryHost']
+    assert a.get(path).json()['state']['phase']=='complete'
+    started=b.post(path+'/actions',json={'action':'start','version':lobby['version']})
+    assert started.status_code==200,started.text
+    assert a.get(path).json()['state']['phase']=='complete'
+    # Reconnection continues the saved review even after the next draft starts.
+    assert a.post(path+'/connection',json={}).status_code==200
+    with Session() as session:
+        row=session.get(Room,room['id']);assert row.owner_id==creator
+        pending=next(m for m in row.state['members'] if m['uid']==creator)
+        assert pending['is_ai'] and pending.get('reviewRound')==1
+    assert a.post(path+'/rematch',json={}).status_code==200
+    returned=a.get(path).json();assert returned['host'] and returned['state']['phase']=='draft'
+    assert not b.get(path).json()['host']
+    with Session() as session:
+        row=session.get(Room,room['id'])
+        assert not next(m for m in row.state['members'] if m['uid']==creator)['is_ai']
+        assert row.state['reviewSnapshots']=={}
+
+
+def test_review_survives_more_than_one_rematch_and_snapshot_storage_is_bounded():
+    from test_community import complete_room
+    a,b=client(),client('bob');room=room_for(a,2);path='/api/rooms/'+room['id']
+    b.post('/api/rooms/join',json={'code':room['code']});complete_room(room['id'])
+    original=a.get(path).json()['state']['matches']
+    b.post(path+'/rematch',json={})
+    complete_room(room['id'])
+    assert b.post(path+'/rematch',json={}).status_code==200
+    review=a.get(path).json()
+    assert review['state']['matches']==original
+    assert review['state']['rematchCode']==room['code']
+    with Session() as session:
+        row=session.get(Room,room['id'])
+        assert set(row.state['reviewSnapshots'])=={'1'}
+        assert all('reviewSnapshots' not in v for v in row.state['reviewSnapshots'].values())
+    assert a.post('/api/rooms/join',json={'code':room['code']}).json()['host']
+    assert a.get(path).json()['state']['phase']=='lobby'

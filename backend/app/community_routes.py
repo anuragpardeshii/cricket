@@ -1,6 +1,7 @@
 import copy
 import itertools
 import secrets
+import time
 from datetime import timedelta
 from types import SimpleNamespace
 from typing import Literal
@@ -162,7 +163,11 @@ def friendly(group_id:UUID,body:CupBody,auth=Depends(account_required),session=D
 def rematch(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     from .room_routes import locked
     room=locked(session,room_id,auth.user_id)
-    # Repeated/concurrent clicks return the reset lobby, without another reset.
+    ts=time.time()
+    person=next(m for m in room.state['members'] if m['uid']==auth.user_id)
+    if person.get('reviewRound') is not None:
+        rooms.join_rematch(room,auth.user_id,ts);session.commit()
+        return dict(code=room.code)
     if room.state['phase']=='lobby' and room.state.get('rematchOf'):
         return dict(code=room.code)
     if room.state['phase']!='complete': raise HTTPException(409,'Finish this tournament first')
@@ -172,10 +177,27 @@ def rematch(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
     host=next(m for m in old['members'] if m['uid']==room.owner_id)
     body=SimpleNamespace(format=old['format'],capacity=old['capacity'],pick_seconds=old['seconds'],competition=old.get('competition'),name=host['name'])
     state=rooms.new_state(room.owner_id,body)
-    state['members']=[{**rooms.member(m['uid'],m['name']),'id':m['id']} for m in old['members'] if m['uid'] is not None]
+    previous_round=old.get('roundNumber',1)
+    snapshots=copy.deepcopy(old.get('reviewSnapshots',{}))
+    saved=copy.deepcopy({k:v for k,v in old.items() if k not in ('reviewSnapshots','rematchCode')})
+    for m in saved['members']:m.pop('reviewRound',None)
+    for match in saved['matches']:
+        if match.get('plan'):
+            # Finished reviews retain every commentary entry, but no longer need
+            # a full scorecard copy for each over. The final card stays on plan.
+            for event in match['plan']['timeline']:event.pop('scorecards',None)
+    snapshots[str(previous_round)]=saved
+    state['members']=[]
+    for m in old['members']:
+        if m['uid'] is None:continue
+        entry={**rooms.member(m['uid'],m['name']),'id':m['id']}
+        if m['uid']==auth.user_id:entry['rematchJoinedAt']=ts
+        else:entry['reviewRound']=m.get('reviewRound',previous_round)
+        state['members'].append(entry)
+    needed={str(m['reviewRound']) for m in state['members'] if m.get('reviewRound') is not None}
     state.update(preset=old.get('preset'),groupId=old.get('groupId'),rematchOf=room.id,
-                 roundNumber=old.get('roundNumber',1)+1,removedUsers=old.get('removedUsers',[]),chat=old.get('chat',[]))
-    # The scored cup fixture was archived above; a rematch is a friendly.
+                 roundNumber=previous_round+1,removedUsers=old.get('removedUsers',[]),chat=old.get('chat',[]),
+                 rematchOpenedAt=ts,reviewSnapshots={k:v for k,v in snapshots.items() if k in needed})
     room.state=state; room.version+=1
     audit(session,'room.rematch',auth.user_id,room.id); session.commit()
     return dict(code=room.code)

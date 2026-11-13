@@ -33,7 +33,7 @@ def access(session, room_id, session_hash):
     room = session.get(Room, room_id)
     if not room or auth.user_id in room.state.get('removedUsers', []):
         raise HTTPException(403, 'You have left or been removed from this room.')
-    member = next((m for m in room.state['members'] if m['uid'] == auth.user_id and not m.get('departed') and not m.get('is_ai')), None)
+    member = next((m for m in room.state['members'] if m['uid'] == auth.user_id and not m.get('departed') and (not m.get('is_ai') or m.get('reviewRound') is not None)), None)
     if not member:
         raise HTTPException(403, 'Room membership required')
     return auth, room, member

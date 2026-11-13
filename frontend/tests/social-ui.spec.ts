@@ -108,6 +108,13 @@ test('completed review and same-room rematch',async({page})=>{
  await expect(page.getByText('Scorecard details & team composition',{exact:true})).toHaveCount(0);
  await expect(page.getByRole('region',{name:'Match analysis'}).locator('p')).toHaveCount(3);
  await expect(page.getByRole('link',{name:'Wankhede Stadium'})).toHaveAttribute('href',/iplt20.com/);
+ // Another player opens the rematch; this viewer still receives their saved result.
+ room.state.rematchCode='ABCD';room.version++;broadcast();
+ await expect(page.getByRole('button',{name:/Your rematch is waiting/})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Waiting room'})).toHaveCount(0);
+ await expect(page.getByRole('heading',{name:'Inside the result'})).toBeVisible();
+ await page.reload();
+ await expect(page.getByRole('heading',{name:'Inside the result'})).toBeVisible();
  await page.screenshot({path:'test-results/match-review.png',fullPage:true});
  await page.getByRole('button',{name:'Play again',exact:true}).click();await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'ABCD',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Start match',exact:true})).toBeVisible();

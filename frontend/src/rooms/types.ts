@@ -3,7 +3,7 @@ import type { ScorecardData } from '../components/Scorecard';
 import type { MatchResult, TimelineEntry, Squad } from '../game/types';
 import type { DraftRules } from '../components/DraftProgress';
 
-export type Member = TeamMember & { lastRoll?: {country:string;tournament:string}; lastSelected?: string|null; rerollsUsed?: number; ready?: boolean };
+export type Member = TeamMember & { reviewRound?: number; lastRoll?: {country:string;tournament:string}; lastSelected?: string|null; rerollsUsed?: number; ready?: boolean };
 export type RoomMatch = {
   id: string; round: number; a: string | null; b: string | null; status: string;
   venue?: {name:string;city:string};
@@ -14,7 +14,7 @@ export type RoomMatch = {
 export type Room = {
   visibility: 'public' | 'private'; id: string; code: string; version: number; serverTime: number; you: string; host: boolean;
   state: DraftRules & {
-    roundNumber?: number;
+    roundNumber?: number; hostMemberId?: string; temporaryHost?: boolean; rematchOpenedAt?: number;
     chat?: {id:string;sender:string;name:string;text:string;sentAt:number}[];
     preset?: string | null; groupId?: string | null; cupId?: string | null; rematchCode?: string;
     rolled?: Squad & { allowedSlots: Record<string, string[]>; unavailableIds?: string[] } | null;

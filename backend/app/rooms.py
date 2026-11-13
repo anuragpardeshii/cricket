@@ -24,6 +24,28 @@ def member(user_id,name): return dict(id=uid(),uid=user_id,userId=user_id,name=n
 def new_state(user_id,body):
     return dict(phase='lobby',format=body.format,capacity=body.capacity,seconds=body.pick_seconds,
                 competition=getattr(body,'competition',None),edition=None,members=[member(user_id,body.name)],turn=0,draftRevision=0,deadline=None,matches=[],taken=[],champion=None,rolled=None,**draft_turns.initial())
+def host_user(room,ts):
+    """The creator retains ownership; only rematch control is temporarily delegated."""
+    creator=next((m for m in room.state['members'] if m['uid']==room.owner_id),None)
+    if not creator or creator.get('reviewRound') is None:return room.owner_id
+    if ts<room.state.get('rematchOpenedAt',ts)+60:return room.owner_id
+    joined=[m for m in room.state['members'] if m['uid'] is not None and m.get('reviewRound') is None and not m.get('is_ai')]
+    return min(joined,key=lambda m:m.get('rematchJoinedAt',0))['uid'] if joined else room.owner_id
+
+
+def join_rematch(room,user_id,ts):
+    state=copy.deepcopy(room.state)
+    person=next(m for m in state['members'] if m['uid']==user_id)
+    if person.get('reviewRound') is None:return False
+    person.pop('reviewRound',None);person['rematchJoinedAt']=ts;person['is_ai']=False
+    needed={str(m['reviewRound']) for m in state['members'] if m.get('reviewRound') is not None}
+    state['reviewSnapshots']={k:v for k,v in state.get('reviewSnapshots',{}).items() if k in needed}
+    if state['phase']=='draft' and state['members'][state['turn']]['id']==person['id']:
+        state['deadline']=ts+state['seconds'];state['draftRevision']=state.get('draftRevision',0)+1
+    room.state=state;room.version+=1
+    return True
+
+
 def eligible(state,players):
     players=pool_players(state,players)
     teams=[m['xi'] for m in state['members']]
@@ -39,12 +61,14 @@ def pool_players(state,players):
 
 def start(state,ts):
     if state['phase']!='lobby': raise HTTPException(409,'Room already started')
-    humans=[m for m in state['members'] if m['uid'] is not None]
+    humans=[m for m in state['members'] if m['uid'] is not None and m.get('reviewRound') is None]
     if state.get('cupId') and (len(humans)!=2 or {m['uid'] for m in humans}!=set(state['allowedUsers'])):
         raise HTTPException(409,'Both scheduled players must join this cup fixture; AI cannot replace them')
     if not humans or not all(m.get('ready',False) for m in humans):
         raise HTTPException(409,'Every human player must be ready before the host can start')
-    # Bots are room members without a login identity; they cannot authenticate or act.
+    for person in state['members']:
+        if person.get('reviewRound') is not None:person['is_ai']=True
+    # Fill unoccupied seats with bots; returning reviewers keep their reserved seats.
     number=1
     while len(state['members'])<state['capacity']:
         name=f'AI {number}'; number+=1
@@ -105,7 +129,7 @@ def pick(state,players,ts,player_id=None,slot_id=None,automatic=False):
     state['deadline']=ts+(AI_PICK_SECONDS if state['members'][state['turn']].get('is_ai') else state['seconds'])
 
 def kick_threshold(state):
-    humans=sum(m['uid'] is not None for m in state['members'])
+    humans=sum(m['uid'] is not None and m.get('reviewRound') is None for m in state['members'])
     return min(3,max(1,math.ceil(humans/2)))
 
 def forfeit_match(state,match,ts):
@@ -157,6 +181,8 @@ def vote_kick(room,state,voter_id,target_id,ts):
     voter=next(m for m in state['members'] if m['uid']==voter_id)
     target=next((m for m in state['members'] if m['id']==target_id and m['uid'] is not None),None)
     if not target or target['id']==voter['id']: raise HTTPException(409,'Choose another active human player')
+    if voter.get('reviewRound') is not None or target.get('reviewRound') is not None:
+        raise HTTPException(409,'Players reviewing a previous result are not part of rematch voting')
     votes=state.setdefault('votes',{}).setdefault(target_id,[])
     if voter['id'] in votes: raise HTTPException(409,'You already voted to remove this player')
     votes.append(voter['id'])
@@ -258,7 +284,17 @@ def advance(state,players,ts):
 def project(room,user_id,ts):
     # Hidden simulations contain every scorecard snapshot. Do not clone them for
     # every viewer on every socket heartbeat just to discard them afterwards.
-    state=copy.deepcopy({k:v for k,v in room.state.items() if k!='matches'})
+    current=next((m for m in room.state['members'] if m['uid']==user_id),None)
+    if not current:raise HTTPException(404,'Room not found')
+    review_round=current.get('reviewRound')
+    saved=room.state.get('reviewSnapshots',{}).get(str(review_round)) if review_round is not None else None
+    if saved:
+        from types import SimpleNamespace
+        prior=project(SimpleNamespace(id=room.id,code=room.code,visibility=room.visibility,version=room.version,owner_id=room.owner_id,state=saved),user_id,ts)
+        prior['state']['rematchCode']=room.code
+        prior['host']=host_user(room,ts)==user_id
+        return prior
+    state=copy.deepcopy({k:v for k,v in room.state.items() if k not in ('matches','reviewSnapshots')})
     state['matches']=[]
     viewer=next((m for m in state['members'] if m['uid']==user_id),None)
     if not viewer: raise HTTPException(404,'Room not found')
@@ -269,6 +305,9 @@ def project(room,user_id,ts):
             state['rolled']={k:state['rolled'][k] for k in ('country','tournament')}
             state['rolled'].update(players=[],allowedSlots={},unavailableIds=[])
     state.pop('lobbyDeadline',None)
+    active_host=host_user(room,ts)
+    state['hostMemberId']=next((m['id'] for m in state['members'] if m['uid']==active_host),None)
+    state['temporaryHost']=active_host!=room.owner_id
     votes=state.pop('votes',{})
     state.pop('removedUsers',None)
     state.pop('allowedUsers',None)
@@ -293,7 +332,7 @@ def project(room,user_id,ts):
         else:
             match.pop('winner',None)
             match['scorecards']=copy.deepcopy(plan['timeline'][count-1]['scorecards']) if count else []
-    return dict(id=room.id,code=room.code,visibility=room.visibility or 'private',version=room.version,serverTime=ts,you=viewer['id'],host=room.owner_id==user_id,state=state,standings=standings(room.state))
+    return dict(id=room.id,code=room.code,visibility=room.visibility or 'private',version=room.version,serverTime=ts,you=viewer['id'],host=host_user(room,ts)==user_id,state=state,standings=standings(room.state))
 
 def tick():
     with Session() as session:

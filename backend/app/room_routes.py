@@ -77,7 +77,9 @@ def join(body:JoinRoom,request:Request,auth=Depends(authenticated),session=Depen
         from .community_routes import group_for
         group_for(session,state['groupId'],auth.user_id)
     if auth.user_id in state.get('removedUsers',[]): raise HTTPException(403,'You have exited or been removed from this room.')
-    if any(m['uid']==auth.user_id for m in state['members']): return rooms.project(room,auth.user_id,time.time())
+    if any(m['uid']==auth.user_id for m in state['members']):
+        if rooms.join_rematch(room,auth.user_id,time.time()):session.commit()
+        return rooms.project(room,auth.user_id,time.time())
     if state['phase'] in ['draft','live']: raise HTTPException(409,'Game in progress. New players cannot join after the draft starts.')
     if state['phase']=='complete': raise HTTPException(409,'This tournament has finished. Join another room or create your own.')
     if state['phase']!='lobby': raise HTTPException(409,'This room has expired. Join another room or create your own.')
@@ -87,7 +89,9 @@ def join(body:JoinRoom,request:Request,auth=Depends(authenticated),session=Depen
     name=preferred; suffix=2
     while any(m['name'].lower()==name.lower() for m in state['members']):
         name=f"Player {len(state['members'])+suffix}" if user.is_guest else f"{preferred[:20]} {suffix}"; suffix+=1
-    state['members'].append(rooms.member(auth.user_id,name)); room.state=state; room.version+=1
+    newcomer=rooms.member(auth.user_id,name)
+    if state.get('rematchOpenedAt'):newcomer['rematchJoinedAt']=time.time()
+    state['members'].append(newcomer); room.state=state; room.version+=1
     audit(session,'room.joined',auth.user_id,room.id); session.commit(); return rooms.project(room,auth.user_id,time.time())
 @router.get('/public')
 def public_rooms(page:int=Query(1,ge=1,le=10000),page_size:int=Query(10,ge=1,le=25),session=Depends(db)):
@@ -108,6 +112,7 @@ def ready(room_id:UUID,body:Ready,auth=Depends(authenticated),session=Depends(db
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state)
     if state['phase']!='lobby': raise HTTPException(409,'Readiness is locked once the draft starts')
     person=next(m for m in state['members'] if m['uid']==auth.user_id)
+    if person.get('reviewRound') is not None:raise HTTPException(409,'Join the rematch before readying up')
     if person.get('ready',False)!=body.ready:
         person['ready']=body.ready; room.state=state; room.version+=1
         audit(session,'room.ready',auth.user_id,room.id); session.commit()
@@ -133,6 +138,8 @@ def get(room_id:UUID,auth=Depends(authenticated),session=Depends(db)):
 @router.post('/{room_id}/actions')
 def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id); state=copy.deepcopy(room.state); ts=time.time()
+    if next(m for m in state['members'] if m['uid']==auth.user_id).get('reviewRound') is not None:
+        raise HTTPException(409,'Join the rematch before playing')
     your_pick=body.action in ['roll','pick'] and state['phase']=='draft' and state['members'][state['turn']]['uid']==auth.user_id
     needs_pool=state['phase']=='draft' and (ts>=state['deadline'] or your_pick)
     players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if needs_pool else []
@@ -145,7 +152,7 @@ def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depe
         if state.get('draftRevision',0)!=body.draft_revision: raise HTTPException(409,'The draft advanced. Try again.')
     elif room.version!=body.version: raise HTTPException(409,'Room changed. Try again.')
     if body.action=='start':
-        if room.owner_id!=auth.user_id: raise HTTPException(403,'Only the host can start')
+        if rooms.host_user(room,ts)!=auth.user_id: raise HTTPException(403,'Only the host can start')
         if state.get('cupId'):
             from .db import Cup
             cup=session.scalar(select(Cup).where(Cup.id==state['cupId']).with_for_update())
@@ -230,7 +237,7 @@ class RoomSettings(CreateRoom):
 @router.post('/{room_id}/settings')
 def settings(room_id:UUID,body:RoomSettings,auth=Depends(authenticated),session=Depends(db)):
     room=locked(session,room_id,auth.user_id)
-    if room.owner_id!=auth.user_id: raise HTTPException(403,'Only the host can change settings')
+    if rooms.host_user(room,time.time())!=auth.user_id: raise HTTPException(403,'Only the host can change settings')
     if room.state['phase']!='lobby': raise HTTPException(409,'Settings are locked after the draft starts')
     if room.state.get('cupId'): raise HTTPException(409,'Scheduled cup settings are fixed')
     if room.version!=body.version: raise HTTPException(409,'Room changed; review settings again')
