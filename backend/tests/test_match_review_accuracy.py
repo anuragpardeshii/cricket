@@ -141,3 +141,24 @@ def test_practice_response_upgrades_legacy_notes_without_mutating_game():
     response=view(game)
     assert 'you opener' in response['state']['match']['result']['analysis']['teams'][0]['notes'][0]
     assert game.state==original
+
+
+def test_compact_review_compares_actual_figures_and_never_invents_home_bonus():
+    plan,teams=fixture()
+    teams['you']['op1'].update(name='Gautam Gambhir',squad='KOLKATA KNIGHT RIDERS 2015')
+    analysis=match_review.review(plan,teams,dict(you='A',opp='B'),match_review.VENUES[2])['result']['analysis']
+    sentences=analysis['sentences']
+    assert len(sentences)==3
+    assert 'A fell behind on scoring tempo' in sentences[0] and "B's 8.16" in sentences[0]
+    assert 'Active bowler' in sentences[1] and 'compared with' in sentences[1]
+    assert 'Gautam Gambhir' in sentences[2] and 'without a franchise bonus' in sentences[2]
+    assert 'spin ×1.02' in sentences[2]
+
+
+def test_external_and_legacy_compact_review_do_not_claim_local_pitch_effects():
+    plan,teams=fixture();analysis=analyze(plan,teams)
+    assert len(analysis['sentences'])==3
+    assert 'does not report a venue-specific performance bonus' in analysis['sentences'][2]
+    analysis.pop('sentences');analysis.pop('pitchSummary')
+    match_review.refresh_named_review(plan)
+    assert 'no player-specific venue advantage is recorded' in analysis['sentences'][2]

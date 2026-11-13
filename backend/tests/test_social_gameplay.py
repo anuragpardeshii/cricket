@@ -53,7 +53,17 @@ def test_chat_is_bounded_and_does_not_invalidate_draft_revision():
     a.post(path+'/chat',json=dict(text='Newest',nonce=str(uuid4())))
     after=a.get(path).json()
     assert len(after['state']['chat'])==60 and after['state']['chat'][-1]['text']=='Newest'
-    assert a.post(path+'/actions',json=dict(action='roll',version=room['version'],draft_revision=revision)).status_code==200
+    response=a.post(path+'/actions',json=dict(action='roll',version=room['version'],draft_revision=revision))
+    assert response.status_code==200
+    rolled=response.json();state=rolled['state'];actor=state['members'][state['turn']]
+    assert actor['lastRoll']=={key:state['rolled'][key] for key in ('country','tournament')}
+    assert set(actor['lastRoll'])=={'country','tournament'}
+    player_id,slots=next(iter(state['rolled']['allowedSlots'].items()))
+    picked=a.post(path+'/actions',json=dict(action='pick',version=rolled['version'],draft_revision=state['draftRevision'],player_id=player_id,slot_id=slots[0]))
+    assert picked.status_code==200,picked.text
+    saved=next(m for m in picked.json()['state']['members'] if m['id']==actor['id'])
+    assert saved['lastRoll']==actor['lastRoll']
+    assert saved['lastSelected']==next(p['name'] for p in state['rolled']['players'] if p['id']==player_id)
 
 
 def test_reviews_match_scorecards_and_venue_applies_to_ipl():

@@ -166,11 +166,43 @@ def named_contributions(own, against):
     return notes,details
 
 
+def compact_review(plan,analysis,cards):
+    winner=plan['result'].get('winner')
+    if winner not in ('you','opp'):return []
+    loser='opp' if winner=='you' else 'you'
+    names={t['side']:t['name'] for t in analysis.get('teams',[])}
+    if not all(side in names for side in (winner,loser)):return []
+    totals={side:innings_totals(card) for side,card in cards.items()}
+    w,l=totals[winner],totals[loser]
+    top=max(cards[loser]['batting'],key=lambda p:p['runs'],default=None)
+    if plan['result'].get('tieResolution'):
+        first=f"{names[winner]} won the level-score match through {plan['result']['tieResolution']}, rather than a runs or wickets advantage."
+    else:
+        support=f" despite {top['name']}'s {top['runs']} from {top['balls']} balls" if top and top['runs'] else ''
+        lr=l['runs']*6/max(1,l['balls']);wr=w['runs']*6/max(1,w['balls'])
+        if lr<wr:
+            first=f"{names[loser]} fell behind on scoring tempo{support}: {lr:.2f} runs per over against {names[winner]}'s {wr:.2f}, finishing {l['runs']}/{l['wickets']}."
+        else:
+            comparison='matched' if lr==wr else 'exceeded'
+            first=f"{names[loser]}'s {lr:.2f} scoring rate {comparison} {names[winner]}'s {wr:.2f}, but their {l['runs']}/{l['wickets']} was insufficient; {names[winner]} won {plan['result']['margin']}."
+    def attack(side):
+        other='opp' if side=='you' else 'you'
+        bowl=[p for p in cards[other]['bowling'] if p['balls'] or p['wickets']]
+        best=max(bowl,key=lambda p:(p['wickets'],-p['runs']/max(1,p['balls'])),default=None)
+        if not best:return f"{names[side]} had no recorded bowling spell"
+        return f"{names[side]}'s {best['name']} returned {best['wickets']}/{best['runs']} from {overs_text(best['balls'])} overs"
+    second=attack(winner)+' compared with '+attack(loser)+'.'
+    fact=analysis['venue']['fact'].rstrip('.')
+    third=analysis.get('pitchSummary') or fact+'; no player-specific venue advantage is recorded for this match.'
+    return [first,second,third]
+
+
 def refresh_named_review(plan):
     """Upgrade narrative on a response copy, without replaying a saved result."""
     analysis=plan.get('result',{}).get('analysis')
     cards={c['side']:c for c in plan.get('scorecards',[])}
     if not analysis or not all(side in cards for side in ('you','opp')):return plan
+    analysis['sentences']=compact_review(plan,analysis,cards)
     if analysis.get('namedReviewVersion')==1:return plan
     for team in analysis.get('teams',[]):
         side=team['side']; other='opp' if side=='you' else 'you'
@@ -237,7 +269,16 @@ def review(plan,teams,names,venue,*,external=False):
     collapses=[] if tied else [fact for side in ('you','opp') if (fact:=collapse_fact(plan,side,names[side],target if side==chase else None))]
     public_venue={k:venue[k] for k in ('id','name','city','fact','source','condition')}
     condition_note='Venue shown for match atmosphere; this engine response does not provide evidence that the venue altered its probabilities.' if external else f"Fantasy surface settings: boundary weight ×{venue['boundary']}, pace wicket chance ×{venue['pace']}, spin wicket chance ×{venue['spin']}. These are game-design assumptions, not measured pitch forecasts; the same rules apply to both teams."
+    fact=venue['fact'].rstrip('.')
+    if external:
+        pitch_summary=fact+'; this engine response does not report a venue-specific performance bonus.'
+    else:
+        pitch_summary=fact+f"; the simulated surface applies spin ×{venue['spin']}, pace ×{venue['pace']} wicket weights and boundary weight ×{venue['boundary']} equally to both teams."
+        home={'eden':'KOLKATA KNIGHT RIDERS','wankhede':'MUMBAI INDIANS','chepauk':'CHENNAI SUPER KINGS','chinnaswamy':'ROYAL CHALLENGERS','ahmedabad':'GUJARAT TITANS','hyderabad':'SUNRISERS HYDERABAD'}.get(venue['id'])
+        home_player=next((p for side in ('you','opp') for p in teams[side].values() if home and p.get('squad','').upper().startswith(home)),None)
+        if home_player:
+            pitch_summary=fact+f"; {home_player['name']} ({home_player['squad']}) shares that home-ground link, while simulated pitch weights—spin ×{venue['spin']}, pace ×{venue['pace']}, boundaries ×{venue['boundary']}—apply to both teams without a franchise bonus."
     plan['venue']=public_venue
-    plan['result']['analysis']=dict(decisive=decisive_text,collapses=collapses,cricketFact=HISTORICAL_COLLAPSES['odi' if plan.get('overs')==50 else 't20'] if collapses else None,teams=reports,metrics=metrics,venue=public_venue,conditions=condition_note,
+    plan['result']['analysis']=dict(pitchSummary=pitch_summary,decisive=decisive_text,collapses=collapses,cricketFact=HISTORICAL_COLLAPSES['odi' if plan.get('overs')==50 else 't20'] if collapses else None,teams=reports,metrics=metrics,venue=public_venue,conditions=condition_note,
         method='Based on the saved scorecard. Contributions and scoring spells describe this match; they do not prove a player or selection caused the loss. Historical season evidence and model assumptions are shown separately.')
     return refresh_named_review(plan)

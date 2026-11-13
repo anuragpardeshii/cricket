@@ -34,6 +34,11 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await expect(page.getByRole('heading',{name:'Bob is picking'})).toBeVisible();await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();
  await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toHaveCount(0);await expect(page.getByRole('button',{name:/Reroll/})).toHaveCount(0);
  await expect(page.getByRole('log',{name:'Room messages'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Match settings',exact:true})).toHaveCount(0);
+ room.state.members[1].lastRoll={country:'MUMBAI INDIANS',tournament:'2013'};room.state.members[1].lastSelected='Jasprit Bumrah';const rolled=room.state.rolled;room.state.rolled=null;room.version++;broadcast();
+ await expect(page.getByText('Selected Jasprit Bumrah',{exact:true})).toBeVisible();
+ await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();
+ room.state.rolled=rolled;room.version++;broadcast();
  if(!mobile){
   const chat=await page.getByRole('log',{name:'Room messages'}).boundingBox();
   const picking=await page.getByRole('heading',{name:'Bob is picking'}).boundingBox();
@@ -67,20 +72,12 @@ test('completed review and same-room rematch',async({page})=>{
   else if(path.endsWith('/rematch')){room.version++;room.state.phase='lobby';room.state.matches=[];room.state.champion=null;room.state.roundNumber=2;result={code:'ABCD'}}
   await route.fulfill({json:result});broadcast();
  });
- await page.goto('/rooms');await expect(page.getByRole('heading',{name:'Match breakdown'})).toBeVisible();
- await expect(page.getByRole('heading',{name:'Alice · Lost'})).toBeVisible();await expect(page.getByRole('heading',{name:'Bob · Won'})).toBeVisible();
- await expect(page.getByText('Could not defend 100: Bob reached the target with 8 wickets remaining.',{exact:true})).toBeVisible();
- const phase=page.getByText('Overs 6.0–15.0: 40 runs, 5 wickets.',{exact:true});
- await expect(phase).not.toBeVisible();
- await page.getByText('Scorecard details & team composition',{exact:true}).click();
- await expect(phase).toBeVisible();
- await page.getByText('Scorecard details & team composition',{exact:true}).click();
- await expect(page.getByText('Your XI: season evidence & ratings',{exact:true})).toHaveCount(0);
- await expect(page.getByText('Alice lost 3 wickets for 12 runs between 12.0 and 15.0 overs.',{exact:true})).toBeVisible();
- await expect(page.getByText('The score moved from 58/2 to 70/5, leaving 5 wickets and 30 balls.',{exact:true})).toBeVisible();
- await page.getByText('From real cricket · 2024 T20 World Cup final',{exact:true}).click();
- await expect(page.getByRole('link',{name:'ICC match report'})).toHaveAttribute('href',/icc-cricket.com/);
- await page.getByText('From real cricket · 2024 T20 World Cup final',{exact:true}).click();
+ await page.goto('/rooms');
+ await expect(page.getByRole('heading',{name:'Inside the result'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Match breakdown'})).toHaveCount(0);
+ await expect(page.getByText('Scorecard details & team composition',{exact:true})).toHaveCount(0);
+ await expect(page.getByRole('region',{name:'Match analysis'}).locator('p')).toHaveCount(3);
+ await expect(page.getByRole('link',{name:'Wankhede Stadium'})).toHaveAttribute('href',/iplt20.com/);
  await page.screenshot({path:'test-results/match-review.png',fullPage:true});
  await page.getByRole('button',{name:'Play again',exact:true}).click();await expect(page.getByRole('heading',{name:'Waiting room'})).toBeVisible();
  await expect(page.getByRole('heading',{name:'ABCD',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Start match',exact:true})).toBeVisible();

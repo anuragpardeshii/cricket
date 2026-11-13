@@ -76,6 +76,8 @@ def roll(state,players,options=None,*,ts=None):
     allowed={}
     for option in choices: allowed.setdefault(option['player']['id'],[]).append(option['slot'])
     state['rolled']=dict(country=country,tournament=year,players=[p for p in players if p['squad']==squad],allowedSlots=allowed)
+    current['lastRoll']=dict(country=country,tournament=year)
+    current['lastSelected']=None
     state['draftRevision']=state.get('draftRevision',0)+1
     if ts is not None:
         state['deadline']=ts+state['seconds']
@@ -92,6 +94,7 @@ def pick(state,players,ts,player_id=None,slot_id=None,automatic=False):
     choice=rng.choice(options) if automatic else next((o for o in options if o['player']['id']==player_id and o['slot']==slot_id),None)
     if not choice: raise HTTPException(409,'Player or slot unavailable')
     m=state['members'][state['turn']]; m['xi'][choice['slot']]=choice['player']; state['taken'].append(choice['player']['id'])
+    m['lastSelected']=choice['player']['name']
     state['lastPick']=dict(name=m['name'],player=choice['player']['name'],automatic=automatic,is_ai=m.get('is_ai',False))
     state['rolled']=None
     state['draftRevision']=state.get('draftRevision',0)+1
