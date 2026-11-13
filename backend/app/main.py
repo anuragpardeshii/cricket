@@ -345,6 +345,7 @@ def dashboard(days:Literal['7','30','90']='30',session=Depends(db)):
     count=lambda stmt: session.scalar(stmt) or 0
     total=count(select(func.count()).select_from(User).where(User.is_guest.is_(False)))
     new=count(select(func.count()).select_from(User).where(User.is_guest.is_(False),User.created_at>=cutoff))
+    accounts=dict(guests=count(select(func.count()).select_from(User).where(User.is_guest.is_(True))),administrators=count(select(func.count()).select_from(User).where(User.is_guest.is_(False),User.is_admin.is_(True))),blocked=count(select(func.count()).select_from(User).where(User.is_guest.is_(False),User.is_blocked.is_(True))))
     events=list(session.scalars(select(Audit).where(Audit.created_at>=cutoff).order_by(Audit.created_at.desc()).limit(50000)))
     games=list(session.scalars(select(Game).where(Game.created_at>=cutoff).limit(10000)))
     rooms=list(session.scalars(select(Room).where(Room.created_at>=cutoff).limit(10000)))
@@ -362,7 +363,7 @@ def dashboard(days:Literal['7','30','90']='30',session=Depends(db)):
     community=engagement(session,cutoff); completed=community['completedMatches']
     colors=['#f5a623','#83a9c7','#7bbba0','#a6a1cf']
     segments=lambda counts:[dict(label=k,value=round(v/max(1,sum(counts.values()))*100,1),color=colors[i%4]) for i,(k,v) in enumerate(counts.items())]
-    return dict(totalRegistered=total,newRegistrations=new,activePlayers=len({e.actor for e in events if e.actor}),sessions=len(starts),draftStarts=sum(g.state['screen']!='lobby' for g in games)+sum(r.state['phase'] not in ['lobby','expired'] for r in rooms),matchesFinished=completed,rooms=len(rooms),liveRooms=sum(r.state['phase']=='live' for r in rooms),trend=trend,devices=segments(devices),audience=segments(audience),popular=[dict(name=k,picks=v) for k,v in popular.most_common(8)],sampleLimit=50000,community=community)
+    return dict(totalRegistered=total,newRegistrations=new,activePlayers=len({e.actor for e in events if e.actor}),sessions=len(starts),draftStarts=sum(g.state['screen']!='lobby' for g in games)+sum(r.state['phase'] not in ['lobby','expired'] for r in rooms),matchesFinished=completed,rooms=len(rooms),liveRooms=sum(r.state['phase']=='live' for r in rooms),trend=trend,devices=segments(devices),audience=segments(audience),popular=[dict(name=k,picks=v) for k,v in popular.most_common(8)],sampleLimit=50000,community=community,accounts=accounts,activity=dict(practiceGames=len(games),onlineRooms=len(rooms),guestSessions=audience['Guest'],registeredSessions=audience['Registered'],events=[dict(action=action,count=n) for action,n in Counter(e.action for e in events).most_common(8)]))
 
 class BlockUser(Strict):
     blocked: bool
