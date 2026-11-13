@@ -38,5 +38,40 @@
   "Sunrisers Hyderabad": {
     "file": "sunrisers-hyderabad.svg",
     "source": "https://www.iplt20.com/api/team-assets?pathname=static%2Fteams%2F1153%2Ficon-dark.svg"
+  },
+  "Deccan Chargers": {
+    "file": "deccan-chargers.png",
+    "source": "https://www.pngall.com/wp-content/uploads/2017/04/Deccan-Chargers-Logo-PNG.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
+  },
+  "Delhi Daredevils": {
+    "file": "delhi-daredevils.png",
+    "source": "https://www.pngall.com/wp-content/uploads/2017/04/Delhi-Daredevils-Logo-PNG.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
+  },
+  "Gujarat Lions": {
+    "file": "gujarat-lions.png",
+    "source": "https://www.pngall.com/wp-content/uploads/2017/04/Gujarat-Lions-Logo-PNG.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
+  },
+  "Kings Xi Punjab": {
+    "file": "kings-xi-punjab.png",
+    "source": "https://www.pngall.com/wp-content/uploads/2017/04/Kings-XI-Punjab-Logo-PNG.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
+  },
+  "Rising Pune Supergiant": {
+    "file": "rising-pune-supergiant.png",
+    "source": "https://www.pngall.com/wp-content/uploads/2017/04/Rising-Pune-Supergiants-Logo-PNG.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
+  },
+  "Kochi Tuskers Kerala": {
+    "file": "kochi-tuskers-kerala.png",
+    "source": "https://assets.stickpng.com/images/627d0aeb8a632ca996477e90.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
+  },
+  "Pune Warriors India": {
+    "file": "pune-warriors-india.png",
+    "source": "https://assets.stickpng.com/images/627d0de88a632ca996477e9e.png",
+    "note": "Historical franchise logo; trademarks belong to their respective owners."
   }
 }

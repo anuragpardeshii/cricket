@@ -66,6 +66,20 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  }
  await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:`test-results/draft-chat-${mobile?'mobile':'desktop'}.png`,fullPage:true});
+ if(!mobile){
+  const countries=['DECCAN CHARGERS','DELHI DAREDEVILS','KINGS XI PUNJAB','KOCHI TUSKERS KERALA','PUNE WARRIORS INDIA','PUNE WARRIORS','GUJARAT LIONS','RISING PUNE SUPERGIANTS','RISING PUNE SUPERGIANT','ROYAL CHALLENGERS BANGALORE'];
+  for(const country of countries){
+   room.state.rolled.country=country;room.version++;broadcast();
+   const logo=page.getByRole('img',{name:`${country} franchise logo`,exact:true});
+   await expect(logo).toBeVisible();
+   await expect.poll(()=>logo.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+  }
+  room.state.rolled.country='DECCAN CHARGERS';room.version++;broadcast();
+  await page.getByRole('img',{name:'DECCAN CHARGERS franchise logo',exact:true}).dispatchEvent('error');
+  await expect(page.getByRole('img',{name:'DECCAN CHARGERS franchise badge',exact:true})).toBeVisible();
+  room.state.rolled.country='DELHI DAREDEVILS';room.version++;broadcast();
+  await expect(page.getByRole('img',{name:'DELHI DAREDEVILS franchise logo',exact:true})).toBeVisible();
+ }
  room.state.turn=0;room.version++;broadcast();
  await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toBeEnabled();
  expect(errors).toEqual([]);
