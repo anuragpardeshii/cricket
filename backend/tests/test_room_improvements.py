@@ -9,10 +9,67 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import rooms
-from app.catalog import SLOTS
+from app.catalog import SLOTS, load_catalog
 from app.db import Room, Session
 from app.main import app
 from test_preflight import clean, client, ready_room, room_for
+
+
+def test_formation_survives_stale_room_version_and_automatic_turn_change():
+    a,b=client(),client('bob')
+    room=room_for(a,2); b.post('/api/rooms/join',json={'code':room['code']})
+    room=ready_room(a,room,b); path=f"/api/rooms/{room['id']}"
+    room=a.post(path+'/actions',json={'action':'start','version':room['version']}).json()
+    original_version=room['version']
+    with Session.begin() as session:
+        row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
+        state['deadline']=time.time()-1; state['turnPicks']=1
+        state['chat']=[{'id':'chat','text':'Hello','sender':'other'}]
+        row.state=state; row.version+=1
+    order=[s['id'] for s in SLOTS][::-1]
+    response=b.post(path+'/actions',json={'action':'formation','version':original_version,'order':order})
+    assert response.status_code==200,response.text
+    updated=response.json()
+    assert updated['state']['turn']==1
+    assert next(m for m in updated['state']['members'] if m['id']==updated['you'])['order']==order
+    assert updated['state']['chat'][0]['text']=='Hello'
+    assert updated['state']['draftRevision']>room['state']['draftRevision']
+    assert b.post(path+'/actions',json={'action':'formation','version':0,'order':['op1']*11}).status_code==422
+    with Session.begin() as session:
+        row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
+        players=[p for squad in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in squad['players']]
+        while state['phase']=='draft': rooms.advance(state,players,state['deadline'])
+        row.state=state
+    response=b.post(path+'/actions',json={'action':'formation','version':original_version,'order':order})
+    assert response.status_code==409 and 'locked' in response.json()['detail']
+
+
+@pytest.mark.parametrize('phase',['lobby','draft','live','complete'])
+def test_host_removes_player_without_votes_and_revokes_access(phase):
+    a,b,c,outsider=[client(n) for n in ['alice','bob','charlie','eve']]
+    room=room_for(a,4); path=f"/api/rooms/{room['id']}"
+    target=b.post('/api/rooms/join',json={'code':room['code']}).json()['you']
+    c.post('/api/rooms/join',json={'code':room['code']})
+    if phase!='lobby':
+        room=ready_room(a,room,b,c)
+        room=a.post(path+'/actions',json={'action':'start','version':room['version']}).json()
+    if phase in ['live','complete']:
+        with Session.begin() as session:
+            row=session.get(Room,room['id']); state=copy.deepcopy(row.state)
+            players=[p for squad in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in squad['players']]
+            while state['phase']=='draft': rooms.advance(state,players,state['deadline'])
+            if phase=='complete': rooms.advance(state,[],time.time()+100000)
+            row.state=state
+    assert outsider.post(path+'/remove',json={'target_id':target}).status_code==404
+    assert c.post(path+'/remove',json={'target_id':target}).status_code==403
+    assert a.post(path+'/remove',json={'target_id':room['you']}).status_code==409
+    response=a.post(path+'/remove',json={'target_id':target})
+    assert response.status_code==200,response.text
+    assert response.json()['state']['lastRemoval']=={'name':'bob','reason':'host_removed'}
+    assert b.get(path).status_code==403
+    assert b.post('/api/rooms/join',json={'code':room['code']}).status_code==403
+    assert b.post(path+'/chat',json={'text':'Hello','nonce':'12345678-1234-1234-1234-123456789abc'}).status_code==403
+    assert a.post(path+'/remove',json={'target_id':target}).status_code==409
 
 
 def test_readiness_is_personal_required_and_can_be_withdrawn():

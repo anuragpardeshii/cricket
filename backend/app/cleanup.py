@@ -9,15 +9,16 @@ from .db import Session, LoginSession, RateBucket, RoomSocketTicket, User, Game,
 
 def cleanup(*, all_rooms=False, timestamp=None):
     timestamp = timestamp or now()
-    cutoff = timestamp - timedelta(days=1)
+    room_cutoff = timestamp - timedelta(hours=12)
+    game_cutoff = timestamp - timedelta(days=1)
     with Session.begin() as session:
         # Chats and simulation timelines live in Room.state and go with the room.
         # Socket tickets and voice grants are removed by ON DELETE CASCADE.
         rooms = delete(Room)
         if not all_rooms:
-            rooms = rooms.where(Room.created_at <= cutoff)
+            rooms = rooms.where(Room.created_at <= room_cutoff)
         room_count = session.execute(rooms).rowcount
-        game_count = session.execute(delete(Game).where(Game.created_at <= cutoff)).rowcount
+        game_count = session.execute(delete(Game).where(Game.created_at <= game_cutoff)).rowcount
         session.execute(delete(LoginSession).where(LoginSession.expires < timestamp))
         session.execute(delete(RateBucket).where(RateBucket.expires < timestamp))
         session.execute(delete(RoomSocketTicket).where(RoomSocketTicket.expires < timestamp))

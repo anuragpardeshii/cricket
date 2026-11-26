@@ -11,7 +11,7 @@ from test_preflight import clean, client
 def test_retention_boundary_cascades_and_preserves_accounts_and_results():
     client()
     timestamp = now()
-    cutoff = timestamp - timedelta(days=1)
+    cutoff = timestamp - timedelta(hours=12)
     with Session.begin() as session:
         user = session.scalar(select(User))
         user_id = user.id
@@ -19,7 +19,8 @@ def test_retention_boundary_cascades_and_preserves_accounts_and_results():
         for key, created in [('old', cutoff), ('recent', cutoff + timedelta(seconds=1))]:
             session.add(Room(id=key, owner_id=user_id, code='AAAA' if key == 'old' else 'BBBB', created_at=created,
                              state={'chat': [{'text': 'private conversation'}]}))
-            session.add(Game(id=key, owner_id=user_id, code=key, created_at=created, state={}))
+            session.add(Game(id=key, owner_id=user_id, code=key,
+                             created_at=created - timedelta(hours=12), state={}))
         session.flush()
         session.add(RoomSocketTicket(token_hash='ticket', room_id='old',
                                      session_hash=auth.token_hash, expires=timestamp + timedelta(minutes=1)))

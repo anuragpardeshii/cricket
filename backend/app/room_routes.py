@@ -144,13 +144,17 @@ def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depe
     needs_pool=state['phase']=='draft' and (ts>=state['deadline'] or your_pick)
     players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if needs_pool else []
     if rooms.advance(state,players,ts):
-        room.state=state; room.version+=1; archive_room(session,room); session.commit()
-        raise HTTPException(409,'The room advanced. Refresh and try again.')
+        room.state=state; room.version+=1; archive_room(session,room)
+        # Formation changes only replace the caller's order. They can safely be
+        # applied to the newly advanced state while it is still a draft.
+        if body.action!='formation' or state['phase']!='draft':
+            session.commit()
+            raise HTTPException(409,'Batting order is locked once matches start' if body.action=='formation' else 'The room advanced. Refresh and try again.')
     # Picks depend on the turn and rolled squad, not another team's formation,
     # name or vote. Keep a separate revision, while supporting older clients.
     if body.action in ['roll','pick'] and body.draft_revision is not None:
         if state.get('draftRevision',0)!=body.draft_revision: raise HTTPException(409,'The draft advanced. Try again.')
-    elif room.version!=body.version: raise HTTPException(409,'Room changed. Try again.')
+    elif body.action!='formation' and room.version!=body.version: raise HTTPException(409,'Room changed. Try again.')
     if body.action=='start':
         if rooms.host_user(room,ts)!=auth.user_id: raise HTTPException(403,'Only the host can start')
         if state.get('cupId'):
@@ -175,6 +179,36 @@ def action(room_id:UUID,body:RoomAction,auth=Depends(authenticated),session=Depe
 
 class KickVote(Strict):
     target_id:str=Field(min_length=36,max_length=36)
+
+@router.post('/{room_id}/remove')
+def host_remove(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Depends(db)):
+    limit('host-remove:'+auth.user_id,30,300)
+    room=locked(session,room_id,auth.user_id); ts=time.time()
+    if rooms.host_user(room,ts)!=auth.user_id: raise HTTPException(403,'Only the host can remove players')
+    state=copy.deepcopy(room.state)
+    if state['phase'] not in ['lobby','draft','live','complete']: raise HTTPException(409,'This room has expired')
+    target=next((m for m in state['members'] if m['id']==body.target_id and m['uid'] is not None),None)
+    if not target or target['uid']==auth.user_id: raise HTTPException(409,'Choose another player')
+    if state.get('cupId') and state['phase']=='lobby':
+        # A scheduled fixture needs both designated players. Cancel its lobby
+        # without awarding points, just as when a player leaves before drafting.
+        from .db import Cup
+        cup=session.scalar(select(Cup).where(Cup.id==state['cupId']).with_for_update())
+        if cup:
+            cup_state=copy.deepcopy(cup.state)
+            for fixture in cup_state['fixtures']:
+                if fixture.get('roomId')==room.id: fixture.update(status='pending',roomId=None)
+            cup.state=cup_state
+        session.add(rooms.Audit(action='room.host_removed',actor=auth.user_id,resource=room.id,details={'target':body.target_id}))
+        session.delete(room); session.commit()
+        return {'closed':True}
+    players=[p for s in load_catalog(session,state.get('competition'),state.get('edition'))['squads'] for p in s['players']] if state['phase']=='draft' and ts>=state['deadline'] else []
+    rooms.advance(state,players,ts)
+    rooms.remove_member(room,state,target,ts,'host_removed')
+    rooms.advance(state,players,ts)
+    room.state=state; room.version+=1; archive_room(session,room)
+    session.add(rooms.Audit(action='room.host_removed',actor=auth.user_id,resource=room.id,details={'target':body.target_id}))
+    session.commit(); return rooms.project(room,auth.user_id,ts)
 
 @router.post('/{room_id}/kick-vote')
 def kick_vote(room_id:UUID,body:KickVote,auth=Depends(authenticated),session=Depends(db)):

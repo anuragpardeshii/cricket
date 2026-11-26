@@ -154,8 +154,8 @@ If you later use a custom frontend domain, update Render's `APP_ORIGIN` and `ALL
 ### Automatic room and chat retention
 
 The API runs retention cleanup on startup and every five minutes while running.
-Rooms (including their chats and full simulation state) and practice games are
-deleted 24 hours after creation, including active ones. Rematches do not reset
+Rooms (including their chats and full simulation state) are deleted 12 hours
+after creation, including active ones. Practice games expire after 24 hours. Rematches do not reset
 the room's creation time. A sleeping service catches up when it starts again.
 Room socket tickets and voice grants are deleted with the room. Expired login
 sessions, rate-limit buckets, socket tickets and unused guest profiles are also
@@ -172,7 +172,7 @@ run this from `backend` with the intended database configured privately:
 python -m app.cleanup --all-rooms
 ```
 
-For the normal 24-hour cleanup only, run `python -m app.cleanup`. Do not run the
+For the normal age-based cleanup only, run `python -m app.cleanup`. Do not run the
 all-rooms command against a different environment by mistake. These commands
 do not delete registered accounts or independent saved results.
 

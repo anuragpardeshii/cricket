@@ -1,7 +1,7 @@
 import type { XI } from '../game/types';
-export type TeamMember = { id: string; name: string; xi: XI; order?: string[]; is_ai?: boolean; departed?: boolean; forfeited?: boolean; kickVotes?: number; voted?: boolean };
-export function TeamBar({ members, currentId, selectedId, yourId, onPreview, onVote, required = 0, busy = false }: {
-  members: TeamMember[]; currentId?: string; selectedId?: string; yourId: string; onPreview: (id: string) => void; onVote?: (id: string) => void; required?: number; busy?: boolean;
+export type TeamMember = { id: string; name: string; xi: XI; order?: string[]; is_ai?: boolean; departed?: boolean; forfeited?: boolean; kickVotes?: number; voted?: boolean; reviewRound?: number };
+export function TeamBar({ members, currentId, selectedId, yourId, onPreview, onVote, onRemove, required = 0, busy = false }: {
+  members: TeamMember[]; currentId?: string; selectedId?: string; yourId: string; onPreview: (id: string) => void; onVote?: (id: string) => void; onRemove?: (id: string) => void; required?: number; busy?: boolean;
 }) {
   return <section aria-label="Teams in this game" className="team-switcher my-3 flex w-full gap-1.5">{members.map((member,index) => {
     const current=member.id===currentId;
@@ -13,7 +13,7 @@ export function TeamBar({ members, currentId, selectedId, yourId, onPreview, onV
         <span className="team-full min-w-0 flex-1 truncate font-bold">{member.name}{member.id===yourId?' (you)':''}</span>
         <span className="team-count shrink-0 font-mono text-[10px] text-muted">{member.forfeited?'Out':`${Object.keys(member.xi).length}/11`}</span>
       </button>
-      {onVote&&!member.is_ai&&!member.departed&&member.id!==yourId&&<button type="button" aria-label={`Vote to kick ${member.name}`} title={`${member.kickVotes??0}/${required} votes to remove · ${member.voted?'Your vote is recorded':'One vote per person'}`} disabled={busy||member.voted} onClick={()=>onVote(member.id)} className="team-vote mr-1 size-7 shrink-0 rounded text-sm text-danger hover:bg-danger/10 disabled:opacity-40">×</button>}
+      {(onRemove||onVote)&&(!member.is_ai||(Boolean(onRemove)&&member.reviewRound!==undefined))&&!member.departed&&member.id!==yourId&&<button type="button" aria-label={onRemove?`Remove ${member.name}`:`Vote to kick ${member.name}`} title={onRemove?`Remove ${member.name} from the room`:`${member.kickVotes??0}/${required} votes to remove · ${member.voted?'Your vote is recorded':'One vote per person'}`} disabled={busy||(!onRemove&&member.voted)} onClick={()=>(onRemove??onVote)?.(member.id)} className="team-vote mr-1 size-7 shrink-0 rounded text-sm text-danger hover:bg-danger/10 disabled:opacity-40">×</button>}
     </div>;
   })}</section>;
 }

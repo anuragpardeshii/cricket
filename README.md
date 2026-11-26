@@ -28,7 +28,7 @@ Requires Docker with Compose, Make and Python 3. The default UI port is 5173; th
 - `/groups`: registered players create a group of up to eight friends and share a private invitation link. Owners can replace the invitation. Joining an ongoing cup's group does not change its frozen roster; newcomers can play friendlies immediately and enter the next cup.
 - A two-player cup is best of three, ending at two wins. Groups of three to eight play a single round robin with a new draft per fixture. Only the two scheduled humans can enter a scoring room; both must be ready. Wins earn two points and losses zero. New simulated matches replay level scores to produce a winner; archived historical ties remain readable. Equal cup table points can still share a title. Extra friendlies and AI games never add cup points.
 - Cups have a 14-day target, can finish early, and can be extended seven days by the owner. A date passing does not fabricate wins. Owners can archive unfinished cups without a title; started fixtures must finish or be forfeited first. Unstarted lobbies cannot start after their cup is archived.
-- Leaving a cup lobby cancels that lobby and returns the fixture to pending. Leaving after drafting begins forfeits the fixture. Cup opponents cannot kick one another. Disconnection uses the normal reconnect and timeout rules, without an immediate forfeit.
+- Leaving a cup lobby cancels that lobby and returns the fixture to pending. Leaving after drafting begins forfeits the fixture. Cup opponents cannot vote to kick one another. Hosts can remove the other player: before drafting this cancels the lobby without points; after drafting begins it forfeits the removed player’s fixture. Disconnection uses the normal reconnect and timeout rules, without an immediate forfeit.
 - Group history includes completed cups and head-to-head records from completed human matches. Temporary room deletion does not delete archived results. The profile shows the latest 30 matches; group history shows the latest 20. Older results continue contributing to milestones and rivalry totals.
 - **Open IPL** uses every IPL edition. **IPL Under 85** permits cards rated 84 or below. Both presets work in practice and online rooms; server validation checks enough distinct cricketers exist for all XI roles. Classic competition selection remains available. Preset rule definitions and cup rules version 1 must remain stable for existing cups.
 - `/achievements`: seven server-earned trophies start in grayscale and turn colorful when earned. Click for requirements, measured progress, or earned date. Locked trophies share a challenge; earned trophies can create a public achievement card. Public cards expose only the player name, trophy definition, and earned date, with no group invitation, email, or match plan. Clipboard/manual-copy fallbacks support browsers without native sharing.
@@ -52,7 +52,7 @@ Practice opens directly in the draft against **AI**, with no room creation scree
 
 During online drafting, the team bar lists everyone and follows the current turn by default. Click any team to preview its XI. All seats fit in one row without scrolling; the current turn expands, and other seats expand on hover, focus or selection. Your XI is a compact list. Drag players to change the batting order, including on touch screens; keyboard users can pick up and drop with Space and choose a position with arrow keys. It is saved on the server and used by the simulator; roster role requirements remain enforced. Orders lock when matches start.
 
-Kick votes require `min(3, ceil(active human players / 2))` votes, including the target in the human count. AI teams do not vote and self-votes are rejected. Vote counts appear in the × button tooltip; duplicate votes cannot increase the total. Votes reset when someone leaves. Exiting or being kicked during lobby/draft transfers the same team, drafted players and future turns to AI. During live play, unfinished matches are forfeited; completed results remain unchanged. Forfeits preserve only already-visible overs and do not contribute simulated future performances to awards or net run rate. Host ownership transfers to another remaining human. When the final human explicitly exits, the room and its connection/voice grants are deleted. Removed/exited memberships cannot rejoin using their original session/account. Disconnecting alone keeps the seat and uses the existing pick timeout.
+Hosts can immediately remove another human player using the × control in the lobby or team bar, including players still reviewing a previous round. Other players use votes. Kick votes require `min(3, ceil(active human players / 2))` votes, including the target in the human count. AI teams do not vote and self-votes are rejected. Vote counts appear in the × button tooltip; duplicate votes cannot increase the total. Votes reset when someone leaves. Exiting or being kicked during lobby/draft transfers the same team, drafted players and future turns to AI. During live play, unfinished matches are forfeited; completed results remain unchanged. Forfeits preserve only already-visible overs and do not contribute simulated future performances to awards or net run rate. Host ownership transfers to another remaining human. When the final human explicitly exits, the room and its connection/voice grants are deleted. Removed/exited memberships cannot rejoin using their original session/account. Disconnecting alone keeps the seat and uses the existing pick timeout.
 
 Migration 0006 replaces older online room codes with four-character codes while retaining room UUIDs and data. New practice games have no code. Room codes use cryptographic randomness, a database uniqueness constraint with collision retries, and per-user/IP join rate limits.
 
@@ -87,6 +87,7 @@ Analytics includes registered/new players, active participants, sessions, draft 
 - `POST /api/rooms/{uuid}/name`: edit your own room name
 - `GET /api/rooms/{uuid}`: membership-scoped live state
 - `POST /api/rooms/{uuid}/actions`: host `start`, current participant `roll` / `pick`, or own `formation`, with expected `version`
+- `POST /api/rooms/{uuid}/remove`: immediate removal by the current host
 - `POST /api/rooms/{uuid}/kick-vote`: one vote per human per target
 - `POST /api/rooms/{uuid}/exit`: confirmed departure, AI takeover or forfeit
 - `POST /api/rooms/{uuid}/connection`: single-use, 30-second WebSocket ticket and connection URL
@@ -204,6 +205,15 @@ plain text, limited to 300 characters, 20 sends per minute per user, and the lat
 per room. Retry IDs prevent duplicate posts. Room membership and CSRF checks apply;
 chat does not advance the draft revision. Exiting or being removed revokes access.
 Messages survive a rematch in the same room and disappear when the room is deleted.
+Rooms and all their chats expire 12 hours after room creation; cleanup runs at
+startup and every five minutes while the API is running. Practice games expire
+after 24 hours. Accounts and independent saved results remain.
+Chat starts collapsed in the bottom-right Chats bar. Its unread badge counts messages
+from other players and displays `4+` from four onward; opening chat clears the badge.
+The emoji picker stays open for repeated selections and closes on Send, Escape or
+its toggle. Personal batting-order edits apply to the latest locked draft state,
+so unrelated chat, picks and turn changes do not cause stale-room errors. Orders
+remain locked once matches start.
 
 Add OUT. to your device uses a web app manifest and the browser’s install prompt where
 supported; Safari instructions are shown on devices without that prompt. The service

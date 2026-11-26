@@ -199,6 +199,27 @@ def test_cup_requires_scheduled_humans_no_kicking_and_draft_withdrawal_is_forfei
     assert detail['cups'][0]['standings'][0]['points']==2
     assert not any(x['earnedAt'] for x in b.get('/api/progress').json()['achievements'])
 
+@pytest.mark.parametrize('started',[False,True])
+def test_host_can_remove_cup_opponent_with_cancellation_or_forfeit(started):
+    a,b=client(),client('bob'); group=group_for(a,b); cup=start_cup(a,group)
+    room=fixture_room(a,b,group,cup['fixtures'][0]); path='/api/rooms/'+room['id']
+    target=b.get(path).json()['you']
+    if started:
+        room=ready_room(a,room,b)
+        assert a.post(path+'/actions',json={'action':'start','version':room['version']}).status_code==200
+    response=a.post(path+'/remove',json={'target_id':target})
+    assert response.status_code==200,response.text
+    detail=a.get('/api/groups/'+group['id']).json()['cups'][0]
+    if started:
+        assert detail['fixtures'][0]['forfeit']
+        assert b.get(path).status_code==403
+    else:
+        assert response.json()=={'closed':True}
+        assert detail['fixtures'][0]['status']=='pending'
+        assert all(row['points']==0 for row in detail['standings'])
+        assert b.get(path).status_code==404
+
+
 def test_lobby_exit_releases_fixture_without_points():
     a,b=client(),client('bob'); group=group_for(a,b); cup=start_cup(a,group)
     room=fixture_room(a,b,group,cup['fixtures'][0])

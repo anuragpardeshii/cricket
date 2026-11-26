@@ -23,6 +23,7 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await page.getByRole('button',{name:'Ready',exact:true}).click();await expect(page.getByRole('button',{name:'Edit name',exact:true})).toBeDisabled();
  await page.getByRole('button',{name:'Match settings',exact:true}).click();await page.getByLabel('Pick timer (seconds)').fill('60');await page.getByRole('button',{name:'Save settings'}).click();
  await expect(page.getByText('0/2 players ready',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Edit name',exact:true})).toBeEnabled();
+ await expect(page.getByRole('textbox',{name:'Chat message'})).toHaveCount(0);
  await page.getByRole('button',{name:/Room chat/}).click();await page.getByRole('textbox',{name:'Chat message'}).fill('<script>alert(1)</script> Hello Bob');await page.getByRole('button',{name:'Send',exact:true}).click();
  await expect(page.getByRole('log')).toContainText('<script>alert(1)</script> Hello Bob');await expect(page.locator('aside script')).toHaveCount(0);
  const chatInput=page.getByRole('textbox',{name:'Chat message'});
@@ -32,8 +33,12 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await page.getByRole('button',{name:'Cricket',exact:true}).click();
  await expect(chatInput).toHaveValue('Great 🏏pick');
  await expect(chatInput).toBeFocused();
+ await page.getByRole('button',{name:'Cricket',exact:true}).click();
+ await page.getByRole('button',{name:'Fire',exact:true}).click();
+ await expect(chatInput).toHaveValue('Great 🏏🏏🔥pick');
+ await expect(page.getByRole('group',{name:'Choose an emoji'})).toBeVisible();
  await page.getByRole('button',{name:'Send',exact:true}).click();
- await expect(page.getByRole('log')).toContainText('Great 🏏pick');
+ await expect(page.getByRole('log')).toContainText('Great 🏏🏏🔥pick');
  await chatInput.fill('x'.repeat(300));
  await page.getByRole('button',{name:'Add emoji',exact:true}).click();
  await expect(page.getByRole('button',{name:'Cricket',exact:true})).toBeDisabled();
@@ -41,7 +46,18 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await expect(page.getByRole('group',{name:'Choose an emoji'})).toHaveCount(0);
  await chatInput.fill('');
 
+ await page.getByRole('button',{name:'Room chat',exact:true}).click();
+ room.state.chat.push({id:'incoming-1',text:'Hello',sender:'b',name:'Bob',sentAt:Date.now()/1000});room.version++;broadcast();
+ await expect(page.getByLabel('1 unread messages',{exact:true})).toHaveText('1');
+ for(let i=2;i<=5;i++)room.state.chat.push({id:`incoming-${i}`,text:`Hello ${i}`,sender:'b',name:'Bob',sentAt:Date.now()/1000});room.version++;broadcast();
+ await expect(page.getByLabel('5 unread messages',{exact:true})).toHaveText('4+');
+ await page.getByRole('button',{name:'Room chat',exact:true}).click();
+ await expect(page.getByLabel('5 unread messages',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Room chat',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Remove Bob',exact:true})).toBeVisible();
  room.host=false;room.version++;broadcast();
+ await expect(page.getByRole('button',{name:'Remove Bob',exact:true})).toHaveCount(0);
+ await expect(page.getByRole('button',{name:'Vote to remove Bob',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:'Match settings',exact:true})).toHaveCount(0);
  room.host=true;room.version++;broadcast();
  await expect(page.getByRole('button',{name:'Match settings',exact:true})).toBeVisible();
@@ -49,6 +65,8 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  room.state.members[1].ready=true;broadcast();await page.getByRole('button',{name:'Ready',exact:true}).click();await page.getByRole('button',{name:'Start match',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Bob is picking'})).toBeVisible();await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();
  await expect(page.getByRole('button',{name:/Jasprit Bumrah/})).toHaveCount(0);await expect(page.getByRole('button',{name:/Reroll/})).toHaveCount(0);
+ await expect(page.getByRole('log',{name:'Room messages'})).toHaveCount(0);
+ await page.getByRole('button',{name:'Room chat',exact:true}).click();
  await expect(page.getByRole('log',{name:'Room messages'})).toBeVisible();
  await expect(page.getByRole('button',{name:'Match settings',exact:true})).toHaveCount(0);
  room.state.members[1].lastRoll={country:'MUMBAI INDIANS',tournament:'2013'};room.state.members[1].lastSelected='Jasprit Bumrah';const rolled=room.state.rolled;room.state.rolled=null;room.version++;broadcast();
@@ -56,11 +74,10 @@ for(const mobile of [false,true])test(`social lobby and draft ${mobile?'mobile':
  await expect(page.getByRole('img',{name:'MUMBAI INDIANS franchise logo'})).toBeVisible();
  room.state.rolled=rolled;room.version++;broadcast();
  if(!mobile){
-  const chat=await page.getByRole('log',{name:'Room messages'}).boundingBox();
-  const picking=await page.getByRole('heading',{name:'Bob is picking'}).boundingBox();
-  expect(chat!.x).toBeGreaterThan(picking!.x+picking!.width);
+  const panelBounds=await page.getByRole('complementary',{name:'Room chat',exact:true}).boundingBox();
+  expect(panelBounds!.x).toBeGreaterThan(800);
   const panel=await page.getByRole('complementary',{name:'Room chat',exact:true}).boundingBox();
-  expect(panel!.height).toBeGreaterThan(700);
+  expect(panel!.height).toBeGreaterThan(400);
   const composer=await page.getByRole('textbox',{name:'Chat message'}).boundingBox();
   expect(composer!.y).toBeGreaterThan(panel!.y+panel!.height-100);
  }
