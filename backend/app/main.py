@@ -35,6 +35,7 @@ COOKIE='__Host-out_session' if SECURE else 'out_session'
 async def lifespan(app):
     from .realtime import RoomSignals, listen
     from .voice import monitor
+    from .cleanup import maintain
     signals = RoomSignals()
     app.state.room_signals = signals
     async def clock():
@@ -46,7 +47,7 @@ async def lifespan(app):
             try: await asyncio.to_thread(practice_tick)
             except Exception: logging.getLogger('out.security').error('practice_clock_failed')
             await asyncio.sleep(1)
-    tasks=[asyncio.create_task(clock()), asyncio.create_task(listen(signals)), asyncio.create_task(monitor(signals))]
+    tasks=[asyncio.create_task(clock()), asyncio.create_task(listen(signals)), asyncio.create_task(monitor(signals)), asyncio.create_task(maintain())]
     try:
         yield
     finally:

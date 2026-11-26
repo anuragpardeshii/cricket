@@ -151,6 +151,35 @@ If you later use a custom frontend domain, update Render's `APP_ORIGIN` and `ALL
 
 ## 5. Administrator access and player data
 
+### Automatic room and chat retention
+
+The API runs retention cleanup on startup and every five minutes while running.
+Rooms (including their chats and full simulation state) and practice games are
+deleted 24 hours after creation, including active ones. Rematches do not reset
+the room's creation time. A sleeping service catches up when it starts again.
+Room socket tickets and voice grants are deleted with the room. Expired login
+sessions, rate-limit buckets, socket tickets and unused guest profiles are also
+cleaned up. Registered accounts, saved match results, achievements, groups, cups
+and audit events remain; cleanup does not put a bound on those tables.
+
+Deploy migration `0016` before starting this version; it indexes creation times
+so cleanup can find old rooms and games efficiently.
+
+To remove **all rooms immediately**, including active rooms and conversations,
+run this from `backend` with the intended database configured privately:
+
+```sh
+python -m app.cleanup --all-rooms
+```
+
+For the normal 24-hour cleanup only, run `python -m app.cleanup`. Do not run the
+all-rooms command against a different environment by mistake. These commands
+do not delete registered accounts or independent saved results.
+
+Cleanup reduces retained data; it does not extend an expired hosting plan or
+guarantee staying within provider storage/compute limits. The hosted database
+must be accessible before cleanup can run.
+
 Register the real account on the deployed frontend first. Then use the Render service shell with database-owner credentials:
 
 ```sh
