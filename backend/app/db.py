@@ -43,7 +43,7 @@ class Game(Base):
     code: Mapped[str | None] = mapped_column(String(8), unique=True)
     version: Mapped[int] = mapped_column(Integer, default=0)
     state: Mapped[dict] = mapped_column(JSONB)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)
 class Audit(Base):
     __tablename__ = 'audit_events'
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
@@ -89,7 +89,7 @@ class Room(Base):
     code: Mapped[str] = mapped_column(String(4), unique=True)
     version: Mapped[int] = mapped_column(Integer, default=0)
     state: Mapped[dict] = mapped_column(JSONB)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, index=True)
 
 class RoomSocketTicket(Base):
     __tablename__ = 'room_socket_tickets'

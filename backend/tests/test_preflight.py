@@ -221,6 +221,28 @@ def test_admin_guard_and_phone_constraints():
     assert c.get('/api/admin/analytics').status_code==403
 
 
+@pytest.mark.parametrize('days', ['7','30','90'])
+def test_admin_analytics_account_and_activity_details(days):
+    admin=client('admin'); blocked=client('blocked')
+    guest=TestClient(app,headers=HEADERS)
+    assert guest.post('/api/auth/guest',json={}).status_code==200
+    create(admin)
+    with Session.begin() as s:
+        s.scalar(select(User).where(User.username=='admin')).is_admin=True
+        s.scalar(select(User).where(User.username=='blocked')).is_blocked=True
+    response=admin.get('/api/admin/analytics',params={'days':days})
+    assert response.status_code==200,response.text
+    data=response.json()
+    assert data['totalRegistered']==2
+    assert data['accounts']==dict(guests=1,administrators=1,blocked=1)
+    assert data['activity']['practiceGames']==1
+    assert data['activity']['onlineRooms']==0
+    assert data['activity']['registeredSessions']==2
+    assert data['activity']['guestSessions']==1
+    assert {'action':'session.started','count':3} in data['activity']['events']
+    assert len(data['trend'])==int(days)
+
+
 def ready_room(host, room, *others):
     for person in (host, *others):
         response=person.post(f"/api/rooms/{room['id']}/ready",json={'ready':True})
